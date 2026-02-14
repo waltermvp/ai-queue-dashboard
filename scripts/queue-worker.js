@@ -46,19 +46,42 @@ function saveQueueState(state) {
 async function processWithOllama(item) {
     console.log(`🤖 Processing: ${item.title}`);
     
-    const prompt = `Analyze this task and provide a solution:
+    // Load coding standards for React Native projects
+    const codingStandards = `
+CRITICAL: Follow React Native coding standards to pass CI:
+
+1. NO INLINE STYLES - Always use StyleSheet.create()
+   ❌ style={{ flex: 1, padding: 10 }}
+   ✅ style={styles.container}
+
+2. IMPORT ORDER - React first, then third-party, then local
+   ❌ import { useQuery } from '@tanstack/react-query'; import React from 'react';
+   ✅ import React from 'react'; import { useQuery } from '@tanstack/react-query';
+
+3. PRETTIER FORMAT - Proper line breaks, trailing commas
+4. HOOK DEPENDENCIES - Include all dependencies in useEffect arrays
+5. NO UNUSED IMPORTS - Remove unused variables/imports
+6. NO COLOR LITERALS - Use theme constants, not 'transparent' or '#fff'
+
+ALWAYS format code properly and run mental lint check before responding.
+`;
+
+    const prompt = `${codingStandards}
+
+Analyze this GitHub issue and provide a complete solution:
 
 Task: ${item.title}
 ID: ${item.id}
 Priority: ${item.priority}
+Repository: MapYourHealth (React Native + Expo)
 
-Please provide:
-1. Analysis of the task
-2. Recommended approach 
-3. Implementation steps
-4. Potential challenges
+Provide:
+1. **Root Cause Analysis** - What's causing the issue?
+2. **Code Solution** - Complete, properly formatted code following React Native standards
+3. **Implementation Steps** - Exact steps to implement  
+4. **Testing Strategy** - How to verify the fix works
 
-Keep response concise but thorough.`;
+Make sure all code follows the coding standards above to pass CI linting.`;
 
     try {
         const response = await axios.post(OLLAMA_URL, {
