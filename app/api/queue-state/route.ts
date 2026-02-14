@@ -4,10 +4,8 @@ import { join } from 'path'
 
 export async function GET(request: NextRequest) {
   try {
-    const queueStatePath = join(
-      process.env.HOME || '',
-      'Library/Mobile Documents/iCloud~md~obsidian/Documents/Notes/work/ai-queue/queue-state.json'
-    )
+    // Read from local queue-state.json file  
+    const queueStatePath = join(process.cwd(), 'queue-state.json')
     
     const data = await readFile(queueStatePath, 'utf-8')
     const queueState = JSON.parse(data)
@@ -18,11 +16,13 @@ export async function GET(request: NextRequest) {
     
     // Return default empty state if file doesn't exist
     const defaultState = {
-      current_issue: null,
-      processing: false,
+      processing: null,
       completed: [],
       failed: [],
-      queue: []
+      queue: [
+        { id: 'demo-1', title: 'Sample Task 1', priority: 'high', created_at: new Date().toISOString() },
+        { id: 'demo-2', title: 'Sample Task 2', priority: 'medium', created_at: new Date().toISOString() }
+      ]
     }
     
     return NextResponse.json(defaultState)

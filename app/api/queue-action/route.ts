@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import path from 'path'
 
 const execAsync = promisify(exec)
 
@@ -8,40 +9,47 @@ export async function POST(request: NextRequest) {
   try {
     const { action } = await request.json()
     
-    const scriptPath = process.env.HOME + '/.openclaw/workspace/ai-issue-queue-processor.sh'
+    // Path to our local queue worker script
+    const workerScript = path.join(process.cwd(), 'scripts', 'queue-worker.js')
     
     let command: string
+    let message: string
     
     switch (action) {
       case 'populate':
-        command = `bash "${scriptPath}" populate`
+        command = `node "${workerScript}" add-demo`
+        message = 'Demo tasks added to queue'
         break
       case 'process-one':
-        command = `bash "${scriptPath}" process-one`
+        command = `node "${workerScript}" process`
+        message = 'Processing started with Ollama Llama 3.1 70B'
         break
       case 'cleanup':
-        command = `bash "${scriptPath}" cleanup`
+        command = `node "${workerScript}" cleanup`
+        message = 'Completed items cleaned up'
         break
       case 'status':
-        command = `bash "${scriptPath}" status`
+        command = `node "${workerScript}" status`
+        message = 'Queue status retrieved'
         break
       default:
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
     }
     
-    console.log('Executing command:', command)
+    console.log('🚀 Executing:', command)
     
-    // For process-one, we want to run it in the background since it takes time
+    // For process-one, run in background since Ollama processing takes time
     if (action === 'process-one') {
-      // Don't await this - let it run in background
-      execAsync(command).catch(error => {
-        console.error('Background process error:', error)
+      execAsync(command).then(({ stdout }) => {
+        console.log('✅ Processing completed:', stdout)
+      }).catch(error => {
+        console.error('❌ Background processing error:', error)
       })
       
       return NextResponse.json({ 
         success: true, 
         action,
-        message: 'Processing started in background'
+        message: 'Processing started with Llama 3.1 70B model...'
       })
     }
     
@@ -51,10 +59,11 @@ export async function POST(request: NextRequest) {
       success: true, 
       action,
       output: stdout,
+      message,
       error: stderr
     })
   } catch (error) {
-    console.error('Error executing action:', error)
+    console.error('❌ Error executing action:', error)
     return NextResponse.json({ 
       error: 'Failed to execute action',
       details: error instanceof Error ? error.message : String(error)
