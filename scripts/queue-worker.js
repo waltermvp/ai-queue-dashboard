@@ -92,7 +92,7 @@ Make sure all code follows the coding standards above to pass CI linting.`;
 
     try {
         const response = await axios.post(OLLAMA_URL, {
-            model: 'llama3.1:70b',
+            model: 'qwen2.5-coder:32b',
             prompt: prompt,
             stream: false
         });
@@ -100,7 +100,7 @@ Make sure all code follows the coding standards above to pass CI linting.`;
         return {
             success: true,
             solution: response.data.response,
-            model: 'llama3.1:70b',
+            model: 'qwen2.5-coder:32b',
             processed_at: new Date().toISOString()
         };
     } catch (error) {
@@ -201,6 +201,31 @@ function cleanup() {
     console.log(`🧹 Cleared ${completedCount} completed items`);
 }
 
+// Watch mode - auto-process queue items
+async function watch(intervalMs = 30000) {
+    console.log(`👀 Watching queue (checking every ${intervalMs / 1000}s)...`);
+    console.log('   Press Ctrl+C to stop\n');
+
+    const tick = async () => {
+        const state = loadQueueState();
+        if (state.queue.length > 0 && !state.processing) {
+            console.log(`\n📥 Found ${state.queue.length} item(s) in queue. Processing...`);
+            await processNext();
+            // After processing, immediately check for more
+            const updated = loadQueueState();
+            if (updated.queue.length > 0 && !updated.processing) {
+                setImmediate(tick);
+                return;
+            }
+        }
+    };
+
+    // Initial check
+    await tick();
+    // Then poll
+    setInterval(tick, intervalMs);
+}
+
 // Main command handler
 async function main() {
     const action = process.argv[2];
@@ -209,6 +234,10 @@ async function main() {
         switch (action) {
             case 'process':
                 await processNext();
+                break;
+            case 'watch':
+                const interval = parseInt(process.argv[3]) || 30000;
+                await watch(interval);
                 break;
             case 'add-demo':
                 addDemoItems();
@@ -226,7 +255,7 @@ async function main() {
                 break;
             default:
                 console.log('Usage: node queue-worker.js <action>');
-                console.log('Actions: process | add-demo | cleanup | status');
+                console.log('Actions: process | watch [intervalMs] | add-demo | cleanup | status');
         }
     } catch (error) {
         console.error('❌ Error:', error.message);

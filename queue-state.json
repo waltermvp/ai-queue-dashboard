@@ -1,0 +1,29 @@
+{
+  "current_issue": null,
+  "processing": null,
+  "completed": [
+    {
+      "id": "demo-1771188224769-1",
+      "title": "Optimize API Performance",
+      "priority": "high",
+      "created_at": "2026-02-15T20:43:44.769Z",
+      "solution": "### Root Cause Analysis\n\nThe performance issue in the API requests is likely due to excessive or unnecessary network calls, lack of caching, or inefficient data handling. Without specific code to analyze, we will assume common issues:\n\n1. **Repeated Network Calls**: The API might be called multiple times unnecessarily.\n2. **Lack of Caching**: There's no caching mechanism in place, causing repeated requests for the same data.\n3. **Inefficient Data Handling**: Large amounts of data are being processed or rendered at once.\n\n### Code Solution\n\nWe will use React Query to manage and cache API calls efficiently. Here’s a sample solution that addresses these issues:\n\n1. Set up React Query for caching.\n2. Ensure network requests are only made when necessary.\n\n```javascript\n// Import order: React first, then third-party, then local\nimport React from 'react';\nimport { View, Text, FlatList } from 'react-native';\nimport { useQuery } from '@tanstack/react-query';\n\nconst fetchData = async () => {\n  const response = await fetch('https://api.example.com/data');\n  if (!response.ok) throw new Error('Network response was not ok');\n  return response.json();\n};\n\n// Use StyleSheet.create for styles\nconst styles = React.StyleSheet.create({\n  container: {\n    flex: 1,\n    padding: 10,\n  },\n  item: {\n    padding: 20,\n    borderBottomWidth: 1,\n    borderBottomColor: '#ccc',\n  }\n});\n\nconst DataList = () => {\n  // Use useQuery to fetch data and cache it\n  const { isLoading, error, data } = useQuery(['data'], fetchData);\n\n  if (isLoading) return <Text>Loading...</Text>;\n  if (error) return <Text>Error: {error.message}</Text>;\n\n  return (\n    <View style={styles.container}>\n      <FlatList\n        data={data}\n        keyExtractor={(item) => item.id.toString()}\n        renderItem={({ item }) => (\n          <View style={styles.item}>\n            <Text>{item.name}</Text>\n          </View>\n        )}\n      />\n    </View>\n  );\n};\n\nexport default DataList;\n```\n\n### Implementation Steps\n\n1. **Install React Query**:\n   ```bash\n   npm install @tanstack/react-query\n   ```\n\n2. **Set Up Query Client**:\n   Wrap your app with `QueryClientProvider` in the entry file (usually `App.js` or `index.js`).\n\n   ```javascript\n   // Import order: React first, then third-party, then local\n   import React from 'react';\n   import { NavigationContainer } from '@react-navigation/native';\n   import { createNativeStackNavigator } from '@react-navigation/native-stack';\n   import { QueryClient, QueryClientProvider } from '@tanstack/react-query';\n\n   import DataList from './path/to/DataList'; // Adjust the path accordingly\n\n   const Stack = createNativeStackNavigator();\n   const queryClient = new QueryClient();\n\n   export default function App() {\n     return (\n       <QueryClientProvider client={queryClient}>\n         <NavigationContainer>\n           <Stack.Navigator initialRouteName=\"DataList\">\n             <Stack.Screen name=\"DataList\" component={DataList} />\n           </Stack.Navigator>\n         </NavigationContainer>\n       </QueryClientProvider>\n     );\n   }\n   ```\n\n3. **Replace Inline Styles**:\n   Ensure all inline styles are replaced with `StyleSheet.create()` as shown in the code snippet.\n\n4. **Remove Unused Imports and Variables**: Clean up any unused imports or variables to maintain a clean codebase.\n\n5. **Use Theme Constants for Colors**: Replace color literals like `'transparent'` or `'#fff'` with theme constants.\n\n### Testing Strategy\n\n1. **Manual Testing**:\n   - Run the application and navigate to the screen displaying the data list.\n   - Observe if there are any loading indicators before data appears.\n   - Ensure that the data does not re-fetch unnecessarily when navigating away and back to the screen.\n\n2. **Performance Monitoring**:\n   - Use tools like React DevTools or Flipper to monitor network requests.\n   - Check that cached data is served from the cache instead of making new network calls.\n\n3. **Automated Testing**:\n   - Write unit tests for the `fetchData` function to ensure it handles errors and returns data correctly.\n   - Implement integration tests to verify the behavior of `useQuery` in different scenarios (e.g., loading, error states).\n\n4. **Load Testing**:\n   - If applicable, perform load testing to simulate multiple users or large datasets to ensure performance remains stable under heavy loads.\n\nBy following these steps and implementing the solution provided, you should be able to optimize API performance in your React Native application using React Query for efficient data fetching and caching.",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-15T20:51:29.624Z",
+      "processing_time": 457514
+    }
+  ],
+  "queue": [],
+  "failed": [
+    {
+      "id": "100",
+      "title": "E2E: Maestro Device Testing - Basic App Flow Validation",
+      "repo": "epiphanyapps/MapYourHealth",
+      "completed_at": "2026-02-15T20:51:55.253Z",
+      "resolution": "PR #101 created — 3 Maestro E2E flows (launch, navigation, search). Awaiting device connection for test execution.",
+      "pr_url": "https://github.com/epiphanyapps/mapyourhealth/pull/101",
+      "failed": "2026-02-15T20:56:40.912Z",
+      "error": "Device testing could not execute — no physical devices connected (Moto E13 + iPhone 11 offline)"
+    }
+  ]
+}

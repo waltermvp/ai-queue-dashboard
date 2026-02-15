@@ -10,6 +10,11 @@ export async function GET(request: NextRequest) {
     const data = await readFile(queueStatePath, 'utf-8')
     const queueState = JSON.parse(data)
     
+    // Ensure all required arrays exist to prevent frontend crashes
+    if (!queueState.queue) queueState.queue = []
+    if (!queueState.completed) queueState.completed = []
+    if (!queueState.failed) queueState.failed = []
+    
     return NextResponse.json(queueState)
   } catch (error) {
     console.error('Error reading queue state:', error)
