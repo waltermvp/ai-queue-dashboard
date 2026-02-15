@@ -367,8 +367,10 @@ async function runE2EPipeline(worktreeDir, fullRepo, prNumber) {
   console.log("\n   📦 Building Android debug APK...")
   const buildCmd = `
     export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20
-    cd "${worktreeDir}/apps/mobile"
+    cd "${worktreeDir}"
     yarn install
+    yarn sync:amplify
+    cd apps/mobile
     npx expo prebuild --platform android --clean
     cd android && ./gradlew assembleDebug
   `
