@@ -6,7 +6,10 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const { spawn } = require('child_process');
 const db = require('./db');
+
+const PIPELINES_DIR = path.join(__dirname, 'pipelines');
 
 const QUEUE_STATE_FILE = path.join(__dirname, '..', 'queue-state.json');
 const PROMPTS_DIR = path.join(__dirname, '..', 'prompts');
@@ -146,6 +149,67 @@ Labels: ${(item.labels || []).join(', ') || 'none'}`;
     }
 }
 
+// Execute type-specific pipeline after Qwen analysis
+async function executePipeline(type, issueId, solutionText) {
+  const pipelineScript = path.join(PIPELINES_DIR, `${type}.sh`);
+  
+  if (!fs.existsSync(pipelineScript)) {
+    log(`⚠️ No pipeline script found for type: ${type}`);
+    return { executed: false, reason: 'no_pipeline_script' };
+  }
+
+  log(`🔧 Executing ${type} pipeline for issue #${issueId}...`);
+  
+  const artifactsDir = path.join(__dirname, '..', 'artifacts', String(issueId));
+  if (!fs.existsSync(artifactsDir)) {
+    fs.mkdirSync(artifactsDir, { recursive: true });
+  }
+  const solutionFile = path.join(artifactsDir, 'qwen-solution.md');
+  fs.writeFileSync(solutionFile, solutionText);
+  
+  return new Promise((resolve) => {
+    const args = [String(issueId)];
+    if (type === 'coding') {
+      args.push('epiphanyapps/MapYourHealth', solutionFile);
+    } else if (type === 'content') {
+      args.push(solutionFile);
+    }
+    
+    const proc = spawn('bash', [pipelineScript, ...args], {
+      env: { ...process.env, PATH: process.env.PATH + ':' + process.env.HOME + '/.maestro/bin' },
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    
+    let stdout = '';
+    let stderr = '';
+    
+    proc.stdout.on('data', (data) => {
+      const line = data.toString();
+      stdout += line;
+      log(`[pipeline] ${line.trim()}`);
+    });
+    
+    proc.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+    
+    proc.on('close', (code) => {
+      if (code === 0) {
+        log(`✅ Pipeline ${type} completed successfully for issue #${issueId}`);
+        resolve({ executed: true, success: true, stdout, stderr });
+      } else {
+        log(`❌ Pipeline ${type} failed for issue #${issueId} (exit code: ${code})`);
+        resolve({ executed: true, success: false, exitCode: code, stdout, stderr });
+      }
+    });
+    
+    proc.on('error', (err) => {
+      log(`❌ Pipeline ${type} error: ${err.message}`);
+      resolve({ executed: true, success: false, error: err.message });
+    });
+  });
+}
+
 // Process next item in queue
 async function processNext() {
     const state = loadQueueState();
@@ -207,12 +271,24 @@ async function processNext() {
     const processingTimeMs = Date.now() - new Date(startedAt).getTime();
     
     if (result.success) {
+        // Execute the type-specific pipeline
+        const pipelineResult = await executePipeline(issueType, item.id, result.solution);
+        if (pipelineResult.executed) {
+            result.pipelineExecuted = true;
+            result.pipelineSuccess = pipelineResult.success;
+            if (!pipelineResult.success) {
+                log(`⚠️ Pipeline failed but Qwen analysis succeeded. Marking as completed with pipeline warning.`);
+            }
+        }
+
         const completedItem = {
             ...item,
             solution: result.solution,
             model: result.model,
             completed_at: result.processed_at,
-            processing_time: processingTimeMs
+            processing_time: processingTimeMs,
+            pipelineExecuted: result.pipelineExecuted || false,
+            pipelineSuccess: result.pipelineSuccess || false
         };
 
         // Collect artifacts for e2e items
