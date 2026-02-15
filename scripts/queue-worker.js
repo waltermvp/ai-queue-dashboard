@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const db = require('./db');
 
 const QUEUE_STATE_FILE = path.join(__dirname, '..', 'queue-state.json');
 const PROMPTS_DIR = path.join(__dirname, '..', 'prompts');

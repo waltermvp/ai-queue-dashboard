@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "axios": "^1.13.5",
+    "better-sqlite3": "^12.6.2",
     "clsx": "^1.2.1",
     "lucide-react": "^0.263.1",
     "next": "14.1.0",
