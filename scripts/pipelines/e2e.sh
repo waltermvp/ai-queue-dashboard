@@ -49,6 +49,15 @@ HASH_INPUT=""
 [ -f "$REPO_ROOT/package.json" ] && HASH_INPUT+=$(cat "$REPO_ROOT/package.json")
 NATIVE_HASH=$(echo "$HASH_INPUT" | md5 -q 2>/dev/null || echo "$HASH_INPUT" | md5sum | cut -d' ' -f1)
 
+# Ensure local.properties exists (expo prebuild --clean deletes it)
+ensure_local_properties() {
+  local props_file="$MOBILE_ROOT/android/local.properties"
+  if [ -d "$MOBILE_ROOT/android" ] && [ ! -f "$props_file" ]; then
+    echo "sdk.dir=$ANDROID_HOME" > "$props_file"
+    log "📝 Created android/local.properties with sdk.dir"
+  fi
+}
+
 CACHED_APK="$BUILDS_CACHE/${NATIVE_HASH}-android.apk"
 APK_PATH="$MOBILE_ROOT/android/app/build/outputs/apk/release/app-release.apk"
 
@@ -58,10 +67,12 @@ if [ -f "$CACHED_APK" ]; then
 elif [ -d "$MOBILE_ROOT/android/app" ]; then
   # Android dir exists — skip prebuild, just rebuild (faster for JS-only changes)
   log "🔨 Incremental build (skipping prebuild, JS changes only)..."
+  ensure_local_properties
   cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || {
     # If incremental fails, try full rebuild
     log "⚠️ Incremental build failed, trying full rebuild..."
     cd "$MOBILE_ROOT" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1 || fail "expo prebuild failed"
+    ensure_local_properties
     cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || fail "gradle assembleRelease failed"
   }
   # Cache the successful build
@@ -74,6 +85,7 @@ else
   # No android dir — full prebuild + build
   log "🏗️ Full rebuild (no existing android directory)..."
   cd "$MOBILE_ROOT" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1 || fail "expo prebuild failed"
+  ensure_local_properties
   cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || fail "gradle assembleRelease failed"
   # Cache the successful build
   if [ -f "$APK_PATH" ]; then

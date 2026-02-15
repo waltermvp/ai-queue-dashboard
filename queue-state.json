@@ -1,32 +1,20 @@
 {
   "current_issue": null,
-  "processing": null,
-  "completed": [
-    {
-      "id": "103",
-      "title": "E2E: Record Basic App Flow Tests on Devices",
-      "repo": "epiphanyapps/MapYourHealth",
-      "url": "https://github.com/epiphanyapps/mapyourhealth/issues/103",
-      "priority": "medium",
-      "labels": [
-        "e2e",
-        "test"
-      ],
-      "created_at": "2026-02-15T22:35:00.000Z",
-      "solution": "### Summary\nRecord basic app flow tests on devices for the MapYourHealth React Native app using Maestro. The task involves building and installing a release APK on Android and iOS devices and running Maestro tests with recording.\n\n### Labels\n- `e2e`\n- `test`\n\n### Steps to Follow\n\n#### 1. Sync Amplify Outputs\n```bash\ncd ~/Documents/MapYourHealth && yarn sync:amplify\n```\n\n#### 2. Build Release APK for Android\n```bash\ncd apps/mobile && npx expo prebuild --platform android --clean\ncd android && ./gradlew assembleRelease\n```\n\n#### 3. Install Release APK on Moto E13 (Android Device)\nReplace `{device_id}` with the actual device ID if different.\n```bash\nadb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n```\n\n#### 4. Set PATH for Maestro\nEnsure Maestro is added to your PATH.\n```bash\nexport PATH=\"$PATH:$HOME/.maestro/bin\"\n```\n\n#### 5. Create Artifact Directory\nReplace `{issue-id}` with the actual issue ID, e.g., `103`.\n```bash\nmkdir -p ~/Documents/ai-queue-dashboard/artifacts/103\n```\n\n#### 6. Run Maestro Tests with Recording for Android (Moto E13)\nReplace `{issue-id}` with the actual issue ID.\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/maestro-farm/flows/android/mapyourhealth-basic.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/103/android-recording.mp4 \\\n  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/103/test-output.log\n```\n\n#### 7. Run Maestro Tests with Recording for iOS (iPhone 11)\nEnsure the Maestro iOS bridge is running first.\n\n**Terminal 1 — keep running:**\n```bash\nmaestro-ios-device --team-id 22X6D48M4G --device 00008030-001950891A53402E\n```\n\n**Terminal 2:**\nReplace `{issue-id}` with the actual issue ID.\n```bash\nmaestro record --local --driver-host-port 6001 --device 00008030-001950891A53402E \\\n  ~/maestro-farm/flows/ios/mapyourhealth-basic.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/103/ios-recording.mp4 \\\n  2>&1 | tee -a ~/Documents/ai-queue-dashboard/artifacts/103/test-output.log\n```\n\n### Expected Behavior\n\n- **Test Results:** The test results should indicate whether each flow passed or failed.\n- **Screenshots of Failures:** Screenshots should be taken for any failed tests to identify issues.\n- **Summary Report:** A summary report with total tests, passed, failed, and skipped should be generated.\n- **Error Output:** If tests fail, the Maestro error output should be included along with suggestions for fixes.\n\n### Notes\n\n- Ensure no Metro bundler is used as the release APK has JS bundled in.\n- Replace `{issue-id}` with `103` or the actual issue ID when creating directories and running commands.\n\nBy following these steps, you will successfully record basic app flow tests on real devices using Maestro for the MapYourHealth React Native app.",
-      "model": "qwen2.5-coder:32b",
-      "completed_at": "2026-02-15T22:38:19.589Z",
-      "processing_time": 120369,
-      "pipelineExecuted": true,
-      "pipelineSuccess": false,
-      "artifacts": {
-        "dir": "artifacts/103",
-        "recordings": [],
-        "logs": [
-          "pipeline.log"
-        ]
-      }
-    },
+  "processing": {
+    "id": "103",
+    "title": "E2E: Record Basic App Flow Tests on Devices",
+    "repo": "epiphanyapps/MapYourHealth",
+    "url": "https://github.com/epiphanyapps/mapyourhealth/issues/103",
+    "priority": "medium",
+    "labels": [
+      "e2e",
+      "test"
+    ],
+    "created_at": "2026-02-15T22:40:00.000Z",
+    "started_at": "2026-02-15T22:46:34.607Z"
+  },
+  "completed": [],
+  "queue": [
     {
       "id": "104",
       "title": "E2E: Auth Flow Test - Login, Signup & Forgot Password",
@@ -37,22 +25,8 @@
         "e2e",
         "test"
       ],
-      "created_at": "2026-02-15T22:38:00.000Z",
-      "solution": "To handle the **E2E: Auth Flow Test - Login, Signup & Forgot Password** task for the **MapYourHealth** React Native app, we need to create a Maestro flow that covers these scenarios. Below are the steps to build, install, and run the Maestro tests on real devices following the guidelines provided.\n\n### Step-by-Step Guide\n\n#### 1. Sync Amplify Outputs\n```bash\ncd ~/Documents/MapYourHealth && yarn sync:amplify\n```\n\n#### 2. Build Release APK\n```bash\ncd apps/mobile && npx expo prebuild --platform android --clean\ncd android && ./gradlew assembleRelease\n```\n\n#### 3. Install on Android Device (Moto E13)\n```bash\nadb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n```\n**App ID:** `com.epiphanyapps.mapyourhealth`\n\n#### 4. Set PATH for Maestro\n```bash\nexport PATH=\"$PATH:$HOME/.maestro/bin\"\n```\n\n#### 5. Create Artifact Directory\nReplace `{issue-id}` with the actual issue number, which is `104` in this case.\n```bash\nmkdir -p ~/Documents/ai-queue-dashboard/artifacts/104\n```\n\n#### 6. Create Maestro Flow for Auth Flows\n\nCreate a new YAML file `auth-flow-test.yaml` under `~/maestro-farm/flows/android/`.\n\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n# Login Test\n- launchApp\n- tapOn: \"Sign In\"\n- inputText:\n    id: \"email-input\" # Replace with the actual ID of the email field\n    text: \"test@example.com\"\n- inputText:\n    id: \"password-input\" # Replace with the actual ID of the password field\n    text: \"Test123!\"\n- tapOn: \"Submit\"\n- assertVisible: \"Welcome\"\n\n# Logout (if needed to test signup)\n- tapOn: \"Menu\"\n- tapOn: \"Logout\"\n- assertVisible: \"Sign In\"\n\n# Signup Test\n- tapOn: \"Don't have an account? Sign Up\"\n- inputText:\n    id: \"signup-email-input\" # Replace with the actual ID of the email field in signup\n    text: \"newuser@example.com\"\n- inputText:\n    id: \"signup-password-input\" # Replace with the actual ID of the password field in signup\n    text: \"NewPass123!\"\n- tapOn: \"Sign Up\"\n- assertVisible: \"Welcome\"\n\n# Logout (if needed to test forgot password)\n- tapOn: \"Menu\"\n- tapOn: \"Logout\"\n- assertVisible: \"Sign In\"\n\n# Forgot Password Test\n- tapOn: \"Forgot Password?\"\n- inputText:\n    id: \"forgot-password-email-input\" # Replace with the actual ID of the email field in forgot password\n    text: \"test@example.com\"\n- tapOn: \"Submit\"\n- assertVisible: \"Password reset email sent\"\n```\n\n#### 7. Run Maestro Tests with Recording\n\nRun the following command to execute the test and record a video:\n\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/maestro-farm/flows/android/auth-flow-test.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/104/android-recording.mp4 \\\n  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/104/test-output.log\n```\n\n### Output Requirements\n\n- **Test Results:** The output will include pass/fail results for each flow.\n- **Screenshots of Failures:** Maestro automatically captures screenshots on failures.\n- **Summary Report:** The log file (`test-output.log`) will contain a summary report with total tests, passed, failed, and skipped.\n- **Error Output:** If tests fail, the error output will be included in `test-output.log`, and suggestions for fixes should be based on these errors.\n\n### Notes\n\n- Ensure that the device IDs and app identifiers are correctly set as per the provided devices table.\n- Make sure to replace placeholder IDs (`email-input`, `password-input`, etc.) with actual IDs from the MapYourHealth app's UI elements.\n- This setup assumes that the Maestro tool is properly configured on your system.\n\nBy following these steps, you can ensure that the E2E tests for the Auth Flow are executed correctly and provide reliable results.",
-      "model": "qwen2.5-coder:32b",
-      "completed_at": "2026-02-15T22:42:47.927Z",
-      "processing_time": 165737,
-      "pipelineExecuted": true,
-      "pipelineSuccess": false,
-      "artifacts": {
-        "dir": "artifacts/104",
-        "recordings": [],
-        "logs": [
-          "pipeline.log"
-        ]
-      }
+      "created_at": "2026-02-15T22:40:00.000Z"
     }
   ],
-  "queue": [],
   "failed": []
 }
