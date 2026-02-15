@@ -8,3 +8,7 @@ yarn-error.log*
 .DS_Store
 *.tgz
 *.tar.gz
+queue-history.db
+queue-history.db-wal
+queue-history.db-shm
+queue-worker.log

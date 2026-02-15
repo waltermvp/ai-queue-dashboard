@@ -167,14 +167,34 @@ async function processNext() {
     });
     
     const item = sortedQueue[0];
+    const issueType = detectIssueType(item);
+    const startedAt = new Date().toISOString();
     
     // Mark as processing
     state.processing = {
         ...item,
-        started_at: new Date().toISOString()
+        started_at: startedAt
     };
     state.queue = state.queue.filter(q => q.id !== item.id);
     saveQueueState(state);
+    
+    // Record in DB
+    let runId;
+    try {
+        runId = db.recordRun({
+            issue_id: item.id,
+            title: item.title,
+            repo: item.repo,
+            type: issueType,
+            labels: JSON.stringify(item.labels || []),
+            priority: item.priority,
+            status: 'processing',
+            started_at: startedAt,
+            github_url: item.url
+        });
+    } catch (e) {
+        log(`⚠️ DB recordRun failed: ${e.message}`);
+    }
     
     log(`▶️  Started processing: ${item.title}`);
     
@@ -184,6 +204,7 @@ async function processNext() {
     // Update state with result
     const updatedState = loadQueueState();
     updatedState.processing = null;
+    const processingTimeMs = Date.now() - new Date(startedAt).getTime();
     
     if (result.success) {
         const completedItem = {
@@ -191,21 +212,48 @@ async function processNext() {
             solution: result.solution,
             model: result.model,
             completed_at: result.processed_at,
-            processing_time: Date.now() - new Date(state.processing.started_at).getTime()
+            processing_time: processingTimeMs
         };
 
         // Collect artifacts for e2e items
-        const issueType = detectIssueType(item);
         if (issueType === 'e2e') {
             const artifacts = collectArtifacts(item.id);
             if (artifacts) {
                 completedItem.artifacts = artifacts;
                 log(`📹 Artifacts collected for ${item.id}: ${artifacts.recordings.length} recordings, ${artifacts.logs.length} logs`);
+                
+                // Record artifacts in DB
+                if (runId) {
+                    const artifactDir = path.join(ARTIFACTS_DIR, item.id);
+                    [...artifacts.recordings, ...artifacts.logs].forEach(filename => {
+                        try {
+                            const filePath = path.join(artifactDir, filename);
+                            const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : null;
+                            db.addArtifact(runId, {
+                                filename,
+                                type: filename.endsWith('.mp4') ? 'recording' : 'log',
+                                path: filePath,
+                                size_bytes: stats ? stats.size : null
+                            });
+                        } catch (e) {
+                            log(`⚠️ DB addArtifact failed: ${e.message}`);
+                        }
+                    });
+                }
             }
         }
 
         updatedState.completed.push(completedItem);
         log(`✅ Completed: ${item.title}`);
+        
+        // Update DB
+        if (runId) {
+            try {
+                db.completeRun(runId, { solution: result.solution, model: result.model, processing_time_ms: processingTimeMs });
+            } catch (e) {
+                log(`⚠️ DB completeRun failed: ${e.message}`);
+            }
+        }
     } else {
         updatedState.failed.push({
             ...item,
@@ -213,6 +261,15 @@ async function processNext() {
             failed_at: result.processed_at
         });
         log(`❌ Failed: ${item.title} - ${result.error}`);
+        
+        // Update DB
+        if (runId) {
+            try {
+                db.failRun(runId, { error: result.error });
+            } catch (e) {
+                log(`⚠️ DB failRun failed: ${e.message}`);
+            }
+        }
     }
     
     saveQueueState(updatedState);
@@ -274,6 +331,9 @@ async function watch(intervalMs = 30000) {
 // Main command handler
 async function main() {
     const action = process.argv[2];
+    
+    // Initialize database
+    try { db.initDB(); } catch (e) { console.warn('⚠️ DB init failed:', e.message); }
     
     try {
         switch (action) {

@@ -17,7 +17,9 @@ import {
   ChevronUp,
   ExternalLink,
   Film,
-  Download
+  Download,
+  History,
+  BarChart3
 } from 'lucide-react'
 
 interface ProcessingItem {
@@ -29,6 +31,32 @@ interface ProcessingItem {
   labels: string[]
   created_at: string
   started_at: string
+}
+
+interface HistoryRun {
+  id: number
+  issue_id: string
+  title: string
+  repo: string
+  type: string
+  labels: string
+  priority: string
+  status: string
+  started_at: string
+  completed_at: string
+  processing_time_ms: number
+  model: string
+  github_url: string
+  pr_url: string
+  created_at: string
+}
+
+interface HistoryStats {
+  totalRuns: number
+  completed: number
+  failed: number
+  avgProcessingTime: number
+  byType: Record<string, number>
 }
 
 interface QueueState {
@@ -209,6 +237,10 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<string[]>([])
   const [showLogs, setShowLogs] = useState(false)
   const logEndRef = useRef<HTMLDivElement>(null)
+  const [history, setHistory] = useState<HistoryRun[]>([])
+  const [historyStats, setHistoryStats] = useState<HistoryStats | null>(null)
+  const [historyOffset, setHistoryOffset] = useState(0)
+  const [showHistory, setShowHistory] = useState(false)
 
   const isProcessing = !!queueState?.processing
 
@@ -237,6 +269,20 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to fetch logs:', error)
     }
+  }, [])
+
+  const fetchHistory = useCallback(async (offset = 0, append = false) => {
+    try {
+      const [histRes, statsRes] = await Promise.all([
+        fetch(`/api/history?limit=20&offset=${offset}`),
+        fetch('/api/history?command=stats')
+      ]);
+      const runs = await histRes.json();
+      const stats = await statsRes.json();
+      if (append) setHistory(prev => [...prev, ...runs]);
+      else setHistory(Array.isArray(runs) ? runs : []);
+      if (!stats.error) setHistoryStats(stats);
+    } catch (e) { console.error('Failed to fetch history:', e); }
   }, [])
 
   const executeAction = async (action: string) => {
@@ -685,6 +731,138 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Run History */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-medium text-gray-900 flex items-center space-x-2">
+            <History className="w-5 h-5" />
+            <span>Run History</span>
+          </h2>
+          <button
+            onClick={() => { setShowHistory(!showHistory); if (!showHistory) fetchHistory(); }}
+            className="text-sm text-primary-600 hover:text-primary-800 flex items-center space-x-1"
+          >
+            <span>{showHistory ? 'Hide' : 'Show'} History</span>
+            {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {showHistory && (
+          <div className="space-y-4">
+            {/* Stats Summary */}
+            {historyStats && (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-gray-900">{historyStats.totalRuns}</p>
+                  <p className="text-xs text-gray-500">Total Runs</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-green-700">{historyStats.completed}</p>
+                  <p className="text-xs text-gray-500">Completed</p>
+                </div>
+                <div className="bg-red-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-red-700">{historyStats.failed}</p>
+                  <p className="text-xs text-gray-500">Failed</p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-blue-700">
+                    {historyStats.totalRuns > 0 ? Math.round((historyStats.completed / historyStats.totalRuns) * 100) : 0}%
+                  </p>
+                  <p className="text-xs text-gray-500">Success Rate</p>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-purple-700">
+                    {historyStats.avgProcessingTime > 0 ? `${Math.round(historyStats.avgProcessingTime / 1000)}s` : '—'}
+                  </p>
+                  <p className="text-xs text-gray-500">Avg Time</p>
+                </div>
+              </div>
+            )}
+
+            {/* By Type breakdown */}
+            {historyStats && Object.keys(historyStats.byType).length > 0 && (
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="w-4 h-4 text-gray-400" />
+                <span className="text-xs text-gray-500">By type:</span>
+                {Object.entries(historyStats.byType).map(([type, count]) => (
+                  <span key={type} className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                    {type}: {count as number}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* History Table */}
+            {history.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-xs text-gray-500">
+                      <th className="pb-2 pr-3">Issue</th>
+                      <th className="pb-2 pr-3">Title</th>
+                      <th className="pb-2 pr-3">Type</th>
+                      <th className="pb-2 pr-3">Status</th>
+                      <th className="pb-2 pr-3">Time</th>
+                      <th className="pb-2">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((run) => (
+                      <tr key={run.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-2 pr-3">
+                          {run.github_url ? (
+                            <a href={run.github_url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline flex items-center space-x-1">
+                              <span>{run.issue_id}</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <span className="text-gray-700">{run.issue_id}</span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-3 text-gray-700 max-w-xs truncate">{run.title}</td>
+                        <td className="py-2 pr-3"><LabelBadge label={run.type || 'coding'} /></td>
+                        <td className="py-2 pr-3">
+                          <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                            run.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            run.status === 'failed' ? 'bg-red-100 text-red-800' :
+                            run.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>{run.status}</span>
+                        </td>
+                        <td className="py-2 pr-3 text-gray-500 font-mono text-xs">
+                          {run.processing_time_ms ? `${Math.round(run.processing_time_ms / 1000)}s` : '—'}
+                        </td>
+                        <td className="py-2 text-gray-500 text-xs">
+                          {run.created_at ? new Date(run.created_at).toLocaleString() : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No run history yet. History is recorded when the queue worker processes items.</p>
+            )}
+
+            {/* Load More */}
+            {history.length >= 20 && (
+              <div className="text-center">
+                <button
+                  onClick={() => {
+                    const newOffset = historyOffset + 20;
+                    setHistoryOffset(newOffset);
+                    fetchHistory(newOffset, true);
+                  }}
+                  className="text-sm text-primary-600 hover:text-primary-800 px-4 py-2 border rounded-lg"
+                >
+                  Load More
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
