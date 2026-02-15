@@ -1,63 +1,154 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 ISSUE_ID="${1:?Usage: e2e.sh <issue-id>}"
 REPO_ROOT="$HOME/Documents/MapYourHealth"
+MOBILE_ROOT="$REPO_ROOT/apps/mobile"
 ARTIFACTS_DIR="$HOME/Documents/ai-queue-dashboard/artifacts/$ISSUE_ID"
+BUILDS_CACHE="$HOME/Documents/ai-queue-dashboard/artifacts/builds"
 LOG_FILE="$ARTIFACTS_DIR/pipeline.log"
 DEVICE_ID="ZL73232GKP"
+IOS_DEVICE_ID="00008030-001950891A53402E"
 APP_ID="com.epiphanyapps.mapyourhealth"
-export PATH="$PATH:$HOME/.maestro/bin"
+APPLE_TEAM_ID="22X6D48M4G"
 
-mkdir -p "$ARTIFACTS_DIR"
+# Environment setup (not inherited from shell profile in background processes)
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export PATH="$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$HOME/.maestro/bin"
+export JAVA_HOME="${JAVA_HOME:-/usr/libexec/java_home 2>/dev/null || echo /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home}"
+
+mkdir -p "$ARTIFACTS_DIR" "$BUILDS_CACHE"
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
+fail() {
+  log "❌ PIPELINE FAILED: $1"
+  exit 1
+}
+
 log "=== E2E Pipeline Started for Issue #$ISSUE_ID ==="
 
-# Step 1: Sync amplify
-log "Step 1/5: Syncing amplify outputs..."
-cd "$REPO_ROOT" && yarn sync:amplify >> "$LOG_FILE" 2>&1
+# -------------------------------------------------------
+# Step 1: Sync amplify outputs
+# -------------------------------------------------------
+log "Step 1/6: Syncing amplify outputs..."
+cd "$REPO_ROOT" && yarn sync:amplify >> "$LOG_FILE" 2>&1 || fail "amplify sync failed"
 log "✅ Amplify sync complete"
 
-# Step 2: Expo prebuild
-log "Step 2/5: Running expo prebuild..."
-cd "$REPO_ROOT/apps/mobile" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1
-log "✅ Prebuild complete"
+# -------------------------------------------------------
+# Step 2: Smart build — cache check
+# -------------------------------------------------------
+log "Step 2/6: Checking build cache..."
 
-# Step 3: Build release APK
-log "Step 3/5: Building release APK..."
-cd "$REPO_ROOT/apps/mobile/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1
-APK_PATH="$REPO_ROOT/apps/mobile/android/app/build/outputs/apk/release/app-release.apk"
-if [ ! -f "$APK_PATH" ]; then
-  log "❌ APK not found at $APK_PATH"
-  exit 1
+# Hash native dependencies to detect if full rebuild needed
+HASH_INPUT=""
+[ -f "$MOBILE_ROOT/package.json" ] && HASH_INPUT+=$(cat "$MOBILE_ROOT/package.json")
+[ -f "$MOBILE_ROOT/app.json" ] && HASH_INPUT+=$(cat "$MOBILE_ROOT/app.json")
+[ -f "$REPO_ROOT/package.json" ] && HASH_INPUT+=$(cat "$REPO_ROOT/package.json")
+NATIVE_HASH=$(echo "$HASH_INPUT" | md5 -q 2>/dev/null || echo "$HASH_INPUT" | md5sum | cut -d' ' -f1)
+
+CACHED_APK="$BUILDS_CACHE/${NATIVE_HASH}-android.apk"
+APK_PATH="$MOBILE_ROOT/android/app/build/outputs/apk/release/app-release.apk"
+
+if [ -f "$CACHED_APK" ]; then
+  log "♻️ Using cached APK (native deps unchanged: $NATIVE_HASH)"
+  APK_PATH="$CACHED_APK"
+elif [ -d "$MOBILE_ROOT/android/app" ]; then
+  # Android dir exists — skip prebuild, just rebuild (faster for JS-only changes)
+  log "🔨 Incremental build (skipping prebuild, JS changes only)..."
+  cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || {
+    # If incremental fails, try full rebuild
+    log "⚠️ Incremental build failed, trying full rebuild..."
+    cd "$MOBILE_ROOT" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1 || fail "expo prebuild failed"
+    cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || fail "gradle assembleRelease failed"
+  }
+  # Cache the successful build
+  if [ -f "$APK_PATH" ]; then
+    cp "$APK_PATH" "$CACHED_APK"
+    ln -sf "$CACHED_APK" "$BUILDS_CACHE/latest-android.apk"
+    log "📦 Cached APK as $NATIVE_HASH"
+  fi
+else
+  # No android dir — full prebuild + build
+  log "🏗️ Full rebuild (no existing android directory)..."
+  cd "$MOBILE_ROOT" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1 || fail "expo prebuild failed"
+  cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || fail "gradle assembleRelease failed"
+  # Cache the successful build
+  if [ -f "$APK_PATH" ]; then
+    cp "$APK_PATH" "$CACHED_APK"
+    ln -sf "$CACHED_APK" "$BUILDS_CACHE/latest-android.apk"
+    log "📦 Cached APK as $NATIVE_HASH"
+  fi
 fi
-log "✅ Release APK built: $APK_PATH"
 
+if [ ! -f "$APK_PATH" ]; then
+  fail "APK not found at $APK_PATH"
+fi
+log "✅ Release APK ready: $APK_PATH"
+
+# -------------------------------------------------------
+# Step 3: Verify device connected
+# -------------------------------------------------------
+log "Step 3/6: Checking device connectivity..."
+adb -s "$DEVICE_ID" get-state >> "$LOG_FILE" 2>&1 || fail "Android device $DEVICE_ID not connected"
+log "✅ Device $DEVICE_ID connected"
+
+# -------------------------------------------------------
 # Step 4: Install on device
-log "Step 4/5: Installing APK on device $DEVICE_ID..."
-adb -s "$DEVICE_ID" install -r "$APK_PATH" >> "$LOG_FILE" 2>&1
+# -------------------------------------------------------
+log "Step 4/6: Installing APK on device $DEVICE_ID..."
+adb -s "$DEVICE_ID" install -r "$APK_PATH" >> "$LOG_FILE" 2>&1 || fail "APK install failed"
 log "✅ APK installed on $DEVICE_ID"
 
-# Step 5: Run Maestro tests with recording
-log "Step 5/5: Running Maestro tests with recording..."
+# -------------------------------------------------------
+# Step 5: Run Maestro tests with recording (Android)
+# -------------------------------------------------------
+log "Step 5/6: Running Maestro tests with recording (Android)..."
 FLOW_FILE="$HOME/maestro-farm/flows/android/mapyourhealth-basic.yaml"
 if [ ! -f "$FLOW_FILE" ]; then
-  log "❌ Maestro flow not found: $FLOW_FILE"
-  exit 1
+  fail "Maestro flow not found: $FLOW_FILE"
 fi
 
 maestro record --local --device "$DEVICE_ID" \
   "$FLOW_FILE" \
   "$ARTIFACTS_DIR/android-recording.mp4" \
-  >> "$ARTIFACTS_DIR/test-output.log" 2>&1 || {
-    log "⚠️ Maestro recording finished with errors (check test-output.log)"
-  }
+  >> "$ARTIFACTS_DIR/test-output.log" 2>&1
+MAESTRO_EXIT=$?
 
+if [ $MAESTRO_EXIT -ne 0 ]; then
+  log "⚠️ Maestro tests had failures (exit code: $MAESTRO_EXIT) — check test-output.log"
+else
+  log "✅ Maestro tests passed with recording"
+fi
+
+# -------------------------------------------------------
+# Step 6: iOS tests (if device available)
+# -------------------------------------------------------
+log "Step 6/6: Checking iOS device..."
+if ideviceinfo -u "$IOS_DEVICE_ID" -k DeviceName >> "$LOG_FILE" 2>&1; then
+  log "📱 iOS device found, skipping iOS build for now (use cached .app when available)"
+  # iOS build caching would go here in future
+  # For now, just log that the device is available
+else
+  log "ℹ️ iOS device not available, skipping iOS tests"
+fi
+
+# -------------------------------------------------------
+# Summary
+# -------------------------------------------------------
+log ""
 log "=== E2E Pipeline Complete for Issue #$ISSUE_ID ==="
-log "Artifacts saved to: $ARTIFACTS_DIR"
+log "Artifacts:"
 ls -la "$ARTIFACTS_DIR" >> "$LOG_FILE" 2>&1
-exit 0
+
+# Check if we got a recording
+if [ -f "$ARTIFACTS_DIR/android-recording.mp4" ]; then
+  SIZE=$(du -h "$ARTIFACTS_DIR/android-recording.mp4" | cut -f1)
+  log "🎬 Video recording: $SIZE"
+else
+  log "⚠️ No video recording produced"
+fi
+
+exit $MAESTRO_EXIT

@@ -277,7 +277,13 @@ async function processNext() {
             result.pipelineExecuted = true;
             result.pipelineSuccess = pipelineResult.success;
             if (!pipelineResult.success) {
-                log(`⚠️ Pipeline failed but Qwen analysis succeeded. Marking as completed with pipeline warning.`);
+                log(`❌ Pipeline failed for ${issueType} issue #${item.id}`);
+                // For e2e issues, pipeline failure = issue failure
+                if (issueType === 'e2e') {
+                    result.success = false;
+                    result.error = `E2E pipeline failed (exit code: ${pipelineResult.exitCode || 'unknown'}). Check artifacts/${item.id}/pipeline.log`;
+                    log(`❌ Marking e2e issue #${item.id} as FAILED`);
+                }
             }
         }
 
