@@ -68,6 +68,11 @@ ALWAYS format code properly and run mental lint check before responding.
 
     const prompt = `${codingStandards}
 
+DEVICE TESTING AVAILABLE:
+- Android: Moto E13 (ID: ZL73232GKP) via Maestro
+- iOS: iPhone 11 (ID: 00008030-001950891A53402E) via Maestro
+- Real device validation required for mobile issues
+
 Analyze this GitHub issue and provide a complete solution:
 
 Task: ${item.title}
@@ -78,9 +83,11 @@ Repository: MapYourHealth (React Native + Expo)
 Provide:
 1. **Root Cause Analysis** - What's causing the issue?
 2. **Code Solution** - Complete, properly formatted code following React Native standards
-3. **Implementation Steps** - Exact steps to implement  
-4. **Testing Strategy** - How to verify the fix works
+3. **Implementation Steps** - Exact steps to implement
+4. **Device Testing Plan** - Maestro test commands for Android & iOS validation
+5. **Testing Strategy** - How to verify the fix works on real devices
 
+For mobile UI changes, include Maestro flow snippets for device testing.
 Make sure all code follows the coding standards above to pass CI linting.`;
 
     try {
