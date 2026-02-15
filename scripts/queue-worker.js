@@ -8,7 +8,61 @@ const path = require('path');
 const axios = require('axios');
 
 const QUEUE_STATE_FILE = path.join(__dirname, '..', 'queue-state.json');
+const PROMPTS_DIR = path.join(__dirname, '..', 'prompts');
+const ARTIFACTS_DIR = path.join(__dirname, '..', 'artifacts');
 const OLLAMA_URL = 'http://localhost:11434/api/generate';
+const LOG_FILE = path.join(__dirname, '..', 'queue-worker.log');
+
+function log(msg) {
+    const line = `[${new Date().toISOString()}] ${msg}`;
+    console.log(line);
+    fs.appendFileSync(LOG_FILE, line + '\n');
+}
+
+// Collect artifacts for an issue
+function collectArtifacts(issueId) {
+    const artifactDir = path.join(ARTIFACTS_DIR, issueId);
+    if (!fs.existsSync(artifactDir)) return null;
+
+    const files = fs.readdirSync(artifactDir);
+    const recordings = files.filter(f => f.endsWith('.mp4'));
+    const logs = files.filter(f => f.endsWith('.log'));
+
+    if (recordings.length === 0 && logs.length === 0) return null;
+
+    return {
+        dir: `artifacts/${issueId}`,
+        recordings,
+        logs
+    };
+}
+
+// Detect issue type from labels
+function detectIssueType(item) {
+    const labels = (item.labels || []).map(l => (typeof l === 'string' ? l : l.name || '').toLowerCase());
+    if (labels.includes('e2e')) return 'e2e';
+    if (labels.includes('content')) return 'content';
+    return 'coding';
+}
+
+// Load prompt file for a given issue type
+function loadPrompt(type) {
+    const promptPath = path.join(PROMPTS_DIR, `${type}.md`);
+    if (!fs.existsSync(promptPath)) {
+        console.warn(`⚠️  Prompt file not found: ${promptPath}, falling back to coding`);
+        return fs.readFileSync(path.join(PROMPTS_DIR, 'coding.md'), 'utf8');
+    }
+    return fs.readFileSync(promptPath, 'utf8');
+}
+
+// Load coding standards (used for coding and e2e types)
+function loadCodingStandards() {
+    const stdPath = path.join(PROMPTS_DIR, 'react-native-coding-standards.md');
+    if (fs.existsSync(stdPath)) {
+        return '\n\n' + fs.readFileSync(stdPath, 'utf8');
+    }
+    return '';
+}
 
 // Initialize queue state if it doesn't exist
 function initializeQueueState() {
@@ -25,7 +79,7 @@ function initializeQueueState() {
     
     if (!fs.existsSync(QUEUE_STATE_FILE)) {
         fs.writeFileSync(QUEUE_STATE_FILE, JSON.stringify(defaultState, null, 2));
-        console.log('✅ Initialized queue state with sample data');
+        log('✅ Initialized queue state with sample data');
     }
 }
 
@@ -44,51 +98,29 @@ function saveQueueState(state) {
 
 // Process single item with Ollama
 async function processWithOllama(item) {
-    console.log(`🤖 Processing: ${item.title}`);
+    const issueType = detectIssueType(item);
+    log(`🤖 Processing [${issueType}]: ${item.title}`);
     
-    // Load coding standards for React Native projects
-    const codingStandards = `
-CRITICAL: Follow React Native coding standards to pass CI:
+    // Load the type-specific prompt
+    let systemPrompt = loadPrompt(issueType);
+    
+    // Append coding standards for coding and e2e types
+    if (issueType === 'coding' || issueType === 'e2e') {
+        systemPrompt += loadCodingStandards();
+    }
 
-1. NO INLINE STYLES - Always use StyleSheet.create()
-   ❌ style={{ flex: 1, padding: 10 }}
-   ✅ style={styles.container}
+    const prompt = `${systemPrompt}
 
-2. IMPORT ORDER - React first, then third-party, then local
-   ❌ import { useQuery } from '@tanstack/react-query'; import React from 'react';
-   ✅ import React from 'react'; import { useQuery } from '@tanstack/react-query';
+---
 
-3. PRETTIER FORMAT - Proper line breaks, trailing commas
-4. HOOK DEPENDENCIES - Include all dependencies in useEffect arrays
-5. NO UNUSED IMPORTS - Remove unused variables/imports
-6. NO COLOR LITERALS - Use theme constants, not 'transparent' or '#fff'
-
-ALWAYS format code properly and run mental lint check before responding.
-`;
-
-    const prompt = `${codingStandards}
-
-DEVICE TESTING AVAILABLE:
-- Android: Moto E13 (ID: ZL73232GKP) via Maestro
-- iOS: iPhone 11 (ID: 00008030-001950891A53402E) via Maestro
-- Real device validation required for mobile issues
-
-Analyze this GitHub issue and provide a complete solution:
+## Issue Context
 
 Task: ${item.title}
 ID: ${item.id}
 Priority: ${item.priority}
+Description: ${item.body || item.description || 'No description provided'}
 Repository: MapYourHealth (React Native + Expo)
-
-Provide:
-1. **Root Cause Analysis** - What's causing the issue?
-2. **Code Solution** - Complete, properly formatted code following React Native standards
-3. **Implementation Steps** - Exact steps to implement
-4. **Device Testing Plan** - Maestro test commands for Android & iOS validation
-5. **Testing Strategy** - How to verify the fix works on real devices
-
-For mobile UI changes, include Maestro flow snippets for device testing.
-Make sure all code follows the coding standards above to pass CI linting.`;
+Labels: ${(item.labels || []).join(', ') || 'none'}`;
 
     try {
         const response = await axios.post(OLLAMA_URL, {
@@ -118,12 +150,12 @@ async function processNext() {
     const state = loadQueueState();
     
     if (state.processing) {
-        console.log('⏳ Already processing an item');
+        log('⏳ Already processing an item');
         return;
     }
     
     if (state.queue.length === 0) {
-        console.log('📭 Queue is empty');
+        log('📭 Queue is empty');
         return;
     }
     
@@ -143,7 +175,7 @@ async function processNext() {
     state.queue = state.queue.filter(q => q.id !== item.id);
     saveQueueState(state);
     
-    console.log(`▶️  Started processing: ${item.title}`);
+    log(`▶️  Started processing: ${item.title}`);
     
     // Process with Ollama
     const result = await processWithOllama(item);
@@ -153,21 +185,33 @@ async function processNext() {
     updatedState.processing = null;
     
     if (result.success) {
-        updatedState.completed.push({
+        const completedItem = {
             ...item,
             solution: result.solution,
             model: result.model,
             completed_at: result.processed_at,
             processing_time: Date.now() - new Date(state.processing.started_at).getTime()
-        });
-        console.log(`✅ Completed: ${item.title}`);
+        };
+
+        // Collect artifacts for e2e items
+        const issueType = detectIssueType(item);
+        if (issueType === 'e2e') {
+            const artifacts = collectArtifacts(item.id);
+            if (artifacts) {
+                completedItem.artifacts = artifacts;
+                log(`📹 Artifacts collected for ${item.id}: ${artifacts.recordings.length} recordings, ${artifacts.logs.length} logs`);
+            }
+        }
+
+        updatedState.completed.push(completedItem);
+        log(`✅ Completed: ${item.title}`);
     } else {
         updatedState.failed.push({
             ...item,
             error: result.error,
             failed_at: result.processed_at
         });
-        console.log(`❌ Failed: ${item.title} - ${result.error}`);
+        log(`❌ Failed: ${item.title} - ${result.error}`);
     }
     
     saveQueueState(updatedState);
@@ -189,7 +233,7 @@ function addDemoItems() {
     });
     
     saveQueueState(state);
-    console.log('➕ Added demo items to queue');
+    log('➕ Added demo items to queue');
 }
 
 // Clear completed items
@@ -198,18 +242,18 @@ function cleanup() {
     const completedCount = state.completed.length;
     state.completed = [];
     saveQueueState(state);
-    console.log(`🧹 Cleared ${completedCount} completed items`);
+    log(`🧹 Cleared ${completedCount} completed items`);
 }
 
 // Watch mode - auto-process queue items
 async function watch(intervalMs = 30000) {
-    console.log(`👀 Watching queue (checking every ${intervalMs / 1000}s)...`);
-    console.log('   Press Ctrl+C to stop\n');
+    log(`👀 Watching queue (checking every ${intervalMs / 1000}s)...`);
+    log('   Press Ctrl+C to stop\n');
 
     const tick = async () => {
         const state = loadQueueState();
         if (state.queue.length > 0 && !state.processing) {
-            console.log(`\n📥 Found ${state.queue.length} item(s) in queue. Processing...`);
+            log(`\n📥 Found ${state.queue.length} item(s) in queue. Processing...`);
             await processNext();
             // After processing, immediately check for more
             const updated = loadQueueState();
@@ -247,15 +291,15 @@ async function main() {
                 break;
             case 'status':
                 const state = loadQueueState();
-                console.log('📊 Queue Status:');
-                console.log(`  Queued: ${state.queue.length}`);
-                console.log(`  Processing: ${state.processing ? 1 : 0}`);
-                console.log(`  Completed: ${state.completed.length}`);
-                console.log(`  Failed: ${state.failed.length}`);
+                log('📊 Queue Status:');
+                log(`  Queued: ${state.queue.length}`);
+                log(`  Processing: ${state.processing ? 1 : 0}`);
+                log(`  Completed: ${state.completed.length}`);
+                log(`  Failed: ${state.failed.length}`);
                 break;
             default:
-                console.log('Usage: node queue-worker.js <action>');
-                console.log('Actions: process | watch [intervalMs] | add-demo | cleanup | status');
+                log('Usage: node queue-worker.js <action>');
+                log('Actions: process | watch [intervalMs] | add-demo | cleanup | status');
         }
     } catch (error) {
         console.error('❌ Error:', error.message);

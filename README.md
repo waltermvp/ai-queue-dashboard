@@ -1,14 +1,14 @@
 # 🤖 AI Issue Queue Dashboard
 
-Automated GitHub issue → code → PR → E2E testing pipeline powered by local LLMs and Maestro device testing.
+Automated GitHub issue processing pipeline powered by local LLMs, Maestro device testing, and intelligent issue routing.
 
 ## Overview
 
 ```
-GitHub Issue → AI Queue → Qwen 2.5 Coder 32B (local) → PR → Maestro E2E Tests → Results on PR
+GitHub Issue → Detect Type (label) → Load Prompt → Qwen 2.5 Coder 32B (local) → Execute Workflow → Results
 ```
 
-The system watches GitHub repos for assigned issues, generates code fixes using a local Ollama model, creates PRs, and optionally runs end-to-end tests on physical devices.
+The system watches GitHub repos for assigned issues, detects the issue type from labels, routes to the appropriate workflow (coding, E2E testing, or content generation), and processes using a local Ollama model. No API costs — everything runs locally.
 
 ## 🚀 Quick Start
 
@@ -16,7 +16,10 @@ The system watches GitHub repos for assigned issues, generates code fixes using 
 # Start the dashboard
 cd ~/Documents/ai-queue-dashboard && nvm use 20 && npm run dev
 
-# Process a single issue
+# Start the queue watcher (auto-processes new items)
+node scripts/queue-worker.js watch 30000
+
+# Process a single issue via PR worker
 node scripts/pr-worker.js epiphanyapps/MapYourHealth 94
 
 # Process with E2E testing skipped
@@ -25,12 +28,86 @@ node scripts/pr-worker.js epiphanyapps/MapYourHealth 94 --skip-e2e
 
 **Dashboard:** http://localhost:3001 (local) / http://192.168.1.227:3001 (network)
 
-## How It Works
+---
 
-### 1. Adding Issues
-Create GitHub issues in any monitored repo. Be specific about files to modify and expected changes. See `prompts/react-native-coding-standards.md` for issue writing guidelines.
+## Issue Types & Routing
 
-### 2. Code Generation
+The queue worker detects issue type from GitHub labels and loads the matching prompt from `prompts/`. This determines the entire workflow for that issue.
+
+### 1. 🔧 Coding (default)
+**Label:** `coding` or no label (default)
+**Prompt:** `prompts/coding.md`
+**Model:** Qwen 2.5 Coder 32B
+
+**Workflow:**
+1. Fetch issue details from GitHub
+2. Analyze codebase, identify root cause
+3. Generate code fix following React Native coding standards
+4. Create branch `issue-{number}`, commit, push
+5. Open PR assigned to `waltermvp`
+
+**When to use:** Bug fixes, feature implementations, refactors, performance improvements — any issue that requires code changes.
+
+### 2. 🧪 E2E Testing
+**Label:** `e2e`
+**Prompt:** `prompts/e2e.md`
+**Model:** Qwen 2.5 Coder 32B
+
+**Workflow:**
+1. Sync amplify outputs (`yarn sync:amplify`)
+2. **Build RELEASE APK** (critical — no dev builds!)
+   ```bash
+   cd apps/mobile && npx expo prebuild --platform android --clean
+   cd android && ./gradlew assembleRelease
+   ```
+3. Install on Moto E13: `adb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk`
+4. Run Maestro tests: `maestro --device ZL73232GKP test ~/maestro-farm/flows/android/`
+5. (Optional) iOS: start bridge, then run iOS flows
+6. Report results — pass/fail, screenshots, logs
+
+**⚠️ CRITICAL:** E2E tests MUST use release builds. Dev builds show the React Native dev menu which breaks Maestro automation. Release builds bundle JS into the APK — no Metro bundler needed.
+
+**When to use:** UI validation, flow testing, regression testing, new feature verification on real devices.
+
+### 3. 📝 Content Generation
+**Label:** `content`
+**Prompt:** `prompts/content.md`
+**Model:** Qwen 2.5 Coder 32B
+
+**Workflow:**
+1. Read issue for content requirements
+2. Generate content (marketing copy, docs, social posts, changelogs)
+3. Output formatted text ready for use
+
+**When to use:** App store descriptions, release notes, blog posts, social media content, documentation updates, marketing copy.
+
+### How Routing Works
+
+```
+Issue comes in
+  → Check labels array for 'e2e' or 'content'
+  → Match found? Load prompts/{type}.md
+  → No match? Default to prompts/coding.md
+  → Append react-native-coding-standards.md for coding/e2e types
+  → Send to Qwen with issue context
+  → Execute type-specific workflow
+```
+
+See `prompts/README.md` for detailed routing documentation.
+
+---
+
+## How It Works (Detailed)
+
+### Adding Issues
+Create GitHub issues in any monitored repo. **Use labels to control routing:**
+- No label → coding workflow
+- `e2e` label → E2E testing workflow
+- `content` label → content generation workflow
+
+Be specific about files to modify and expected changes. See `prompts/react-native-coding-standards.md` for code issue guidelines.
+
+### Code Generation (PR Worker)
 The PR worker (`scripts/pr-worker.js`):
 1. Fetches issue details from GitHub
 2. Creates a git worktree for isolation
@@ -41,24 +118,44 @@ The PR worker (`scripts/pr-worker.js`):
 7. Self-corrects up to 2 times if validation fails
 8. Commits, pushes, and creates a PR
 
-### 3. E2E Testing (Auto-Detected)
-After PR creation, the worker checks if the issue needs device testing:
+### E2E Testing Pipeline
+After PR creation or for standalone E2E issues:
 
-**Detection:** Issues with `e2e` or `test` labels, or containing keywords like "e2e", "maestro", "end-to-end" in title/body.
+**Build (Release APK — NOT dev build):**
+```bash
+cd ~/Documents/MapYourHealth && yarn sync:amplify
+cd apps/mobile && npx expo prebuild --platform android --clean
+cd android && ./gradlew assembleRelease
+```
 
-**Pipeline:**
-1. **Build** — Expo prebuild + Gradle assembleDebug (Android)
-2. **Install** — `adb install` to Moto E13 (`ZL73232GKP`)
-3. **Test** — Maestro runs all flows in `apps/mobile/.maestro/flows/`
-4. **Report** — Results posted as a PR comment
+**Install & Test:**
+```bash
+adb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk
+export PATH="$PATH:$HOME/.maestro/bin"
+maestro --device ZL73232GKP test ~/maestro-farm/flows/android/
+```
 
-Each step is fault-tolerant — failures are reported on the PR without crashing the worker.
+**iOS (requires bridge):**
+```bash
+# Terminal 1
+maestro-ios-device --team-id 22X6D48M4G --device 00008030-001950891A53402E
+# Terminal 2
+maestro --driver-host-port 6001 --device 00008030-001950891A53402E test ~/maestro-farm/flows/ios/
+```
 
-**Skip with:** `--skip-e2e` flag
+Each step is fault-tolerant — failures are reported without crashing the worker.
 
-### 4. Monitoring
+### Queue Watcher
+The queue worker (`scripts/queue-worker.js`) runs in watch mode:
+- Polls `queue-state.json` every 30 seconds
+- Auto-picks up new items by priority (high → medium → low)
+- Detects issue type from labels
+- Loads the right prompt and processes
+- Immediately checks for more items after completing one
+
+### Monitoring
 - **Dashboard** at localhost:3001 — real-time queue status, controls, history
-- **Telegram updates** — 3x daily summaries of queue progress
+- **Telegram updates** — 3x daily to QueensClaw group (9am, 2pm, 8pm EST)
 - **Queue state** stored in `queue-state.json`
 
 ## Available Commands
@@ -85,16 +182,23 @@ Each step is fault-tolerant — failures are reported on the PR without crashing
 ```
 ai-queue-dashboard/
 ├── scripts/
-│   └── pr-worker.js          # Main worker: issue → code → PR → E2E
+│   ├── queue-worker.js        # Queue watcher: polls, routes, processes
+│   ├── pr-worker.js           # PR worker: issue → code → PR → E2E
+│   └── auto-queue-processor.js
 ├── prompts/
-│   └── react-native-coding-standards.md  # LLM coding guidelines
+│   ├── README.md              # How issue routing works
+│   ├── coding.md              # Coding workflow prompt
+│   ├── e2e.md                 # E2E testing workflow prompt
+│   ├── content.md             # Content generation workflow prompt
+│   ├── react-native-coding-standards.md  # Shared coding standards
+│   └── device-testing-integration.md     # Device farm integration
 ├── app/                       # Next.js dashboard
 │   ├── api/
 │   │   ├── queue-state/       # Queue data API
 │   │   └── queue-action/      # Control actions API
 │   └── page.tsx               # Dashboard UI
 ├── queue-state.json           # Persistent queue state
-└── README.md
+└── README.md                  # ← You are here
 ```
 
 ## Tech Stack
