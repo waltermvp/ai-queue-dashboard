@@ -110,3 +110,112 @@ Before creating PR:
 - [ ] No color literals (use theme/constants)
 
 Run `npm run lint -- --fix` to auto-fix formatting issues.
+
+## E2E Testing with Maestro
+
+Issues tagged with `e2e` or `test` labels (or containing keywords like "e2e", "maestro", "end-to-end") will **automatically trigger device testing** after the PR is created.
+
+### How It Works
+1. AI generates code and creates a PR (as usual)
+2. Queue detects E2E keywords/labels
+3. Builds Android debug APK via Expo + Gradle
+4. Installs on physical device (Moto E13)
+5. Runs Maestro YAML flows
+6. Posts results as a PR comment
+
+### Maestro Flow Format
+Test files go in `apps/mobile/.maestro/flows/`. Each flow is a YAML file:
+
+```yaml
+appId: com.yourapp.mobile
+---
+- launchApp
+- tapOn: "Sign In"
+- inputText:
+    id: "email-input"
+    text: "test@example.com"
+- tapOn: "Submit"
+- assertVisible: "Welcome"
+```
+
+### Available Devices
+| Device | Type | ID |
+|--------|------|----|
+| Moto E13 | Android | `ZL73232GKP` |
+| iPhone 11 | iOS | `00008030-001950891A53402E` |
+
+> **Note:** Android is the default for automated testing. iOS requires additional bridge setup.
+
+### Skip E2E
+Pass `--skip-e2e` to the worker to bypass testing even if labels are present.
+
+## Issue Writing Guidelines for AI Queue
+
+When creating or processing issues for the AI queue, follow these rules:
+
+### Be Specific About WHAT to Change
+- ❌ "Fix sharing" — too vague, AI may change wrong files
+- ✅ "Update Share.share() calls in CategoryDetailScreen.tsx and DashboardScreen.tsx to use https://app.mapyourhealth.info/ as the base URL"
+
+### Include Hints About WHERE
+- Name specific files or directories to look in
+- Name specific functions or patterns to search for (e.g., `Share.share()`, `Linking.openURL()`)
+- Call out files that should NOT be modified
+
+### Include Hints About HOW
+- Show the current code pattern if known
+- Show the expected code pattern after the fix
+- Explain the difference between similar concepts (e.g., "share URLs" vs "API URLs")
+
+### Anti-Patterns to Avoid
+- ❌ Never change API configuration files unless the issue explicitly says to
+- ❌ Never commit debug/temp files (`.llm-response.txt`, etc.)
+- ❌ Never rewrite entire files when only a few lines need changing
+- ❌ Never replace URLs in utility functions that handle ALL URLs — be surgical
+
+### Issue Template
+```markdown
+## Summary
+[One sentence description]
+
+## Files to Modify
+- `path/to/file.tsx` — [what to change]
+
+## Files NOT to Modify
+- `config.prod.ts` — API config, do not touch
+- `openLinkInBrowser.ts` — generic utility, do not touch
+
+## Search Pattern
+Look for: `Share.share()` or `[specific function]`
+
+## Expected Change
+Before: `url: "https://old-url.com/path"`
+After: `url: "https://new-url.com/path"`
+```
+
+### E2E Issue Template
+Add the `e2e` label if the issue requires device testing. The queue auto-detects E2E issues and runs Maestro tests after PR creation.
+
+```markdown
+## Summary
+[Feature/fix that needs device verification]
+
+## Labels
+`e2e`, `bug` (or `enhancement`)
+
+## Files to Modify
+- `apps/mobile/src/screens/LoginScreen.tsx` — fix login button
+
+## Maestro Flow (if new test needed)
+Create: `apps/mobile/.maestro/flows/login-test.yaml`
+```yaml
+appId: com.yourapp.mobile
+---
+- launchApp
+- tapOn: "Sign In"
+- assertVisible: "Dashboard"
+```
+
+## Expected Behavior
+After the fix, the Maestro flow above should pass on Android (Moto E13).
+```

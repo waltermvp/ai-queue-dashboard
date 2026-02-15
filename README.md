@@ -1,186 +1,113 @@
 # 🤖 AI Issue Queue Dashboard
 
-A modern web interface for monitoring and controlling your AI-powered GitHub issue processing system.
+Automated GitHub issue → code → PR → E2E testing pipeline powered by local LLMs and Maestro device testing.
 
-## ✨ Features
+## Overview
 
-### 📊 **Real-Time Monitoring**
-- **Queue Status:** See queued, processing, completed, and failed issues
-- **Live Updates:** Automatic refresh every 30 seconds
-- **Processing Progress:** Track current AI analysis in real-time
-- **Historical Data:** View completed solutions and failed attempts
+```
+GitHub Issue → AI Queue → Qwen 2.5 Coder 32B (local) → PR → Maestro E2E Tests → Results on PR
+```
 
-### 🎛️ **Queue Controls**
-- **Load Issues:** Fetch latest GitHub issues from your repos
-- **Process One:** Manually trigger processing of next issue
-- **Cleanup:** Clear completed items from queue
-- **Retry Failed:** Requeue failed issues for retry
-
-### 📝 **Issue Management**
-- **Priority Queue:** Critical bugs processed first
-- **Issue Details:** Title, repo, GitHub links
-- **Processing Time:** Track how long each issue takes
-- **Solution Links:** Direct access to AI-generated solutions
-
-### 🔍 **Visual Status**
-- **Color-coded cards:** Easy status identification
-- **Progress indicators:** Spinning loaders for active processing
-- **Badge system:** Clear issue categorization
-- **Responsive design:** Works on desktop and mobile
+The system watches GitHub repos for assigned issues, generates code fixes using a local Ollama model, creates PRs, and optionally runs end-to-end tests on physical devices.
 
 ## 🚀 Quick Start
 
-### Launch the UI:
 ```bash
-# From the workspace directory
-bash launch-ai-queue-ui.sh
+# Start the dashboard
+cd ~/Documents/ai-queue-dashboard && nvm use 20 && npm run dev
+
+# Process a single issue
+node scripts/pr-worker.js epiphanyapps/MapYourHealth 94
+
+# Process with E2E testing skipped
+node scripts/pr-worker.js epiphanyapps/MapYourHealth 94 --skip-e2e
 ```
 
-### Access the dashboard:
-Open your browser to: **http://localhost:3001**
+**Dashboard:** http://localhost:3001 (local) / http://192.168.1.227:3001 (network)
 
-## 📱 Interface Overview
+## How It Works
 
-### **Status Cards (Top Row)**
-- 🕒 **Queued:** Number of issues waiting to be processed
-- ⚙️ **Processing:** Currently active AI processing (0 or 1)
-- ✅ **Completed:** Successfully processed issues
-- ❌ **Failed:** Issues that failed processing
+### 1. Adding Issues
+Create GitHub issues in any monitored repo. Be specific about files to modify and expected changes. See `prompts/react-native-coding-standards.md` for issue writing guidelines.
 
-### **Queue Controls**
-- **➕ Load Issues:** Fetches latest GitHub issues assigned to you
-- **▶️ Process One:** Starts AI processing of next queued issue
-- **🔄 Cleanup:** Removes completed items from display
+### 2. Code Generation
+The PR worker (`scripts/pr-worker.js`):
+1. Fetches issue details from GitHub
+2. Creates a git worktree for isolation
+3. Discovers relevant source files based on issue keywords
+4. Sends code context + issue to **Qwen 2.5 Coder 32B** via Ollama (local, no API costs)
+5. Parses SEARCH/REPLACE edit blocks from LLM output
+6. Applies edits, runs prettier/eslint/tsc validation
+7. Self-corrects up to 2 times if validation fails
+8. Commits, pushes, and creates a PR
 
-### **Current Processing Panel**
-- Shows which issue is currently being analyzed
-- Processing start time and duration
-- Real-time progress indicator
+### 3. E2E Testing (Auto-Detected)
+After PR creation, the worker checks if the issue needs device testing:
 
-### **Issue Lists**
-- **📋 Pending Issues:** Queue order with priority badges
-- **✅ Completed Issues:** Successful AI solutions with links
-- **❌ Failed Issues:** Errors with retry options
+**Detection:** Issues with `e2e` or `test` labels, or containing keywords like "e2e", "maestro", "end-to-end" in title/body.
 
-## 🔧 Technical Details
+**Pipeline:**
+1. **Build** — Expo prebuild + Gradle assembleDebug (Android)
+2. **Install** — `adb install` to Moto E13 (`ZL73232GKP`)
+3. **Test** — Maestro runs all flows in `apps/mobile/.maestro/flows/`
+4. **Report** — Results posted as a PR comment
 
-### **Built With:**
-- **Next.js 14:** React framework with App Router
-- **TypeScript:** Type-safe development
-- **Tailwind CSS:** Modern, responsive styling
-- **Lucide Icons:** Beautiful, consistent iconography
+Each step is fault-tolerant — failures are reported on the PR without crashing the worker.
 
-### **API Integration:**
-- **Queue State:** Reads from `queue-state.json`
-- **Action Control:** Executes bash scripts via API
-- **Real-time Updates:** Automatic polling for changes
+**Skip with:** `--skip-e2e` flag
 
-### **File Structure:**
+### 4. Monitoring
+- **Dashboard** at localhost:3001 — real-time queue status, controls, history
+- **Telegram updates** — 3x daily summaries of queue progress
+- **Queue state** stored in `queue-state.json`
+
+## Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `node scripts/pr-worker.js <repo> <issue>` | Process a single issue |
+| `node scripts/pr-worker.js <url>` | Process by GitHub issue URL |
+| `--skip-e2e` | Skip E2E testing |
+| Dashboard: Load Issues | Fetch latest assigned issues |
+| Dashboard: Process One | Trigger next issue processing |
+| Dashboard: Cleanup | Clear completed items |
+
+## Available Devices
+
+| Device | Type | ID | Status |
+|--------|------|----|--------|
+| Moto E13 | Android | `ZL73232GKP` | ✅ Primary |
+| iPhone 11 | iOS | `00008030-001950891A53402E` | ✅ Available |
+| iPhone 16e | iOS | `00008140-0018288A0CBA801C` | Available |
+
+## Architecture
+
 ```
-ai-queue-ui/
-├── app/
+ai-queue-dashboard/
+├── scripts/
+│   └── pr-worker.js          # Main worker: issue → code → PR → E2E
+├── prompts/
+│   └── react-native-coding-standards.md  # LLM coding guidelines
+├── app/                       # Next.js dashboard
 │   ├── api/
-│   │   ├── queue-state/route.ts    # Queue data API
-│   │   └── queue-action/route.ts   # Control actions API
-│   ├── globals.css                 # Tailwind styles
-│   ├── layout.tsx                  # App layout
-│   └── page.tsx                    # Main dashboard
-├── package.json                    # Dependencies
-├── tailwind.config.js              # Styling config
-└── tsconfig.json                   # TypeScript config
+│   │   ├── queue-state/       # Queue data API
+│   │   └── queue-action/      # Control actions API
+│   └── page.tsx               # Dashboard UI
+├── queue-state.json           # Persistent queue state
+└── README.md
 ```
 
-## 🌐 URL Structure
+## Tech Stack
 
-- **Dashboard:** `http://localhost:3001/`
-- **API Endpoints:**
-  - `GET /api/queue-state` - Current queue status
-  - `POST /api/queue-action` - Execute control actions
+- **LLM:** Qwen 2.5 Coder 32B via Ollama (local)
+- **E2E:** Maestro + physical Android/iOS devices
+- **Dashboard:** Next.js 14 + TypeScript + Tailwind CSS
+- **CI:** GitHub CLI (`gh`) for issues/PRs
+- **Runtime:** Node.js 20
 
-## 🔄 Integration with AI System
+## Troubleshooting
 
-### **Data Flow:**
-1. **GitHub Issues** → **Obsidian Notes** → **AI Queue**
-2. **AI Processing** → **Generated Solutions** → **Obsidian Archive**
-3. **UI Dashboard** → **Real-time Monitoring** → **User Controls**
-
-### **Connected Systems:**
-- **Obsidian CLI:** Issue and solution management
-- **AI Queue Processor:** Core processing logic
-- **GitHub API:** Issue synchronization
-- **WhatsApp Notifications:** Morning summaries
-
-## 📊 Usage Patterns
-
-### **Daily Workflow:**
-1. **Morning:** Check overnight processing results
-2. **Throughout day:** Monitor queue status
-3. **Manual processing:** Trigger specific issue analysis
-4. **Evening:** Load new issues before overnight run
-
-### **Queue Management:**
-- **Load Issues:** When new GitHub issues are created
-- **Process One:** For urgent issue analysis
-- **Cleanup:** To reduce UI clutter after review
-
-## 🔒 Security Notes
-
-- **Local Access:** UI runs locally on your machine
-- **No External Connections:** All data stays on your Mac
-- **File System Access:** Reads/writes queue state files
-- **Script Execution:** Runs bash commands with your permissions
-
-## 🐛 Troubleshooting
-
-### **UI Won't Load:**
-```bash
-# Check if Node.js is installed
-node --version
-
-# Check port availability
-lsof -i :3001
-
-# Restart with fresh install
-rm -rf ai-queue-ui/node_modules
-bash launch-ai-queue-ui.sh
-```
-
-### **No Queue Data:**
-- Ensure AI queue system is initialized
-- Check if `queue-state.json` exists
-- Run `bash obsidian-toolkit.sh ai-populate` first
-
-### **Actions Not Working:**
-- Verify bash scripts are executable
-- Check file permissions in workspace
-- Ensure Obsidian CLI is configured
-
-## 🚀 Future Enhancements
-
-- **WebSocket Support:** Real-time updates without polling
-- **Solution Previews:** Inline AI output viewing
-- **Progress Bars:** Detailed processing progress
-- **Issue Filtering:** Search and filter capabilities
-- **Mobile Optimization:** Touch-friendly controls
-- **Dark Mode:** Theme switching
-
-## 📞 Quick Help
-
-### **Start UI:**
-```bash
-bash launch-ai-queue-ui.sh
-```
-
-### **Check Queue Status:**
-```bash
-bash obsidian-toolkit.sh ai-queue
-```
-
-### **Load New Issues:**
-```bash
-bash obsidian-toolkit.sh ai-populate
-```
-
----
-
-**🎯 Perfect for monitoring your AI-powered issue processing while you focus on other work!**
+**Build fails:** Ensure `nvm use 20`, Expo CLI installed, Android SDK available.
+**Device not found:** Check `adb devices` for `ZL73232GKP`. Reconnect USB if needed.
+**Maestro fails:** Ensure `$HOME/.maestro/bin` is in PATH. Run `maestro --version`.
+**Ollama timeout:** Model needs ~42GB RAM. Check `ollama ps` and restart if needed.
