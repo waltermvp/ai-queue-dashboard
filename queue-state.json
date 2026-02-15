@@ -1,5 +1,12 @@
 {
-  "current_issue": null,
+  "current_issue": {
+    "id": "100",
+    "title": "E2E: Maestro Device Testing - Basic App Flow Validation",
+    "repo": "epiphanyapps/MapYourHealth",
+    "priority": "medium",
+    "created_at": "2026-02-15T20:59:46.784Z",
+    "url": "https://github.com/epiphanyapps/mapyourhealth/issues/100"
+  },
   "processing": null,
   "completed": [
     {
@@ -14,16 +21,5 @@
     }
   ],
   "queue": [],
-  "failed": [
-    {
-      "id": "100",
-      "title": "E2E: Maestro Device Testing - Basic App Flow Validation",
-      "repo": "epiphanyapps/MapYourHealth",
-      "completed_at": "2026-02-15T20:51:55.253Z",
-      "resolution": "PR #101 created — 3 Maestro E2E flows (launch, navigation, search). Awaiting device connection for test execution.",
-      "pr_url": "https://github.com/epiphanyapps/mapyourhealth/pull/101",
-      "failed": "2026-02-15T20:56:40.912Z",
-      "error": "Device testing could not execute — no physical devices connected (Moto E13 + iPhone 11 offline)"
-    }
-  ]
+  "failed": []
 }

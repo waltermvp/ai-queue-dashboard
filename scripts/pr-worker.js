@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * PR Worker v2 - Uses local Llama 70b (Ollama) to generate code changes and create GitHub PRs
+ * PR Worker v2 - Uses local Qwen 2.5 Coder 32B (Ollama) to generate code changes and create GitHub PRs
  *
  * Improvements over v1:
  * - Full file context (no truncation)
