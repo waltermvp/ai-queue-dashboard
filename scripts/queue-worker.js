@@ -253,7 +253,7 @@ async function processNext() {
         const startedMs = new Date(state.processing.started_at).getTime();
         const staleMinutes = Math.round((Date.now() - startedMs) / 60000);
         if (staleMinutes >= 30) {
-            log(`⚠️ Recovering stale processing item #${state.processing.id} (started ${staleMinutes} min ago)`);
+            log(`⚠️ Recovering stale processing item #${state.processing.issueNumber} (started ${staleMinutes} min ago)`);
             const failedItem = {
                 ...state.processing,
                 error: `Worker timeout/crash recovery (stale for ${staleMinutes} min)`,
@@ -263,7 +263,7 @@ async function processNext() {
             // Record failure in SQLite
             try {
                 const runId = db.recordRun({
-                    issue_id: state.processing.id,
+                    issue_id: state.processing.issueNumber,
                     title: state.processing.title,
                     repo: state.processing.repo,
                     type: detectIssueType(state.processing),

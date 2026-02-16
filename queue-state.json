@@ -1,18 +1,52 @@
 {
   "current_issue": null,
-  "processing": {
-    "issueNumber": 105,
-    "repo": "epiphanyapps/MapYourHealth",
-    "title": "E2E: Settings Screen & Dark Mode Toggle",
-    "labels": [
-      "e2e",
-      "test"
-    ],
-    "priority": "medium",
-    "addedAt": "2026-02-16T02:46:26.770Z",
-    "started_at": "2026-02-16T04:03:58.075Z"
-  },
+  "processing": null,
   "completed": [],
-  "queue": [],
+  "queue": [
+    {
+      "issueNumber": 100,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "E2E: Maestro Device Testing - Basic App Flow Validation",
+      "labels": [
+        "e2e",
+        "test"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16T04:30:00Z"
+    },
+    {
+      "issueNumber": 103,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "E2E: Record Basic App Flow Tests on Devices",
+      "labels": [
+        "e2e",
+        "test"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16T04:30:00Z"
+    },
+    {
+      "issueNumber": 104,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "E2E: Auth Flow Test - Login, Signup & Forgot Password",
+      "labels": [
+        "e2e",
+        "test"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16T04:30:00Z"
+    },
+    {
+      "issueNumber": 105,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "E2E: Settings Screen & Dark Mode Toggle",
+      "labels": [
+        "e2e",
+        "test"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16T04:30:00Z"
+    }
+  ],
   "failed": []
 }
