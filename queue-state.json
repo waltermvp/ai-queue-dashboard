@@ -1,14 +1,17 @@
 {
   "current_issue": null,
   "processing": {
-    "issueNumber": 99,
+    "issueNumber": 87,
     "repo": "epiphanyapps/MapYourHealth",
-    "title": "Verify noreply@mapyourhealth.com is properly configured in SES",
-    "labels": [],
+    "title": "Playwright parity: Category reorganization, accordion, and external links on mobile web",
+    "labels": [
+      "test",
+      "e2e"
+    ],
     "priority": "medium",
     "addedAt": "2026-02-16T18:25:04.274Z",
-    "url": "https://github.com/epiphanyapps/MapYourHealth/issues/99",
-    "started_at": "2026-02-16T18:32:06.266Z"
+    "url": "https://github.com/epiphanyapps/MapYourHealth/issues/87",
+    "started_at": "2026-02-16T18:34:31.034Z"
   },
   "completed": [
     {
@@ -65,21 +68,24 @@
       "processing_time": 202217,
       "pipelineExecuted": true,
       "pipelineSuccess": true
+    },
+    {
+      "issueNumber": 99,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "Verify noreply@mapyourhealth.com is properly configured in SES",
+      "labels": [],
+      "priority": "medium",
+      "addedAt": "2026-02-16T18:25:04.274Z",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/99",
+      "solution": "To address the issue of verifying that `noreply@mapyourhealth.com` is properly configured in AWS Simple Email Service (SES), we need to ensure that the email sending functionality in the app uses this email as the sender and that SES is correctly set up to handle it. However, since this involves backend configuration more than frontend code, the task primarily lies outside of React Native/Expo.\n\nGiven that the issue does not specify changes needed in the frontend codebase but assumes there might be some configurations or checks required in the app's email sending logic, we will proceed with ensuring that the email address is used correctly in any relevant parts of the code. We'll also outline steps for verifying SES configuration and potential frontend tests.\n\n### Root Cause Analysis\n\n1. **Email Configuration**: The email sending functionality should use `noreply@mapyourhealth.com` as the sender.\n2. **SES Configuration**: Ensure that `noreply@mapyourhealth.com` is verified in AWS SES, and the app has the necessary permissions to send emails from this address.\n\n### Code Solution\n\nWe will update any parts of the code where an email address is specified to use `noreply@mapyourhealth.com`. Since no specific files or patterns are mentioned, we'll assume there might be a utility function for sending emails that needs updating.\n\n#### Example: Update Email Sending Logic\n\nLet's assume there is a utility file called `sendEmail.ts` in the project which handles email sending. We will update this file to use `noreply@mapyourhealth.com`.\n\n**apps/mobile/src/utils/sendEmail.ts**\n```tsx\nimport { MailComposer } from 'expo-mail-composer';\n\nconst sendEmail = async (to: string, subject: string, body: string) => {\n  try {\n    const result = await MailComposer.composeAsync({\n      recipients: [to],\n      subject,\n      body,\n      isHtml: true,\n      from: 'noreply@mapyourhealth.com', // Ensure this email address is used\n    });\n\n    return result;\n  } catch (error) {\n    console.error('Failed to send email:', error);\n    throw error;\n  }\n};\n\nexport default sendEmail;\n```\n\n### Implementation Steps\n\n1. **Update `sendEmail.ts`**: Ensure the `from` field in the `MailComposer.composeAsync` call uses `noreply@mapyourhealth.com`.\n2. **Search for other email sending logic**: Check if there are any other parts of the codebase that send emails and update them accordingly.\n\n### Device Testing Plan\n\nSince this change primarily affects email functionality, we will need to verify that emails are sent correctly from the app using `noreply@mapyourhealth.com`. This involves checking both frontend logic and backend configuration.\n\n**Frontend Testing:**\n- Ensure the updated code sends emails successfully.\n- Check for any console errors during the email sending process.\n\n**Backend Testing:**\n- Verify that `noreply@mapyourhealth.com` is verified in AWS SES.\n- Ensure that the app has the necessary permissions to send emails from this address.\n\n### Testing Strategy\n\n1. **Local Testing**: Test the email functionality on both Android and iOS simulators/emulators.\n2. **Device Testing**:\n   - **Android**: `maestro --device ZL73232GKP test ~/maestro-farm/flows/android/`\n   - **iOS**: `maestro --driver-host-port 6001 --device 00008030-001950891A53402E test ~/maestro-farm/flows/ios/`\n\n### E2E Maestro Flow\n\nIf there are no existing flows for testing email functionality, we will create a new one.\n\n**Create: `apps/mobile/.maestro/flows/send-email-test.yaml`**\n```yaml\nappId: com.mapyourhealth.mobile\n---\n- launchApp\n- tapOn: \"Send Email\"\n- assertVisible: \"Email sent successfully\" # Assuming there's a confirmation message after sending an email\n```\n\n### Expected Behavior\n\nAfter the fix, the Maestro flow above should pass on both Android (Moto E13) and iOS (iPhone 11).\n\n### Output Requirements\n\n1. **Create branch**: `issue-99`\n2. **Commit with descriptive message**: \"Update sendEmail utility to use noreply@mapyourhealth.com\"\n3. **Open PR assigned to**: `waltermvp`\n\n### Pre-commit Checklist\n\n- [ ] No inline styles (use StyleSheet)\n- [ ] React imported before other packages\n- [ ] All hook dependencies included\n- [ ] No unused imports\n- [ ] Proper Prettier formatting\n- [ ] No color literals (use theme/constants)\n\nRun `npm run lint -- --fix` to auto-fix formatting issues.\n\n### Backend Configuration Verification\n\nEnsure that the following steps are completed for SES configuration:\n\n1. **Verify Email Address**: Log in to AWS Console, navigate to SES, and verify `noreply@mapyourhealth.com`.\n2. **Configure Sending Permissions**: Ensure that the app has the necessary permissions to send emails from this address.\n\n### Final Steps\n\n- Verify all changes locally.\n- Run tests using Maestro flows.\n- Create PR with descriptive commit messages and assign it to `waltermvp`.\n\nBy following these steps, we can ensure that the email functionality in the app uses `noreply@mapyourhealth.com` correctly and is properly configured in AWS SES.",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-16T18:34:29.710Z",
+      "processing_time": 173442,
+      "pipelineExecuted": true,
+      "pipelineSuccess": false
     }
   ],
   "queue": [
-    {
-      "issueNumber": 87,
-      "repo": "epiphanyapps/MapYourHealth",
-      "title": "Playwright parity: Category reorganization, accordion, and external links on mobile web",
-      "labels": [
-        "test",
-        "e2e"
-      ],
-      "priority": "medium",
-      "addedAt": "2026-02-16T18:25:04.274Z",
-      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/87"
-    },
     {
       "issueNumber": 86,
       "repo": "epiphanyapps/MapYourHealth",

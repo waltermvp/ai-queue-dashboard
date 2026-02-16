@@ -1,14 +1,23 @@
 # 🤖 AI Issue Queue Dashboard
 
-Automated GitHub issue processing pipeline powered by local LLMs, Maestro device testing, and intelligent issue routing.
+Automated GitHub issue processing pipeline powered by local LLMs, mini-swe-agent, Maestro device testing, and intelligent issue routing.
 
 ## Overview
 
 ```
-GitHub Issue → Detect Type (label) → Load Prompt → Qwen 2.5 Coder 32B (local) → Execute Workflow → Results
+GitHub Issue → Detect Type (label) → Route to Pipeline → Process → Results
+                                         │
+                         ┌───────────────┼───────────────┐
+                         ▼               ▼               ▼
+                    🔧 Coding       🧪 E2E Testing   📝 Content
+                   mini-swe-agent   Maestro + Device   Qwen 2.5
+                   + Qwen analysis  + Video Recording  Coder 32B
+                         │               │               │
+                         ▼               ▼               ▼
+                    PR Created      Pass/Fail + Video   Generated Text
 ```
 
-The system watches GitHub repos for assigned issues, detects the issue type from labels, routes to the appropriate workflow (coding, E2E testing, or content generation), and processes using a local Ollama model. No API costs — everything runs locally.
+The system watches GitHub repos for issues, detects the type from labels, routes to the appropriate pipeline, and processes automatically. Coding issues use [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) for actual code changes. E2E issues run Maestro tests on real devices with video recording.
 
 ## 🚀 Quick Start
 
@@ -16,202 +25,180 @@ The system watches GitHub repos for assigned issues, detects the issue type from
 # Start the dashboard
 cd ~/Documents/ai-queue-dashboard && nvm use 20 && npm run dev
 
-# Start the queue watcher (auto-processes new items)
+# Start the queue watcher (auto-processes every 30s)
 node scripts/queue-worker.js watch 30000
 
-# Process a single issue via PR worker
-node scripts/pr-worker.js epiphanyapps/MapYourHealth 94
-
-# Process with E2E testing skipped
-node scripts/pr-worker.js epiphanyapps/MapYourHealth 94 --skip-e2e
+# Or process a single issue
+node scripts/queue-worker.js process
 ```
 
 **Dashboard:** http://localhost:3001 (local) / http://192.168.1.227:3001 (network)
+
+### Dashboard Controls
+- **Load from GitHub** — Fetches real open issues from `epiphanyapps/MapYourHealth`
+- **Process One** — Triggers processing of next queued item
+- **Clear All** — Empties the queue
+- **Clear History** — Clears completed/failed items
+- **❌ per item** — Remove individual queued issues
 
 ---
 
 ## Issue Types & Routing
 
-The queue worker detects issue type from GitHub labels and loads the matching prompt from `prompts/`. This determines the entire workflow for that issue.
+The queue worker detects issue type from GitHub labels and routes to the matching pipeline.
 
 ### 1. 🔧 Coding (default)
-**Label:** `coding` or no label (default)
-**Prompt:** `prompts/coding.md`
-**Model:** Qwen 2.5 Coder 32B
+**Label:** `coding` or no label  
+**Pipeline:** `scripts/pipelines/coding.sh`  
+**Agent:** [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) + Qwen 2.5 Coder 32B
 
 **Workflow:**
-1. Fetch issue details from GitHub
-2. Analyze codebase, identify root cause
-3. Generate code fix following React Native coding standards
-4. Create branch `issue-{number}`, commit, push
-5. Open PR assigned to `waltermvp`
+1. Qwen analyzes the issue (planning, file identification, approach)
+2. Creates a git worktree: `~/Documents/MapYourHealth-issue-{number}`
+3. Copies required `amplify_outputs.json` from main clone
+4. Runs mini-swe-agent with Qwen's analysis as context
+5. If files changed: creates branch `issue-{number}`, commits, pushes
+6. Opens PR assigned to `waltermvp` referencing the issue
+7. Saves trajectory to `artifacts/{number}/mini-trajectory.json`
 
-**When to use:** Bug fixes, feature implementations, refactors, performance improvements — any issue that requires code changes.
+**Model:** `ollama/qwen2.5-coder:32b` (local, configurable via `MINI_MODEL` env var)
 
 ### 2. 🧪 E2E Testing
-**Label:** `e2e`
-**Prompt:** `prompts/e2e.md`
-**Model:** Qwen 2.5 Coder 32B
+**Label:** `e2e`  
+**Pipeline:** `scripts/pipelines/e2e.sh`  
+**Tools:** Maestro + adb screenrecord
 
 **Workflow:**
-1. Sync amplify outputs (`yarn sync:amplify`)
-2. **Build RELEASE APK** (critical — no dev builds!)
-   ```bash
-   cd apps/mobile && npx expo prebuild --platform android --clean
-   cd android && ./gradlew assembleRelease
-   ```
-3. Install on Moto E13: `adb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk`
-4. Run Maestro tests: `maestro --device ZL73232GKP test ~/maestro-farm/flows/android/`
-5. (Optional) iOS: start bridge, then run iOS flows
-6. Report results — pass/fail, screenshots, logs
+1. Sync amplify outputs
+2. Build release APK (with smart caching by native dep hash)
+3. Verify device connectivity
+4. Install APK + health check (app must visibly load)
+5. Run Maestro tests with per-flow video recording
+   - Uses Qwen-generated flows if available
+   - Falls back to `mapyourhealth-basic.yaml`
+6. Post-test validation: exit code + screenshots + video verification
+7. Summary: X/Y flows passed, Z videos recorded
 
-**⚠️ CRITICAL:** E2E tests MUST use release builds. Dev builds show the React Native dev menu which breaks Maestro automation. Release builds bundle JS into the APK — no Metro bundler needed.
+**⚠️ CRITICAL:** E2E tests MUST use release builds. Dev builds show the React Native dev menu which breaks Maestro automation.
 
-**When to use:** UI validation, flow testing, regression testing, new feature verification on real devices.
-
-### 3. 📝 Content Generation
-**Label:** `content`
-**Prompt:** `prompts/content.md`
-**Model:** Qwen 2.5 Coder 32B
-
-**Workflow:**
-1. Read issue for content requirements
-2. Generate content (marketing copy, docs, social posts, changelogs)
-3. Output formatted text ready for use
-
-**When to use:** App store descriptions, release notes, blog posts, social media content, documentation updates, marketing copy.
-
-### How Routing Works
-
-```
-Issue comes in
-  → Check labels array for 'e2e' or 'content'
-  → Match found? Load prompts/{type}.md
-  → No match? Default to prompts/coding.md
-  → Append react-native-coding-standards.md for coding/e2e types
-  → Send to Qwen with issue context
-  → Execute type-specific workflow
-```
-
-See `prompts/README.md` for detailed routing documentation.
-
----
-
-## How It Works (Detailed)
-
-### Adding Issues
-Create GitHub issues in any monitored repo. **Use labels to control routing:**
-- No label → coding workflow
-- `e2e` label → E2E testing workflow
-- `content` label → content generation workflow
-
-Be specific about files to modify and expected changes. See `prompts/react-native-coding-standards.md` for code issue guidelines.
-
-### Code Generation (PR Worker)
-The PR worker (`scripts/pr-worker.js`):
-1. Fetches issue details from GitHub
-2. Creates a git worktree for isolation
-3. Discovers relevant source files based on issue keywords
-4. Sends code context + issue to **Qwen 2.5 Coder 32B** via Ollama (local, no API costs)
-5. Parses SEARCH/REPLACE edit blocks from LLM output
-6. Applies edits, runs prettier/eslint/tsc validation
-7. Self-corrects up to 2 times if validation fails
-8. Commits, pushes, and creates a PR
-
-### E2E Testing Pipeline
-After PR creation or for standalone E2E issues:
-
-**Build (Release APK — NOT dev build):**
-```bash
-cd ~/Documents/MapYourHealth && yarn sync:amplify
-cd apps/mobile && npx expo prebuild --platform android --clean
-cd android && ./gradlew assembleRelease
-```
-
-**Install & Test:**
-```bash
-adb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk
-export PATH="$PATH:$HOME/.maestro/bin"
-maestro --device ZL73232GKP test ~/maestro-farm/flows/android/
-```
-
-**iOS (requires bridge):**
-```bash
-# Terminal 1
-maestro-ios-device --team-id 22X6D48M4G --device 00008030-001950891A53402E
-# Terminal 2
-maestro --driver-host-port 6001 --device 00008030-001950891A53402E test ~/maestro-farm/flows/ios/
-```
-
-Each step is fault-tolerant — failures are reported without crashing the worker.
-
-### Queue Watcher
-The queue worker (`scripts/queue-worker.js`) runs in watch mode:
-- Polls `queue-state.json` every 30 seconds
-- Auto-picks up new items by priority (high → medium → low)
-- Detects issue type from labels
-- Loads the right prompt and processes
-- Immediately checks for more items after completing one
-
-### Monitoring
-- **Dashboard** at localhost:3001 — real-time queue status, controls, history
-- **Telegram updates** — 3x daily to QueensClaw group (9am, 2pm, 8pm EST)
-- **Queue state** stored in `queue-state.json`
-
-## Available Commands
-
-| Command | Description |
-|---------|-------------|
-| `node scripts/pr-worker.js <repo> <issue>` | Process a single issue |
-| `node scripts/pr-worker.js <url>` | Process by GitHub issue URL |
-| `--skip-e2e` | Skip E2E testing |
-| Dashboard: Load Issues | Fetch latest assigned issues |
-| Dashboard: Process One | Trigger next issue processing |
-| Dashboard: Cleanup | Clear completed items |
-
-## Available Devices
-
+**Devices:**
 | Device | Type | ID | Status |
 |--------|------|----|--------|
 | Moto E13 | Android | `ZL73232GKP` | ✅ Primary |
 | iPhone 11 | iOS | `00008030-001950891A53402E` | ✅ Available |
-| iPhone 16e | iOS | `00008140-0018288A0CBA801C` | Available |
+
+### 3. 📝 Content Generation
+**Label:** `content`  
+**Pipeline:** `scripts/pipelines/content.sh`  
+**Model:** Qwen 2.5 Coder 32B
+
+**Workflow:**
+1. Qwen generates content based on issue requirements
+2. Output saved to `artifacts/{number}/content-output.md`
+
+---
 
 ## Architecture
 
 ```
 ai-queue-dashboard/
 ├── scripts/
-│   ├── queue-worker.js        # Queue watcher: polls, routes, processes
-│   ├── pr-worker.js           # PR worker: issue → code → PR → E2E
-│   └── auto-queue-processor.js
+│   ├── queue-worker.js          # Queue watcher: polls, routes, processes
+│   ├── pr-worker.js             # Legacy PR worker
+│   ├── db.js                    # SQLite history layer
+│   ├── db-api.js                # DB CLI API for Next.js routes
+│   └── pipelines/
+│       ├── coding.sh            # mini-swe-agent pipeline
+│       ├── e2e.sh               # Maestro + device testing pipeline
+│       └── content.sh           # Content generation pipeline
 ├── prompts/
-│   ├── README.md              # How issue routing works
-│   ├── coding.md              # Coding workflow prompt
-│   ├── e2e.md                 # E2E testing workflow prompt
-│   ├── content.md             # Content generation workflow prompt
-│   ├── react-native-coding-standards.md  # Shared coding standards
-│   └── device-testing-integration.md     # Device farm integration
-├── app/                       # Next.js dashboard
+│   ├── coding.md                # Coding analysis prompt (fed to Qwen)
+│   ├── e2e.md                   # E2E testing prompt
+│   ├── content.md               # Content generation prompt
+│   └── react-native-coding-standards.md
+├── app/                         # Next.js dashboard
 │   ├── api/
-│   │   ├── queue-state/       # Queue data API
-│   │   └── queue-action/      # Control actions API
-│   └── page.tsx               # Dashboard UI
-├── queue-state.json           # Persistent queue state
-└── README.md                  # ← You are here
+│   │   ├── queue-state/         # Live queue data (JSON + SQLite)
+│   │   ├── queue-action/        # Control actions (load, remove, clear)
+│   │   ├── history/             # Historical run data
+│   │   └── artifacts/           # Video/log artifact serving
+│   └── page.tsx                 # Dashboard UI
+├── artifacts/                   # Per-issue artifacts (videos, logs, trajectories)
+│   └── {issue-number}/
+│       ├── pipeline.log
+│       ├── android-*.mp4        # E2E recordings
+│       ├── mini-trajectory.json # Coding agent trajectory
+│       └── qwen-solution.md
+├── queue-state.json             # Live queue state (atomic writes)
+├── queue-history.db             # SQLite history (completed/failed/stats)
+└── README.md
 ```
+
+## Data Flow
+
+```
+queue-state.json (live)          queue-history.db (SQLite)
+┌──────────────────┐             ┌──────────────────┐
+│ queue: [...]     │             │ runs table       │
+│ processing: {}   │ ──done──►  │ artifacts table  │
+│ completed: [...]│             │ stats/history    │
+│ failed: [...]   │             └──────────────────┘
+└──────────────────┘
+```
+
+- **Live state** (queue, processing) from `queue-state.json`
+- **Historical data** (completed, failed, stats) from SQLite
+- Atomic JSON writes (`.tmp` + rename) prevent corruption
+- Stale processing recovery: items stuck >30 min auto-fail
 
 ## Tech Stack
 
-- **LLM:** Qwen 2.5 Coder 32B via Ollama (local)
-- **E2E:** Maestro + physical Android/iOS devices
+- **Coding Agent:** [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) v2.1.0
+- **LLM:** Qwen 2.5 Coder 32B via Ollama (local, no API costs)
+- **E2E Testing:** Maestro 2.1.0 + physical Android/iOS devices
 - **Dashboard:** Next.js 14 + TypeScript + Tailwind CSS
-- **CI:** GitHub CLI (`gh`) for issues/PRs
-- **Runtime:** Node.js 20
+- **Database:** SQLite via better-sqlite3
+- **CI/Git:** GitHub CLI (`gh`) for issues/PRs
+- **Runtime:** Node.js 20 (via nvm)
+- **Monitoring:** Telegram updates 3x daily to QueensClaw group
+
+## Queue Commands
+
+```bash
+# Watch mode (recommended)
+node scripts/queue-worker.js watch 30000
+
+# Process next item once
+node scripts/queue-worker.js process
+
+# Load issues from GitHub
+node scripts/queue-worker.js load-github
+
+# Check status
+node scripts/queue-worker.js status
+
+# Clear completed items
+node scripts/queue-worker.js cleanup
+
+# Remove specific issue
+node scripts/queue-worker.js remove <issueNumber>
+
+# Clear all queued items
+node scripts/queue-worker.js clear-all
+
+# Clear history (completed + failed)
+node scripts/queue-worker.js clear-history
+```
 
 ## Troubleshooting
 
-**Build fails:** Ensure `nvm use 20`, Expo CLI installed, Android SDK available.
-**Device not found:** Check `adb devices` for `ZL73232GKP`. Reconnect USB if needed.
-**Maestro fails:** Ensure `$HOME/.maestro/bin` is in PATH. Run `maestro --version`.
-**Ollama timeout:** Model needs ~42GB RAM. Check `ollama ps` and restart if needed.
+| Problem | Fix |
+|---------|-----|
+| Build fails | `nvm use 20`, check Android SDK, run `yarn sync:amplify` |
+| Device not found | `adb devices` — reconnect USB if `ZL73232GKP` missing |
+| Maestro fails | Check `$HOME/.maestro/bin` in PATH, `maestro --version` |
+| Ollama timeout | Model needs ~20GB VRAM. `ollama ps`, restart if hung |
+| Worker hangs | Kill and restart: `pkill -f queue-worker && node scripts/queue-worker.js watch 30000` |
+| Dashboard down | `nvm use 20 && nohup npx next dev -p 3001 -H 0.0.0.0 &` |
+| mini-swe-agent not found | `which mini` — install with `uv tool install mini-swe-agent` |
+| Stale processing | Worker auto-recovers items stuck >30 min on restart |
