@@ -48,7 +48,7 @@ HASH_INPUT=""
 [ -f "$MOBILE_ROOT/package.json" ] && HASH_INPUT+=$(cat "$MOBILE_ROOT/package.json")
 [ -f "$MOBILE_ROOT/app.json" ] && HASH_INPUT+=$(cat "$MOBILE_ROOT/app.json")
 [ -f "$REPO_ROOT/package.json" ] && HASH_INPUT+=$(cat "$REPO_ROOT/package.json")
-NATIVE_HASH=$(echo "$HASH_INPUT" | md5 -q 2>/dev/null || echo "$HASH_INPUT" | md5sum | cut -d' ' -f1)
+NATIVE_HASH=$(echo "$HASH_INPUT" | shasum | cut -d' ' -f1)
 
 # Ensure local.properties exists (expo prebuild --clean deletes it)
 ensure_local_properties() {

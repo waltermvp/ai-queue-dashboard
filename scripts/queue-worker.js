@@ -122,7 +122,7 @@ async function processWithOllama(item) {
 ## Issue Context
 
 Task: ${item.title}
-ID: ${item.id}
+ID: ${item.issueNumber}
 Priority: ${item.priority}
 Description: ${item.body || item.description || 'No description provided'}
 Repository: MapYourHealth (React Native + Expo)
@@ -304,14 +304,14 @@ async function processNext() {
         ...item,
         started_at: startedAt
     };
-    state.queue = state.queue.filter(q => q.id !== item.id);
+    state.queue = state.queue.filter(q => q.id !== item.issueNumber);
     saveQueueState(state);
     
     // Record in DB
     let runId;
     try {
         runId = db.recordRun({
-            issue_id: item.id,
+            issue_id: item.issueNumber,
             title: item.title,
             repo: item.repo,
             type: issueType,
@@ -337,17 +337,17 @@ async function processNext() {
     
     if (result.success) {
         // Execute the type-specific pipeline
-        const pipelineResult = await executePipeline(issueType, item.id, result.solution);
+        const pipelineResult = await executePipeline(issueType, item.issueNumber, result.solution);
         if (pipelineResult.executed) {
             result.pipelineExecuted = true;
             result.pipelineSuccess = pipelineResult.success;
             if (!pipelineResult.success) {
-                log(`❌ Pipeline failed for ${issueType} issue #${item.id}`);
+                log(`❌ Pipeline failed for ${issueType} issue #${item.issueNumber}`);
                 // For e2e issues, pipeline failure = issue failure
                 if (issueType === 'e2e') {
                     result.success = false;
-                    result.error = `E2E pipeline failed (exit code: ${pipelineResult.exitCode || 'unknown'}). Check artifacts/${item.id}/pipeline.log`;
-                    log(`❌ Marking e2e issue #${item.id} as FAILED`);
+                    result.error = `E2E pipeline failed (exit code: ${pipelineResult.exitCode || 'unknown'}). Check artifacts/${item.issueNumber}/pipeline.log`;
+                    log(`❌ Marking e2e issue #${item.issueNumber} as FAILED`);
                 }
             }
         }
@@ -364,14 +364,14 @@ async function processNext() {
 
         // Collect artifacts for e2e items
         if (issueType === 'e2e') {
-            const artifacts = collectArtifacts(item.id);
+            const artifacts = collectArtifacts(item.issueNumber);
             if (artifacts) {
                 completedItem.artifacts = artifacts;
-                log(`📹 Artifacts collected for ${item.id}: ${artifacts.recordings.length} recordings, ${artifacts.logs.length} logs`);
+                log(`📹 Artifacts collected for ${item.issueNumber}: ${artifacts.recordings.length} recordings, ${artifacts.logs.length} logs`);
                 
                 // Record artifacts in DB
                 if (runId) {
-                    const artifactDir = path.join(ARTIFACTS_DIR, item.id);
+                    const artifactDir = path.join(ARTIFACTS_DIR, item.issueNumber);
                     [...artifacts.recordings, ...artifacts.logs].forEach(filename => {
                         try {
                             const filePath = path.join(artifactDir, filename);
