@@ -95,9 +95,11 @@ function loadQueueState() {
     return JSON.parse(fs.readFileSync(QUEUE_STATE_FILE, 'utf8'));
 }
 
-// Save queue state
+// Save queue state (atomic write via temp file + rename)
 function saveQueueState(state) {
-    fs.writeFileSync(QUEUE_STATE_FILE, JSON.stringify(state, null, 2));
+    const tmpFile = QUEUE_STATE_FILE + '.tmp';
+    fs.writeFileSync(tmpFile, JSON.stringify(state, null, 2));
+    fs.renameSync(tmpFile, QUEUE_STATE_FILE);
 }
 
 // Process single item with Ollama
@@ -248,8 +250,38 @@ async function processNext() {
     const state = loadQueueState();
     
     if (state.processing) {
-        log('⏳ Already processing an item');
-        return;
+        const startedMs = new Date(state.processing.started_at).getTime();
+        const staleMinutes = Math.round((Date.now() - startedMs) / 60000);
+        if (staleMinutes >= 30) {
+            log(`⚠️ Recovering stale processing item #${state.processing.id} (started ${staleMinutes} min ago)`);
+            const failedItem = {
+                ...state.processing,
+                error: `Worker timeout/crash recovery (stale for ${staleMinutes} min)`,
+                failed_at: new Date().toISOString()
+            };
+            state.failed.push(failedItem);
+            // Record failure in SQLite
+            try {
+                const runId = db.recordRun({
+                    issue_id: state.processing.id,
+                    title: state.processing.title,
+                    repo: state.processing.repo,
+                    type: detectIssueType(state.processing),
+                    labels: JSON.stringify(state.processing.labels || []),
+                    priority: state.processing.priority,
+                    status: 'failed',
+                    started_at: state.processing.started_at
+                });
+                if (runId) db.failRun(runId, { error: failedItem.error });
+            } catch (e) {
+                log(`⚠️ DB stale recovery record failed: ${e.message}`);
+            }
+            state.processing = null;
+            saveQueueState(state);
+        } else {
+            log('⏳ Already processing an item');
+            return;
+        }
     }
     
     if (state.queue.length === 0) {
@@ -358,15 +390,34 @@ async function processNext() {
             }
         }
 
-        updatedState.completed.push(completedItem);
-        log(`✅ Completed: ${item.title}`);
-        
-        // Update DB
-        if (runId) {
-            try {
-                db.completeRun(runId, { solution: result.solution, model: result.model, processing_time_ms: processingTimeMs });
-            } catch (e) {
-                log(`⚠️ DB completeRun failed: ${e.message}`);
+        // Check if result was marked as failed during pipeline execution (e.g. e2e failure)
+        if (result.success) {
+            updatedState.completed.push(completedItem);
+            log(`✅ Completed: ${item.title}`);
+            
+            // Update DB
+            if (runId) {
+                try {
+                    db.completeRun(runId, { solution: result.solution, model: result.model, processing_time_ms: processingTimeMs });
+                } catch (e) {
+                    log(`⚠️ DB completeRun failed: ${e.message}`);
+                }
+            }
+        } else {
+            // Pipeline failed (e.g. e2e) — route to failed
+            updatedState.failed.push({
+                ...completedItem,
+                error: result.error || 'Pipeline failed',
+                failed_at: result.processed_at
+            });
+            log(`❌ Failed (pipeline): ${item.title} - ${result.error}`);
+            
+            if (runId) {
+                try {
+                    db.failRun(runId, { error: result.error || 'Pipeline failed' });
+                } catch (e) {
+                    log(`⚠️ DB failRun failed: ${e.message}`);
+                }
             }
         }
     } else {

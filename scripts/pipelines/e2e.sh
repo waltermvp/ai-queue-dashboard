@@ -16,7 +16,7 @@ APPLE_TEAM_ID="22X6D48M4G"
 # Environment setup (not inherited from shell profile in background processes)
 export ANDROID_HOME="$HOME/Library/Android/sdk"
 export PATH="$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$HOME/.maestro/bin"
-export JAVA_HOME="${JAVA_HOME:-/usr/libexec/java_home 2>/dev/null || echo /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home}"
+export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home 2>/dev/null || echo /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home)}"
 
 mkdir -p "$ARTIFACTS_DIR" "$BUILDS_CACHE"
 
@@ -196,14 +196,20 @@ for i in "${!FLOWS_TO_RUN[@]}"; do
   maestro test --udid "$DEVICE_ID" "$FLOW_FILE" >> "$FLOW_LOG" 2>&1
   MAESTRO_EXIT=$?
 
-  # Stop recording
-  kill $RECORD_PID 2>/dev/null
+  # Stop recording gracefully (signal the on-device process, not the local adb client)
+  adb -s "$DEVICE_ID" shell pkill -INT screenrecord 2>/dev/null
   wait $RECORD_PID 2>/dev/null
-  sleep 2
+  sleep 4  # let the on-device file finalize
 
-  # Pull recording from device
+  # Pull recording from device (retry once if truncated)
   VIDEO_FILE="$ARTIFACTS_DIR/android-${FLOW_NAME}.mp4"
   adb -s "$DEVICE_ID" pull "$DEVICE_RECORDING" "$VIDEO_FILE" >> "$LOG_FILE" 2>&1
+  PULL_SIZE=$(stat -f%z "$VIDEO_FILE" 2>/dev/null || stat -c%s "$VIDEO_FILE" 2>/dev/null || echo "0")
+  if [ "$PULL_SIZE" -lt 1000 ]; then
+    log "⚠️ Video looks truncated ($PULL_SIZE bytes), retrying pull after 3s..."
+    sleep 3
+    adb -s "$DEVICE_ID" pull "$DEVICE_RECORDING" "$VIDEO_FILE" >> "$LOG_FILE" 2>&1
+  fi
   adb -s "$DEVICE_ID" shell rm "$DEVICE_RECORDING" 2>/dev/null
 
   # --- Post-Test Validation ---
