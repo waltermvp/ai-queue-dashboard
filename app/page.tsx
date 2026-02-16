@@ -438,6 +438,22 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Enhanced System Banner */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 rounded-lg mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold mb-1">🚀 Enhanced Three-Pillar System Available!</h2>
+            <p className="text-blue-100 text-sm">Advanced label-based routing with Feature, Content & E2E queues</p>
+          </div>
+          <a 
+            href="/enhanced"
+            className="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-blue-50 transition-colors"
+          >
+            Try Enhanced Dashboard
+          </a>
+        </div>
+      </div>
+
       {/* Controls */}
       <div className="card">
         <div className="flex items-center justify-between">
