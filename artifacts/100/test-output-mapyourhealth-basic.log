@@ -1,0 +1,34 @@
+Running on ZL73232GKP
+ > Flow mapyourhealth-basic
+Launch app "com.epiphanyapps.mapyourhealth" with clear state... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot app-launch... COMPLETED
+Assert that ".*" is visible... COMPLETED
+Tap on (Optional) Index: 0... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot first-tab... COMPLETED
+Tap on (Optional) "Search"... WARNED
+
+
+ Warning: Element not found: Text matching regex: Search
+Tap on (Optional) "search"... WARNED
+
+
+ Warning: Element not found: Text matching regex: search
+Take screenshot search-area... COMPLETED
+Press back... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot after-back... COMPLETED
+Assert that ".*" is visible... COMPLETED
+Take screenshot final-state... COMPLETED
+
+[33m🚀 Update: We built maestro-runner from scratch — 3.6x faster, real iOS device support, runs locally or on any Appium cloud, true parallel execution, no paywall. Fixes 78% of Maestro's top issues. Same YAML.[0m
+
+[4;36mTry maestro-runner: https://github.com/devicelab-dev/maestro-runner[0m
+
+[36m╔═══════════════════════════════════════════════════════════════════╗[0m
+[36m║[0m  [1;32mMaestro iOS Real Device Support[0m - by ]8;;https://devicelab.dev[1;38;2;23;162;184mDeviceLab.dev[0m]8;;               [36m║[0m
+[36m║[0m  Build your own distributed lab: [4;36mhttps://devicelab.dev[0m            [36m║[0m
+[36m╚═══════════════════════════════════════════════════════════════════╝[0m
+
+

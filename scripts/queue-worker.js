@@ -304,7 +304,7 @@ async function processNext() {
         ...item,
         started_at: startedAt
     };
-    state.queue = state.queue.filter(q => q.id !== item.issueNumber);
+    state.queue = state.queue.filter(q => q.issueNumber !== item.issueNumber);
     saveQueueState(state);
     
     // Record in DB
@@ -364,14 +364,14 @@ async function processNext() {
 
         // Collect artifacts for e2e items
         if (issueType === 'e2e') {
-            const artifacts = collectArtifacts(item.issueNumber);
+            const artifacts = collectArtifacts(String(item.issueNumber));
             if (artifacts) {
                 completedItem.artifacts = artifacts;
                 log(`📹 Artifacts collected for ${item.issueNumber}: ${artifacts.recordings.length} recordings, ${artifacts.logs.length} logs`);
                 
                 // Record artifacts in DB
                 if (runId) {
-                    const artifactDir = path.join(ARTIFACTS_DIR, item.issueNumber);
+                    const artifactDir = path.join(ARTIFACTS_DIR, String(item.issueNumber));
                     [...artifacts.recordings, ...artifacts.logs].forEach(filename => {
                         try {
                             const filePath = path.join(artifactDir, filename);

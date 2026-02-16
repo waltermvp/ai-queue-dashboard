@@ -1,6 +1,17 @@
 {
   "current_issue": null,
-  "processing": null,
+  "processing": {
+    "issueNumber": 100,
+    "repo": "epiphanyapps/MapYourHealth",
+    "title": "E2E: Maestro Device Testing - Basic App Flow Validation",
+    "labels": [
+      "e2e",
+      "test"
+    ],
+    "priority": "medium",
+    "addedAt": "2026-02-16T04:30:00Z",
+    "started_at": "2026-02-16T12:47:10.081Z"
+  },
   "completed": [],
   "queue": [
     {
