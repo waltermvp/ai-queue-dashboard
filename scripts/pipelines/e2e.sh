@@ -25,8 +25,9 @@ log() {
 }
 
 fail() {
-  log "❌ PIPELINE FAILED: $1"
-  exit 1
+  local exit_code="${2:-1}"
+  log "❌ PIPELINE FAILED: $1 (exit code: $exit_code)"
+  exit "$exit_code"
 }
 
 log "=== E2E Pipeline Started for Issue #$ISSUE_ID ==="
@@ -35,7 +36,7 @@ log "=== E2E Pipeline Started for Issue #$ISSUE_ID ==="
 # Step 1: Sync amplify outputs
 # -------------------------------------------------------
 log "Step 1/6: Syncing amplify outputs..."
-cd "$REPO_ROOT" && yarn sync:amplify >> "$LOG_FILE" 2>&1 || fail "amplify sync failed"
+cd "$REPO_ROOT" && yarn sync:amplify >> "$LOG_FILE" 2>&1 || fail "amplify sync failed" 3
 log "✅ Amplify sync complete"
 
 # -------------------------------------------------------
@@ -72,9 +73,9 @@ elif [ -d "$MOBILE_ROOT/android/app" ]; then
   cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || {
     # If incremental fails, try full rebuild
     log "⚠️ Incremental build failed, trying full rebuild..."
-    cd "$MOBILE_ROOT" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1 || fail "expo prebuild failed"
+    cd "$MOBILE_ROOT" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1 || fail "expo prebuild failed" 1
     ensure_local_properties
-    cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || fail "gradle assembleRelease failed"
+    cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || fail "gradle assembleRelease failed" 1
   }
   # Cache the successful build
   if [ -f "$APK_PATH" ]; then
@@ -85,9 +86,9 @@ elif [ -d "$MOBILE_ROOT/android/app" ]; then
 else
   # No android dir — full prebuild + build
   log "🏗️ Full rebuild (no existing android directory)..."
-  cd "$MOBILE_ROOT" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1 || fail "expo prebuild failed"
+  cd "$MOBILE_ROOT" && npx expo prebuild --platform android --clean >> "$LOG_FILE" 2>&1 || fail "expo prebuild failed" 1
   ensure_local_properties
-  cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || fail "gradle assembleRelease failed"
+  cd "$MOBILE_ROOT/android" && ./gradlew assembleRelease >> "$LOG_FILE" 2>&1 || fail "gradle assembleRelease failed" 1
   # Cache the successful build
   if [ -f "$APK_PATH" ]; then
     cp "$APK_PATH" "$CACHED_APK"
@@ -97,7 +98,7 @@ else
 fi
 
 if [ ! -f "$APK_PATH" ]; then
-  fail "APK not found at $APK_PATH"
+  fail "APK not found at $APK_PATH" 1
 fi
 log "✅ Release APK ready: $APK_PATH"
 
@@ -105,19 +106,19 @@ log "✅ Release APK ready: $APK_PATH"
 # Step 3: Verify device connected
 # -------------------------------------------------------
 log "Step 3/6: Checking device connectivity..."
-adb -s "$DEVICE_ID" get-state >> "$LOG_FILE" 2>&1 || fail "Android device $DEVICE_ID not connected"
+adb -s "$DEVICE_ID" get-state >> "$LOG_FILE" 2>&1 || fail "Android device $DEVICE_ID not connected" 3
 log "✅ Device $DEVICE_ID connected"
 
 # -------------------------------------------------------
 # Step 4: Install on device + Health Check Gate
 # -------------------------------------------------------
 log "Step 4/6: Installing APK and running health check..."
-adb -s "$DEVICE_ID" install -r "$APK_PATH" >> "$LOG_FILE" 2>&1 || fail "APK install failed"
+adb -s "$DEVICE_ID" install -r "$APK_PATH" >> "$LOG_FILE" 2>&1 || fail "APK install failed" 3
 log "✅ APK installed on $DEVICE_ID"
 
 # Launch app and wait for it to load (Moto E13 is slow)
 log "🏥 Launching app for health check..."
-adb -s "$DEVICE_ID" shell am start -n "$APP_ID/.MainActivity" >> "$LOG_FILE" 2>&1 || fail "Failed to launch app"
+adb -s "$DEVICE_ID" shell am start -n "$APP_ID/.MainActivity" >> "$LOG_FILE" 2>&1 || fail "Failed to launch app" 3
 log "⏳ Waiting 10s for app to load on Moto E13..."
 sleep 10
 
@@ -128,7 +129,7 @@ if [ -f "$HEALTHCHECK_FLOW" ]; then
   maestro test --udid "$DEVICE_ID" "$HEALTHCHECK_FLOW" >> "$ARTIFACTS_DIR/healthcheck-output.log" 2>&1
   HC_EXIT=$?
   if [ $HC_EXIT -ne 0 ]; then
-    fail "App failed to load — health check did not pass (exit code: $HC_EXIT). Check healthcheck-output.log"
+    fail "App failed to load — health check did not pass (exit code: $HC_EXIT). Check healthcheck-output.log" 2
   fi
   log "✅ Health check passed — app is loaded and visible"
 else
@@ -161,7 +162,7 @@ fi
 if [ ${#FLOWS_TO_RUN[@]} -eq 0 ]; then
   BASIC_FLOW="$HOME/maestro-farm/flows/android/mapyourhealth-basic.yaml"
   if [ ! -f "$BASIC_FLOW" ]; then
-    fail "Maestro flow not found: $BASIC_FLOW"
+    fail "Maestro flow not found: $BASIC_FLOW" 3
   fi
   FLOWS_TO_RUN+=("$BASIC_FLOW")
   FLOW_NAMES+=("mapyourhealth-basic")
@@ -279,7 +280,7 @@ log "Artifacts:"
 ls -la "$ARTIFACTS_DIR" >> "$LOG_FILE" 2>&1
 
 if [ $ANY_FAILED -ne 0 ]; then
-  fail "$FAILED_FLOWS/$TOTAL_FLOWS flows failed — see individual test-output logs"
+  fail "$FAILED_FLOWS/$TOTAL_FLOWS flows failed — see individual test-output logs" 2
 fi
 
 exit 0
