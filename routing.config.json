@@ -20,11 +20,17 @@
       "script": "scripts/pipelines/content.sh",
       "prompt": "prompts/content.md",
       "model": "qwen2.5-coder:32b"
+    },
+    "deploy": {
+      "script": "scripts/pipelines/deploy.sh",
+      "prompt": "prompts/coding.md",
+      "model": "qwen2.5-coder:32b"
     }
   },
   "routing": {
     "e2e": "e2e",
     "content": "content",
+    "deploy": "deploy",
     "*": "coding"
   }
 }
