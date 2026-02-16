@@ -263,8 +263,10 @@ export default function Dashboard() {
   const [historyOffset, setHistoryOffset] = useState(0)
   const [showHistory, setShowHistory] = useState(false)
   const [showIssuePicker, setShowIssuePicker] = useState(false)
-  const [githubIssues, setGithubIssues] = useState<Array<{number: number; title: string; labels: string[]; createdAt: string; alreadyQueued: boolean}>>([])
+  const [githubIssues, setGithubIssues] = useState<Array<{number: number; title: string; labels: string[]; createdAt: string; alreadyQueued: boolean; repo: string}>>([])
   const [loadingIssues, setLoadingIssues] = useState(false)
+  const [availableRepos, setAvailableRepos] = useState<string[]>([])
+  const [selectedRepo, setSelectedRepo] = useState('')
 
   const isProcessing = !!queueState?.processing
 
@@ -324,18 +326,22 @@ export default function Dashboard() {
     }
   }
 
-  const fetchGithubIssues = async () => {
+  const fetchGithubIssues = async (repo?: string) => {
     setLoadingIssues(true)
     try {
-      const res = await fetch('/api/github-issues')
+      const repoParam = repo || selectedRepo
+      const url = repoParam ? `/api/github-issues?repo=${encodeURIComponent(repoParam)}` : '/api/github-issues'
+      const res = await fetch(url)
       const data = await res.json()
       setGithubIssues(data.issues || [])
+      if (data.repos) setAvailableRepos(data.repos)
+      if (data.currentRepo && !selectedRepo) setSelectedRepo(data.currentRepo)
     } catch (e) { console.error('Failed to fetch GitHub issues:', e) }
     finally { setLoadingIssues(false) }
   }
 
-  const addIssueToQueue = async (issueNumber: number) => {
-    await executeAction('add-issue', { issueNumber })
+  const addIssueToQueue = async (issueNumber: number, repo?: string) => {
+    await executeAction('add-issue', { issueNumber, repo })
     // Mark as queued in local state
     setGithubIssues(prev => prev.map(i => i.number === issueNumber ? { ...i, alreadyQueued: true } : i))
   }
@@ -993,6 +999,18 @@ export default function Dashboard() {
               <h3 className="text-lg font-semibold text-gray-900">Add GitHub Issues to Queue</h3>
               <button onClick={() => setShowIssuePicker(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
+            {availableRepos.length > 1 && (
+              <div className="px-4 pt-3 pb-1 flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-600">Repo:</label>
+                <select
+                  value={selectedRepo}
+                  onChange={(e) => { setSelectedRepo(e.target.value); fetchGithubIssues(e.target.value) }}
+                  className="text-sm border rounded-md px-2 py-1.5 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  {availableRepos.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+            )}
             <div className="overflow-y-auto flex-1 p-4">
               {loadingIssues ? (
                 <div className="flex items-center justify-center py-8">
@@ -1017,7 +1035,7 @@ export default function Dashboard() {
                         )}
                       </div>
                       <button
-                        onClick={() => addIssueToQueue(issue.number)}
+                        onClick={() => addIssueToQueue(issue.number, issue.repo)}
                         disabled={issue.alreadyQueued}
                         className={`ml-3 px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap ${
                           issue.alreadyQueued

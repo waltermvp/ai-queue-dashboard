@@ -83,8 +83,11 @@ export async function POST(request: NextRequest) {
         if (!payload?.issueNumber) {
           return NextResponse.json({ error: 'Missing issueNumber' }, { status: 400 })
         }
-        command = `"${NODE_BIN}" "${workerScript}" add-issue ${parseInt(payload.issueNumber)}`
-        message = `Issue #${payload.issueNumber} added to queue`
+        {
+          const repo = typeof payload.repo === 'string' ? payload.repo.replace(/[^a-zA-Z0-9\-_\/]/g, '') : ''
+          command = `"${NODE_BIN}" "${workerScript}" add-issue ${parseInt(payload.issueNumber)}${repo ? ` ${repo}` : ''}`
+          message = `Issue #${payload.issueNumber} added to queue`
+        }
         break
       default:
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 })

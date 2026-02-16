@@ -577,3 +577,11 @@
 [2026-02-16T20:36:58.995Z]    Press Ctrl+C to stop
 
 [2026-02-16T20:42:11.101Z] 📥 Loaded 7 new issue(s) from GitHub (22 total open, 16 already tracked)
+[2026-02-16T20:45:34.619Z] 📊 Queue Status:
+[2026-02-16T20:45:34.621Z]   Queued: 7
+[2026-02-16T20:45:34.621Z]   Processing: 1
+[2026-02-16T20:45:34.621Z]   Completed: 4
+[2026-02-16T20:45:34.621Z]   Failed: 11
+[2026-02-16T20:45:59.521Z] 🗑️ Cleared 7 item(s) from queue
+[2026-02-16T20:46:02.913Z] 🗑️ Cleared 15 history items
+[2026-02-16T20:46:34.194Z] 🗑️ Cleared 0 history items

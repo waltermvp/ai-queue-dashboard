@@ -5,12 +5,26 @@ import path from 'path'
 const NODE_BIN = process.execPath
 const workerScript = path.join(process.cwd(), 'scripts', 'queue-worker.js')
 
-export async function GET() {
+// Repos available for issue browsing
+const REPOS = [
+  'epiphanyapps/MapYourHealth',
+  'waltermvp/ai-queue-dashboard',
+]
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const repo = searchParams.get('repo') || REPOS[0]
+
+  // Validate repo is in allowlist
+  if (!REPOS.includes(repo)) {
+    return NextResponse.json({ error: `Repo not allowed: ${repo}`, repos: REPOS }, { status: 400 })
+  }
+
   try {
     // Get open issues from GitHub
     const raw = execFileSync('gh', [
       'issue', 'list',
-      '--repo', 'epiphanyapps/MapYourHealth',
+      '--repo', repo,
       '--state', 'open',
       '--json', 'number,title,labels,createdAt',
       '--limit', '50'
@@ -37,10 +51,11 @@ export async function GET() {
       title: issue.title,
       labels: (issue.labels || []).map((l: any) => typeof l === 'string' ? l : l.name || ''),
       createdAt: issue.createdAt,
-      alreadyQueued: tracked.has(issue.number)
+      alreadyQueued: tracked.has(issue.number),
+      repo,
     }))
 
-    return NextResponse.json({ issues: result })
+    return NextResponse.json({ issues: result, repos: REPOS, currentRepo: repo })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

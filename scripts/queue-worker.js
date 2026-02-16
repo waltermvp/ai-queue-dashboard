@@ -502,11 +502,11 @@ async function main() {
       }
       case 'add-issue': {
         const issueNum = parseInt(process.argv[3]);
-        if (!issueNum) { log('❌ Usage: node queue-worker.js add-issue <issueNumber>'); process.exit(1); }
+        if (!issueNum) { log('❌ Usage: node queue-worker.js add-issue <issueNumber> [repo]'); process.exit(1); }
         const existing = db.allIssueNumbers();
         if (existing.has(issueNum)) { log(`⚠️ Issue #${issueNum} is already tracked`); process.exit(0); }
         const { execSync: execS } = require('child_process');
-        const REPO = 'epiphanyapps/MapYourHealth';
+        const REPO = process.argv[4] || 'epiphanyapps/MapYourHealth';
         try {
           const raw = execS(`gh issue view ${issueNum} --repo ${REPO} --json number,title,body,labels,createdAt`, { encoding: 'utf8' });
           const issue = JSON.parse(raw);
