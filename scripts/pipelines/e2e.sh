@@ -12,6 +12,7 @@ DEVICE_ID="ZL73232GKP"
 IOS_DEVICE_ID="00008030-001950891A53402E"
 APP_ID="com.epiphanyapps.mapyourhealth"
 APPLE_TEAM_ID="22X6D48M4G"
+CONFIG_FILE="$HOME/Documents/ai-queue-dashboard/routing.config.json"
 
 # Environment setup (not inherited from shell profile in background processes)
 export ANDROID_HOME="$HOME/Library/Android/sdk"
@@ -258,13 +259,133 @@ for i in "${!FLOWS_TO_RUN[@]}"; do
 done
 
 # -------------------------------------------------------
-# Step 6: iOS tests (if device available)
+# Step 6: iOS E2E tests (if device enabled + connected)
 # -------------------------------------------------------
-log "Step 6/6: Checking iOS device..."
-if ideviceinfo -u "$IOS_DEVICE_ID" -k DeviceName >> "$LOG_FILE" 2>&1; then
-  log "📱 iOS device found, skipping iOS build for now (use cached .app when available)"
+log "Step 6/6: iOS E2E pipeline..."
+
+# Check if iOS device is enabled in config
+IOS_ENABLED="false"
+if [ -f "$CONFIG_FILE" ] 2>/dev/null; then
+  IOS_ENABLED=$(python3 -c "
+import json
+cfg = json.load(open('$CONFIG_FILE'))
+devs = cfg.get('devices',{}).get('ios',[])
+enabled = [d for d in devs if d.get('enabled') and d.get('id')=='$IOS_DEVICE_ID']
+print('true' if enabled else 'false')
+" 2>/dev/null || echo "false")
+fi
+
+if [ "$IOS_ENABLED" != "true" ]; then
+  log "ℹ️ iOS device $IOS_DEVICE_ID not enabled in config, skipping iOS tests"
+elif ! ideviceinfo -u "$IOS_DEVICE_ID" -k DeviceName >> "$LOG_FILE" 2>&1; then
+  log "ℹ️ iOS device $IOS_DEVICE_ID not connected, skipping iOS tests"
 else
-  log "ℹ️ iOS device not available, skipping iOS tests"
+  IOS_DEVICE_NAME=$(ideviceinfo -u "$IOS_DEVICE_ID" -k DeviceName 2>/dev/null || echo "iOS Device")
+  log "📱 iOS device connected: $IOS_DEVICE_NAME ($IOS_DEVICE_ID)"
+
+  # iOS build caching (similar to Android)
+  IOS_HASH_INPUT=""
+  [ -f "$MOBILE_ROOT/package.json" ] && IOS_HASH_INPUT+=$(cat "$MOBILE_ROOT/package.json")
+  [ -f "$MOBILE_ROOT/app.json" ] && IOS_HASH_INPUT+=$(cat "$MOBILE_ROOT/app.json")
+  [ -f "$REPO_ROOT/package.json" ] && IOS_HASH_INPUT+=$(cat "$REPO_ROOT/package.json")
+  IOS_NATIVE_HASH=$(echo "$IOS_HASH_INPUT" | shasum | cut -d' ' -f1)
+  CACHED_APP="$BUILDS_CACHE/${IOS_NATIVE_HASH}-ios.app"
+  IOS_APP_PATH="$MOBILE_ROOT/ios/build/Build/Products/Release-iphoneos/MapYourHealth.app"
+
+  if [ -d "$CACHED_APP" ]; then
+    log "♻️ Using cached iOS .app (native deps unchanged: $IOS_NATIVE_HASH)"
+    IOS_APP_PATH="$CACHED_APP"
+  else
+    # Expo prebuild for iOS
+    log "🏗️ Running expo prebuild --platform ios --clean..."
+    cd "$MOBILE_ROOT" && npx expo prebuild --platform ios --clean >> "$LOG_FILE" 2>&1 || fail "iOS expo prebuild failed" 1
+
+    # Pod install
+    log "🏗️ Running pod install..."
+    cd "$MOBILE_ROOT/ios" && LANG=en_US.UTF-8 pod install >> "$LOG_FILE" 2>&1 || fail "pod install failed" 1
+
+    # Build for device
+    log "🏗️ Building iOS app for device..."
+    cd "$MOBILE_ROOT/ios" && xcodebuild \
+      -workspace MapYourHealth.xcworkspace \
+      -scheme MapYourHealth \
+      -configuration Release \
+      -sdk iphoneos \
+      -derivedDataPath ./build \
+      DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+      >> "$LOG_FILE" 2>&1 || fail "xcodebuild failed" 1
+
+    if [ -d "$IOS_APP_PATH" ]; then
+      cp -R "$IOS_APP_PATH" "$CACHED_APP"
+      log "📦 Cached iOS .app as $IOS_NATIVE_HASH"
+    else
+      fail "iOS .app not found at $IOS_APP_PATH" 1
+    fi
+  fi
+
+  # Install on device
+  log "📲 Installing app on iOS device..."
+  ideviceinstaller -u "$IOS_DEVICE_ID" -i "$IOS_APP_PATH" >> "$LOG_FILE" 2>&1 || fail "ideviceinstaller failed" 3
+
+  log "✅ iOS app installed on $IOS_DEVICE_ID"
+
+  # Wait for app to load
+  log "⏳ Waiting 10s for iOS app to load..."
+  sleep 10
+
+  # Start screen recording if idevicescreenrecord is available
+  IOS_VIDEO="$ARTIFACTS_DIR/ios-recording.mp4"
+  IOS_RECORD_PID=""
+  if command -v idevicescreenrecord &>/dev/null; then
+    idevicescreenrecord -u "$IOS_DEVICE_ID" "$IOS_VIDEO" &
+    IOS_RECORD_PID=$!
+    log "📹 Started iOS screen recording (PID: $IOS_RECORD_PID)"
+    sleep 2
+  else
+    log "⚠️ idevicescreenrecord not found, skipping iOS recording"
+  fi
+
+  # Start Maestro iOS bridge in background
+  log "🌉 Starting Maestro iOS bridge..."
+  nohup maestro-ios-device --team-id "$APPLE_TEAM_ID" --device "$IOS_DEVICE_ID" > "$ARTIFACTS_DIR/maestro-bridge.log" 2>&1 &
+  BRIDGE_PID=$!
+  log "🌉 Maestro bridge started (PID: $BRIDGE_PID)"
+  sleep 5
+
+  # Run Maestro iOS tests
+  IOS_FLOWS_DIR="$HOME/maestro-farm/flows/ios"
+  IOS_FLOW="$IOS_FLOWS_DIR/mapyourhealth-basic.yaml"
+  if [ -f "$IOS_FLOW" ]; then
+    log "🧪 Running Maestro iOS tests..."
+    IOS_TEST_LOG="$ARTIFACTS_DIR/ios-test-output.log"
+    maestro --driver-host-port 6001 --device "$IOS_DEVICE_ID" test "$IOS_FLOW" >> "$IOS_TEST_LOG" 2>&1
+    IOS_MAESTRO_EXIT=$?
+    if [ $IOS_MAESTRO_EXIT -ne 0 ]; then
+      log "❌ iOS Maestro tests FAILED (exit code: $IOS_MAESTRO_EXIT)"
+    else
+      log "✅ iOS Maestro tests PASSED"
+    fi
+  else
+    log "⚠️ No iOS flow found at $IOS_FLOW, skipping Maestro tests"
+  fi
+
+  # Stop bridge and recording
+  if [ -n "$BRIDGE_PID" ]; then
+    kill "$BRIDGE_PID" 2>/dev/null
+    wait "$BRIDGE_PID" 2>/dev/null
+    log "🌉 Maestro bridge stopped"
+  fi
+  if [ -n "$IOS_RECORD_PID" ]; then
+    kill -INT "$IOS_RECORD_PID" 2>/dev/null
+    wait "$IOS_RECORD_PID" 2>/dev/null
+    sleep 2
+    if [ -f "$IOS_VIDEO" ]; then
+      IOSVIDSIZE=$(stat -f%z "$IOS_VIDEO" 2>/dev/null || stat -c%s "$IOS_VIDEO" 2>/dev/null || echo "0")
+      log "🎬 iOS recording: $(du -h "$IOS_VIDEO" | cut -f1)"
+    fi
+  fi
+
+  log "✅ iOS E2E pipeline complete"
 fi
 
 # -------------------------------------------------------
