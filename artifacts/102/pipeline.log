@@ -1,0 +1,53 @@
+[2026-02-16 13:28:28] === Coding Pipeline Started for Issue #102 ===
+[2026-02-16 13:28:28] Repository: epiphanyapps/MapYourHealth
+[2026-02-16 13:28:28] Delegating to pr-worker.js...
+
+📋 Processing epiphanyapps/MapYourHealth#102
+
+1️⃣  Fetching issue details...
+$ gh issue view 102 --repo epiphanyapps/MapYourHealth --json title,body,labels
+   Title: E2E Tests: Mobile App Content Sharing Functionality
+
+2️⃣  Ensuring repo is available...
+   Repo exists, fetching latest...
+$ cd "/Users/waltervargas-pena/Documents/MapYourHealth" && git fetch origin
+$ cd "/Users/waltervargas-pena/Documents/MapYourHealth" && git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
+
+3️⃣  Creating worktree...
+$ cd "/Users/waltervargas-pena/Documents/MapYourHealth" && git branch -D issue-102
+error: branch 'issue-102' not found
+$ cd "/Users/waltervargas-pena/Documents/MapYourHealth" && git worktree add "/Users/waltervargas-pena/Documents/MapYourHealth-issue-102" -b issue-102 origin/main
+Preparing worktree (new branch 'issue-102')
+
+🎭 E2E issue detected — skipping LLM, running tests directly...
+
+🧪 Running E2E testing pipeline...
+
+   📦 Building Android release APK (no dev menu)...
+$ bash -c '
+    export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20
+    export ANDROID_HOME="$HOME/Library/Android/sdk"
+    cd "/Users/waltervargas-pena/Documents/MapYourHealth-issue-102"
+    yarn install
+    yarn sync:amplify
+    cd apps/mobile
+    npx expo prebuild --platform android --clean
+    echo "sdk.dir=$HOME/Library/Android/sdk" > android/local.properties
+    cd android && ./gradlew assembleRelease
+  ' 2>&1
+   ⚠️ Worktree build failed — using existing APK from main clone
+
+   📱 Installing on Android device (ZL73232GKP)...
+$ adb -s ZL73232GKP install -r "/Users/waltervargas-pena/Documents/MapYourHealth/apps/mobile/android/app/build/outputs/apk/release/app-release.apk" 2>&1
+   ❌ APK install failed (device may be disconnected)
+$ gh pr comment 102 --repo epiphanyapps/MapYourHealth --body "## 🧪 Maestro E2E Results\n\n### Build\n⚠️ Worktree build failed, using existing APK from main clone\n\n### Install\n❌ APK install failed (device may be disconnected)\n\n❌ APK install failed (device may be disconnected)"
+GraphQL: Could not resolve to a PullRequest with the number of 102. (repository.pullRequest)
+
+⚠️  E2E had issues: ❌ APK install failed (device may be disconnected)
+📊 Queue state updated
+
+🧹 Cleaning up worktree...
+$ cd "/Users/waltervargas-pena/Documents/MapYourHealth" && git worktree remove "/Users/waltervargas-pena/Documents/MapYourHealth-issue-102" --force
+
+🎉 Done! Total time: 218s
+[2026-02-16 13:32:06] === Coding Pipeline Complete for Issue #102 ===

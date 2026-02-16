@@ -203,7 +203,7 @@ async function executePipeline(type, issueId, solutionText) {
   return new Promise((resolve) => {
     const args = [String(issueId)];
     if (type === 'coding') {
-      args.push('epiphanyapps/MapYourHealth', solutionFile);
+      args.push(solutionFile);
     } else if (type === 'content') {
       args.push(solutionFile);
     } else if (type === 'e2e' && flowsDir) {
@@ -211,7 +211,7 @@ async function executePipeline(type, issueId, solutionText) {
     }
     
     const proc = spawn('bash', [pipelineScript, ...args], {
-      env: { ...process.env, PATH: process.env.PATH + ':' + process.env.HOME + '/.maestro/bin' },
+      env: { ...process.env, PATH: process.env.PATH + ':' + process.env.HOME + '/.maestro/bin:' + process.env.HOME + '/.local/bin' },
       stdio: ['ignore', 'pipe', 'pipe']
     });
     
@@ -343,8 +343,8 @@ async function processNext() {
             result.pipelineSuccess = pipelineResult.success;
             if (!pipelineResult.success) {
                 log(`❌ Pipeline failed for ${issueType} issue #${item.issueNumber}`);
-                // For e2e issues, pipeline failure = issue failure
-                if (issueType === 'e2e') {
+                // For e2e and coding issues, pipeline failure = issue failure
+                if (issueType === 'e2e' || issueType === 'coding') {
                     result.success = false;
                     result.error = `E2E pipeline failed (exit code: ${pipelineResult.exitCode || 'unknown'}). Check artifacts/${item.issueNumber}/pipeline.log`;
                     log(`❌ Marking e2e issue #${item.issueNumber} as FAILED`);

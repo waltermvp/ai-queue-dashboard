@@ -1,0 +1,5 @@
+[2026-02-16 13:33:50] === Coding Pipeline Started for Issue #999 ===
+[2026-02-16 13:33:50] Model: ollama/qwen2.5-coder:32b
+[2026-02-16 13:33:50] Timeout: 1800s
+[2026-02-16 13:33:50] Step 1/7: Fetching issue details...
+[2026-02-16 13:33:51] ❌ PIPELINE FAILED: Failed to fetch issue #999 from GitHub
