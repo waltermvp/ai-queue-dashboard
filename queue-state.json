@@ -1,22 +1,18 @@
 {
   "current_issue": null,
-  "processing": null,
+  "processing": {
+    "issueNumber": 111,
+    "repo": "epiphanyapps/MapYourHealth",
+    "title": "E2E Test: Login and Logout Flow",
+    "labels": [
+      "e2e",
+      "test"
+    ],
+    "priority": "medium",
+    "addedAt": "2026-02-16 20:32:32",
+    "started_at": "2026-02-16 21:21:59"
+  },
   "queue": [],
   "completed": [],
-  "failed": [
-    {
-      "issueNumber": 111,
-      "repo": "epiphanyapps/MapYourHealth",
-      "title": "E2E Test: Login and Logout Flow",
-      "labels": [
-        "e2e",
-        "test"
-      ],
-      "priority": "medium",
-      "addedAt": "2026-02-16 20:32:32",
-      "error": "Cancelled by user",
-      "error_class": null,
-      "failed_at": "2026-02-16 21:06:34"
-    }
-  ]
+  "failed": []
 }

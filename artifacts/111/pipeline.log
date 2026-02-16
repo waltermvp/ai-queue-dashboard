@@ -23,3 +23,20 @@ Starting: Intent { cmp=com.epiphanyapps.mapyourhealth/.MainActivity }
 [2026-02-16 15:36:53] 🔢 Total flows to run: 1
 [2026-02-16 15:36:53] --- Running flow 1/1: qwen-flow-1 ---
 [2026-02-16 15:36:53] 📹 Started screen recording (PID: 96223)
+[2026-02-16 16:23:24] === E2E Pipeline Started for Issue #111 ===
+[2026-02-16 16:23:24] Step 1/6: Syncing amplify outputs...
+✓ Synced amplify_outputs.json from backend to root and mobile
+[2026-02-16 16:23:25] ✅ Amplify sync complete
+[2026-02-16 16:23:25] Step 2/6: Checking build cache...
+[2026-02-16 16:23:25] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16 16:23:25] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16 16:23:25] Step 3/6: Checking device connectivity...
+device
+[2026-02-16 16:23:25] ✅ Device ZL73232GKP connected
+[2026-02-16 16:23:25] Step 4/6: Installing APK and running health check...
+Performing Streamed Install
+Success
+[2026-02-16 16:23:36] ✅ APK installed on ZL73232GKP
+[2026-02-16 16:23:36] 🏥 Launching app for health check...
+Starting: Intent { cmp=com.epiphanyapps.mapyourhealth/.MainActivity }
+[2026-02-16 16:23:37] ⏳ Waiting 10s for app to load on Moto E13...

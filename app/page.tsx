@@ -568,6 +568,7 @@ export default function Dashboard() {
                   rel="noopener noreferrer"
                   className="font-medium text-gray-900 hover:text-primary-600 flex items-center space-x-1"
                 >
+                  <span className="font-mono text-primary-600">#{queueState.processing.id?.split('-').pop()}</span>
                   <span>{queueState.processing.title}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
@@ -652,7 +653,7 @@ export default function Dashboard() {
                 <div key={issue.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <span className="badge-primary">#{index + 1}</span>
+                      <span className="badge-primary font-mono">#{issue.number || issue.id.split('-').pop()}</span>
                       {isBugReport(issue.title) ? (
                         <div className="flex items-center space-x-1">
                           <span className="text-orange-600">🐛</span>
@@ -664,9 +665,8 @@ export default function Dashboard() {
                           <span className="px-1 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">Feature</span>
                         </div>
                       )}
-                      <span className="text-sm font-medium text-gray-900">{issue.id}</span>
+                      <span className="text-sm font-medium text-gray-900">{issue.title}</span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{issue.title}</p>
                     <div className="flex items-center space-x-2 mt-1">
                       <GitBranch className="w-3 h-3 text-gray-400" />
                       <span className="text-xs text-gray-500">{issue.repo}</span>
@@ -702,7 +702,8 @@ export default function Dashboard() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <CheckCircle className="w-4 h-4 text-success-600" />
-                        <span className="text-sm font-medium text-gray-900">{issue.id}</span>
+                        <span className="text-sm font-mono text-gray-500">#{issue.id?.split('-').pop()}</span>
+                        <span className="text-sm font-medium text-gray-900">{issue.title}</span>
                         {issue.artifacts && <Film className="w-3.5 h-3.5 text-purple-500" title="Has recordings" />}
                         {issue.resolution === 'not_a_bug' && (
                           <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
@@ -710,7 +711,6 @@ export default function Dashboard() {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{issue.title}</p>
                       <div className="flex items-center space-x-2 mt-1 flex-wrap gap-y-1">
                         <span className="text-xs text-gray-500">
                           {issue.resolution === 'not_a_bug' ? 'Analyzed' : 'Completed'}: {new Date(issue.completed_at || issue.completed).toLocaleString()}
@@ -803,13 +803,13 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <XCircle className="w-4 h-4 text-danger-600" />
-                    <span className="text-sm font-medium text-gray-900">{issue.id}</span>
+                    <span className="text-sm font-mono text-gray-500">#{issue.id?.split('-').pop()}</span>
+                    <span className="text-sm font-medium text-gray-900">{issue.title}</span>
                     {issue.type && <LabelBadge label={issue.type} />}
                     {(issue.labels || []).map((label) => (
                       <LabelBadge key={label} label={label} />
                     ))}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">{issue.title}</p>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs text-gray-500">
                       Failed: {new Date(issue.failed_at || issue.failed).toLocaleString()}

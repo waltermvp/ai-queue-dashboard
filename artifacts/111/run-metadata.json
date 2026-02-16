@@ -1,7 +1,7 @@
 {
   "model": "qwen2.5-coder:32b",
   "issueType": "e2e",
-  "startedAt": "2026-02-16T20:36:17.502Z",
+  "startedAt": "2026-02-16T21:23:24.703Z",
   "config": {
     "script": "scripts/pipelines/e2e.sh",
     "prompt": "prompts/e2e.md",
