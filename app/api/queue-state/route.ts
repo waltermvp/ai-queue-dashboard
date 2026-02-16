@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile, readdir, stat } from 'fs/promises'
-import { execSync } from 'child_process'
 import { join } from 'path'
+import Database from 'better-sqlite3'
 
-// Use the same Node 20 that Next.js runs under
-const NODE_BIN = process.execPath
-const DB_API = join(process.cwd(), 'scripts', 'db-api.js')
+const DB_PATH = join(process.cwd(), 'queue-history.db')
 
-function queryDB(args: string): any {
-  try {
-    const result = execSync(`"${NODE_BIN}" "${DB_API}" ${args}`, { timeout: 5000, encoding: 'utf-8' })
-    return JSON.parse(result)
-  } catch {
-    return null
-  }
+function getDB() {
+  const db = new Database(DB_PATH, { readonly: true })
+  db.pragma('journal_mode = WAL')
+  return db
 }
 
 function parseLabels(labels: string | null): string[] {
@@ -27,7 +22,7 @@ async function getArtifacts(issueId: string) {
     await stat(artDir)
     const files = await readdir(artDir)
     const recordings = files.filter((f: string) => /\.(mp4|mov|webm)$/i.test(f))
-    const logs = files.filter((f: string) => /\.(log|txt)$/i.test(f))
+    const logs = files.filter((f: string) => /\.(log|txt|patch|md|json)$/i.test(f))
     if (recordings.length > 0 || logs.length > 0) {
       return { dir: `artifacts/${issueId}`, recordings, logs }
     }
@@ -36,19 +31,54 @@ async function getArtifacts(issueId: string) {
 }
 
 export async function GET(request: NextRequest) {
+  let db: ReturnType<typeof getDB> | null = null
   try {
-    // Live state from queue-state.json
-    const queueStatePath = join(process.cwd(), 'queue-state.json')
-    let liveState: any = { processing: null, queue: [] }
-    try {
-      const data = await readFile(queueStatePath, 'utf-8')
-      liveState = JSON.parse(data)
-    } catch {}
+    db = getDB()
 
-    // Historical data from SQLite
-    const stats = queryDB('stats') || { totalRuns: 0, completed: 0, failed: 0, avgProcessingTime: 0, byType: {} }
-    const recentCompleted = queryDB('history --status completed --limit 20') || []
-    const recentFailed = queryDB('history --status failed --limit 20') || []
+    // Queue items from SQLite (single source of truth)
+    const queuedRows = db.prepare(
+      `SELECT * FROM queue_items WHERE status = 'queued' ORDER BY
+        CASE priority WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END DESC, added_at ASC`
+    ).all() as any[]
+
+    const processingRow = db.prepare("SELECT * FROM queue_items WHERE status = 'processing' LIMIT 1").get() as any
+
+    // Historical data from runs table
+    const recentCompleted = db.prepare(
+      "SELECT * FROM runs WHERE status = 'completed' ORDER BY id DESC LIMIT 20"
+    ).all() as any[]
+
+    const recentFailed = db.prepare(
+      "SELECT * FROM runs WHERE status = 'failed' ORDER BY id DESC LIMIT 20"
+    ).all() as any[]
+
+    // Stats
+    const total = (db.prepare('SELECT COUNT(*) as count FROM runs').get() as any).count
+    const completedCount = (db.prepare("SELECT COUNT(*) as count FROM runs WHERE status = 'completed'").get() as any).count
+    const failedCount = (db.prepare("SELECT COUNT(*) as count FROM runs WHERE status = 'failed'").get() as any).count
+    const avg = (db.prepare("SELECT AVG(processing_time_ms) as avg FROM runs WHERE status = 'completed' AND processing_time_ms IS NOT NULL").get() as any).avg
+    const byType = db.prepare("SELECT type, COUNT(*) as count FROM runs GROUP BY type").all() as any[]
+
+    const stats = {
+      totalRuns: total,
+      completed: completedCount,
+      failed: failedCount,
+      avgProcessingTime: Math.round(avg || 0),
+      byType: byType.reduce((acc: any, r: any) => { acc[r.type] = r.count; return acc }, {})
+    }
+
+    const toQueueItem = (row: any) => ({
+      issueNumber: row.issue_number,
+      repo: row.repo || '',
+      title: row.title,
+      labels: parseLabels(row.labels),
+      priority: row.priority || 'medium',
+      addedAt: row.added_at,
+      url: row.url,
+    })
+
+    const queue = queuedRows.map(toQueueItem)
+    const processing = processingRow ? { ...toQueueItem(processingRow), started_at: processingRow.started_at } : null
 
     const completed = await Promise.all(recentCompleted.map(async (r: any) => ({
       id: r.issue_id,
@@ -74,26 +104,45 @@ export async function GET(request: NextRequest) {
       failed_at: r.completed_at,
       type: r.type,
       error: r.error,
+      error_class: r.error_class,
       labels: parseLabels(r.labels),
     }))
 
     return NextResponse.json({
-      processing: liveState.processing || null,
-      queue: liveState.queue || [],
+      processing,
+      queue,
       completed,
       failed,
-      needs_clarification: liveState.needs_clarification || [],
-      bug_confirmed: liveState.bug_confirmed || [],
+      needs_clarification: [],
+      bug_confirmed: [],
       stats,
       lastUpdated: new Date().toISOString()
     })
   } catch (error) {
     console.error('Error reading queue state:', error)
-    return NextResponse.json({
-      processing: null, completed: [], failed: [], queue: [],
-      needs_clarification: [], bug_confirmed: [],
-      stats: { totalRuns: 0, completed: 0, failed: 0, avgProcessingTime: 0, byType: {} }
-    })
+    // Fallback to queue-state.json if SQLite fails
+    try {
+      const data = await readFile(join(process.cwd(), 'queue-state.json'), 'utf-8')
+      const state = JSON.parse(data)
+      return NextResponse.json({
+        processing: state.processing || null,
+        queue: state.queue || [],
+        completed: state.completed || [],
+        failed: state.failed || [],
+        needs_clarification: [],
+        bug_confirmed: [],
+        stats: { totalRuns: 0, completed: 0, failed: 0, avgProcessingTime: 0, byType: {} },
+        lastUpdated: new Date().toISOString()
+      })
+    } catch {
+      return NextResponse.json({
+        processing: null, completed: [], failed: [], queue: [],
+        needs_clarification: [], bug_confirmed: [],
+        stats: { totalRuns: 0, completed: 0, failed: 0, avgProcessingTime: 0, byType: {} }
+      })
+    }
+  } finally {
+    if (db) try { db.close() } catch {}
   }
 }
 
