@@ -1,0 +1,7 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp
+- tapOn: "Categories"
+- assertVisible: "[Expected category name]"
+- swipeDown
+- assertVisible: "[Another expected category name]"

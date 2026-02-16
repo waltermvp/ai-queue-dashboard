@@ -1,17 +1,18 @@
 {
   "current_issue": null,
   "processing": {
-    "issueNumber": 87,
+    "issueNumber": 84,
     "repo": "epiphanyapps/MapYourHealth",
-    "title": "Playwright parity: Category reorganization, accordion, and external links on mobile web",
+    "title": "E2E test: Risk-only display (#61)",
     "labels": [
       "test",
-      "e2e"
+      "e2e",
+      "mobile"
     ],
     "priority": "medium",
     "addedAt": "2026-02-16T18:25:04.274Z",
-    "url": "https://github.com/epiphanyapps/MapYourHealth/issues/87",
-    "started_at": "2026-02-16T18:34:31.034Z"
+    "url": "https://github.com/epiphanyapps/MapYourHealth/issues/84",
+    "started_at": "2026-02-16T18:47:37.509Z"
   },
   "completed": [
     {
@@ -83,47 +84,24 @@
       "processing_time": 173442,
       "pipelineExecuted": true,
       "pipelineSuccess": false
+    },
+    {
+      "issueNumber": 99,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "Verify noreply@mapyourhealth.com is properly configured in SES",
+      "labels": [],
+      "priority": "medium",
+      "addedAt": "2026-02-16T18:25:04.274Z",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/99",
+      "solution": "### Root Cause Analysis\n\nThe issue ID #99 mentions verifying that `noreply@mapyourhealth.com` is properly configured in Simple Email Service (SES). This involves checking the configuration of the email address in AWS SES to ensure it can send emails as expected. \n\nIn React Native, while we cannot directly configure SES settings, we need to ensure that our application is set up correctly to use SES for sending emails. This includes verifying:\n\n1. **Email Verification**: The `noreply@mapyourhealth.com` email address must be verified in AWS SES.\n2. **Configuration of Email Sending Logic**: Ensure the logic in the app to send emails using this address is correct and properly handles any errors or status codes returned by SES.\n\n### Code Solution\n\nTo verify and fix this issue, we need to ensure that:\n\n1. The `noreply@mapyourhealth.com` email address is verified in AWS SES.\n2. The application uses a proper utility function or service to send emails via SES.\n3. Proper error handling is implemented in the email sending logic.\n\nLet's assume there is an existing utility file `sendEmail.ts` that handles sending emails. We will review and ensure it follows best practices:\n\n### Implementation Steps\n\n1. **Check AWS SES Console**: Ensure `noreply@mapyourhealth.com` is verified.\n2. **Review Existing Code**:\n   - Open `apps/mobile/src/utils/sendEmail.ts`.\n   - Verify the configuration and logic for sending emails.\n3. **Update Email Sending Logic** (if needed):\n   - Ensure proper error handling is in place.\n\n### Expected Code Updates\n\n#### 1. Check AWS SES Console\nEnsure that `noreply@mapyourhealth.com` is verified in the AWS SES console.\n\n#### 2. Review Existing Code\nReview the existing code in `apps/mobile/src/utils/sendEmail.ts`.\n\n```jsx\n// apps/mobile/src/utils/sendEmail.ts\nimport { API } from 'aws-amplify';\nimport * as yup from 'yup';\n\nconst emailValidationSchema = yup.object().shape({\n  to: yup.string().email('Invalid email').required('Required'),\n  subject: yup.string().required('Required'),\n  body: yup.string().required('Required'),\n});\n\nexport const sendEmail = async (to, subject, body) => {\n  try {\n    await emailValidationSchema.validate({ to, subject, body });\n\n    const response = await API.post('sendEmail', '/email/send', {\n      body: {\n        from: 'noreply@mapyourhealth.com',\n        to,\n        subject,\n        body,\n      },\n    });\n\n    if (response.statusCode !== 200) {\n      throw new Error(`Failed to send email: ${response.message}`);\n    }\n\n    return response;\n  } catch (error) {\n    console.error('Error sending email:', error);\n    throw error;\n  }\n};\n```\n\n#### 3. Update Email Sending Logic\nEnsure proper error handling and validation are in place.\n\n### Device Testing Plan\n\nSince this issue involves backend configuration and utility functions, device testing is not strictly necessary unless the email sending functionality directly affects the UI (e.g., displaying a success or failure message).\n\nHowever, if there is any UI component that interacts with `sendEmail`, we can test it on real devices. For example, if there's an \"Contact Us\" form that sends emails:\n\n- **Android**: \n  ```sh\n  maestro --device ZL73232GKP test ~/maestro-farm/flows/android/\n  ```\n- **iOS**:\n  ```sh\n  maestro --driver-host-port 6001 --device 00008030-001950891A53402E test ~/maestro-farm/flows/ios/\n  ```\n\n### Testing Strategy\n\n1. **Backend Verification**: Ensure `noreply@mapyourhealth.com` is verified in AWS SES.\n2. **Unit Tests**: Write and run unit tests for the `sendEmail` utility function to verify it handles different scenarios correctly.\n3. **Integration Tests**: If there are UI components that use this utility, test them on real devices using Maestro.\n\n### Output Requirements\n\n- **Create Branch**: `issue-99`\n- **Commit Message**: \"Fix: Ensure noreply@mapyourhealth.com is properly configured in SES\"\n- **Open PR**: Assigned to `waltermvp`\n\n### Pre-Commit Checklist\n\n- [ ] No inline styles (use StyleSheet)\n- [ ] React imported before other packages\n- [ ] All hook dependencies included  \n- [ ] No unused imports\n- [ ] Proper Prettier formatting\n- [ ] No color literals (use theme/constants)\n\nRun `npm run lint -- --fix` to auto-fix formatting issues.\n\n### Example PR Description\n\n```markdown\n## Summary\nEnsure noreply@mapyourhealth.com is properly configured in SES by verifying the email address and updating the sendEmail utility function with proper error handling.\n\n## Files to Modify\n- `apps/mobile/src/utils/sendEmail.ts` — Update sendEmail function with proper validation and error handling.\n\n## Testing Strategy\n1. Verify noreply@mapyourhealth.com is verified in AWS SES.\n2. Run unit tests for the sendEmail utility function.\n3. Test UI components that use this utility on real devices using Maestro.\n\n## Device Testing Plan\n- **Android**: \n  ```sh\n  maestro --device ZL73232GKP test ~/maestro-farm/flows/android/\n  ```\n- **iOS**:\n  ```sh\n  maestro --driver-host-port 6001 --device 00008030-001950891A53402E test ~/maestro-farm/flows/ios/\n  ```\n\n## Expected Behavior\nAfter the fix, the `sendEmail` utility function should properly validate and send emails using noreply@mapyourhealth.com. UI components that use this utility should handle success and failure scenarios correctly.\n```",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-16T18:38:19.182Z",
+      "processing_time": 372916,
+      "pipelineExecuted": true,
+      "pipelineSuccess": false
     }
   ],
   "queue": [
-    {
-      "issueNumber": 86,
-      "repo": "epiphanyapps/MapYourHealth",
-      "title": "E2E test: Separate admin import sections per category (#63)",
-      "labels": [
-        "test",
-        "e2e"
-      ],
-      "priority": "medium",
-      "addedAt": "2026-02-16T18:25:04.274Z",
-      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/86"
-    },
-    {
-      "issueNumber": 85,
-      "repo": "epiphanyapps/MapYourHealth",
-      "title": "E2E test: Simplified location granularity (#62)",
-      "labels": [
-        "test",
-        "e2e",
-        "mobile"
-      ],
-      "priority": "medium",
-      "addedAt": "2026-02-16T18:25:04.274Z",
-      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/85"
-    },
-    {
-      "issueNumber": 84,
-      "repo": "epiphanyapps/MapYourHealth",
-      "title": "E2E test: Risk-only display (#61)",
-      "labels": [
-        "test",
-        "e2e",
-        "mobile"
-      ],
-      "priority": "medium",
-      "addedAt": "2026-02-16T18:25:04.274Z",
-      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/84"
-    },
     {
       "issueNumber": 83,
       "repo": "epiphanyapps/MapYourHealth",
@@ -269,6 +247,60 @@
       },
       "error": "E2E pipeline failed (exit code: 1). Check artifacts/105/pipeline.log",
       "failed_at": "2026-02-16T14:49:02.865Z"
+    },
+    {
+      "issueNumber": 87,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "Playwright parity: Category reorganization, accordion, and external links on mobile web",
+      "labels": [
+        "test",
+        "e2e"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16T18:25:04.274Z",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/87",
+      "solution": "To address the task of ensuring Playwright parity for category reorganization, accordion functionality, and external links on the mobile web in the **MapYourHealth** React Native app, we need to ensure that these features work as expected on both mobile web (via Expo) and native platforms. Since this issue is tagged with `test` and `e2e`, it will trigger device testing using Maestro after a PR is created.\n\n### Steps to Implement and Test\n\n#### 1. Update Code for Category Reorganization, Accordion, and External Links\nFirst, we need to make sure that the category reorganization, accordion functionality, and external links are implemented correctly in the React Native app. This involves modifying specific files as described below.\n\n**Files to Modify:**\n- `apps/mobile/src/screens/CategoryScreen.tsx` — Implement category reorganization and accordion.\n- `apps/mobile/src/components/AccordionComponent.tsx` — Ensure accordion functionality works correctly.\n- `apps/mobile/src/utils/openLinkInBrowser.tsx` — Ensure external links open correctly.\n\n**Files NOT to Modify:**\n- `config.prod.ts` — API config, do not touch.\n- `openLinkInBrowser.ts` — generic utility, modify with caution as per the specific changes needed.\n\n**Search Pattern:**\nLook for components related to categories and accordions in `CategoryScreen.tsx`. Ensure that external links are handled by `openLinkInBrowser.ts`.\n\n**Expected Change:**\nEnsure that the category list is reorganized as required. Accordion should toggle visibility of content sections. External links should open in a new browser tab or in-app browser.\n\n#### 2. Create Maestro Flows for Testing\nWe need to create Maestro flows to test the following scenarios:\n- Category reorganization.\n- Accordion functionality.\n- External links.\n\n**Create: `apps/mobile/.maestro/flows/category-reorg-test.yaml`**\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Categories\"\n- assertVisible: \"[Expected category name]\"\n- swipeDown\n- assertVisible: \"[Another expected category name]\"\n```\n\n**Create: `apps/mobile/.maestro/flows/accordion-test.yaml`**\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Categories\"\n- tapOn: \"[Accordion Header Text]\"\n- assertVisible: \"[Expected content inside accordion]\"\n```\n\n**Create: `apps/mobile/.maestro/flows/external-links-test.yaml`**\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Categories\"\n- tapOn: \"[Link text]\"\n- assertVisible: \"[Expected content of the external link page]\"\n```\n\n#### 3. Build, Install, and Run Maestro Tests on Real Devices\nFollow the pipeline to build a release APK, install it on a real device, and run Maestro tests.\n\n**Sync Amplify Outputs:**\n```bash\ncd ~/Documents/MapYourHealth && yarn sync:amplify\n```\n\n**Build Release APK:**\n```bash\ncd apps/mobile && npx expo prebuild --platform android --clean\ncd android && ./gradlew assembleRelease\n```\n\n**Install on Android Device:**\n```bash\nadb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n```\n\n**Set PATH for Maestro:**\n```bash\nexport PATH=\"$PATH:$HOME/.maestro/bin\"\n```\n\n**Create Artifact Directory:**\n```bash\nmkdir -p ~/Documents/ai-queue-dashboard/artifacts/87\n```\n\n**Run Maestro Tests with Recording (Android):**\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/apps/mobile/.maestro/flows/category-reorg-test.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/87/android-category-recording.mp4 \\\n  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/87/test-output.log\n```\n\nRepeat the above step for `accordion-test.yaml` and `external-links-test.yaml`.\n\n#### 4. Output Requirements\n- Test results with pass/fail for each flow.\n- Screenshots of failures.\n- Summary report: total tests, passed, failed, skipped.\n- If tests fail, include the Maestro error output and suggest fixes.\n\n### Example Issue Template\n\n```markdown\n## Summary\nEnsure category reorganization, accordion functionality, and external links work correctly on mobile web and native platforms.\n\n## Labels\n`test`, `e2e`\n\n## Files to Modify\n- `apps/mobile/src/screens/CategoryScreen.tsx` — Implement category reorganization and accordion.\n- `apps/mobile/src/components/AccordionComponent.tsx` — Ensure accordion functionality works correctly.\n- `apps/mobile/src/utils/openLinkInBrowser.tsx` — Ensure external links open correctly.\n\n## Files NOT to Modify\n- `config.prod.ts` — API config, do not touch.\n- `openLinkInBrowser.ts` — generic utility, modify with caution as per the specific changes needed.\n\n## Search Pattern\nLook for components related to categories and accordions in `CategoryScreen.tsx`. Ensure that external links are handled by `openLinkInBrowser.ts`.\n\n## Expected Change\nEnsure that the category list is reorganized as required. Accordion should toggle visibility of content sections. External links should open in a new browser tab or in-app browser.\n\n## Maestro Flows (if new test needed)\nCreate: `apps/mobile/.maestro/flows/category-reorg-test.yaml`\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Categories\"\n- assertVisible: \"[Expected category name]\"\n- swipeDown\n- assertVisible: \"[Another expected category name]\"\n```\n\nCreate: `apps/mobile/.maestro/flows/accordion-test.yaml`\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Categories\"\n- tapOn: \"[Accordion Header Text]\"\n- assertVisible: \"[Expected content inside accordion]\"\n```\n\nCreate: `apps/mobile/.maestro/flows/external-links-test.yaml`\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Categories\"\n- tapOn: \"[Link text]\"\n- assertVisible: \"[Expected content of the external link page]\"\n```\n\n## Expected Behavior\nAfter the fix, the Maestro flows above should pass on Android (Moto E13).\n```\n\nBy following these steps and guidelines, we can ensure that the category reorganization, accordion functionality, and external links are implemented correctly and work as expected across both mobile web and native platforms.",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-16T18:43:15.463Z",
+      "processing_time": 524430,
+      "pipelineExecuted": true,
+      "pipelineSuccess": false,
+      "artifacts": {
+        "dir": "artifacts/87",
+        "recordings": [],
+        "logs": [
+          "pipeline.log"
+        ]
+      },
+      "error": "E2E pipeline failed (exit code: 1). Check artifacts/87/pipeline.log",
+      "failed_at": "2026-02-16T18:43:15.463Z"
+    },
+    {
+      "issueNumber": 86,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "E2E test: Separate admin import sections per category (#63)",
+      "labels": [
+        "test",
+        "e2e"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16T18:25:04.274Z",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/86",
+      "solution": "To address the task \"E2E test: Separate admin import sections per category\" for Issue #63 in the MapYourHealth React Native app, we need to create a Maestro flow that verifies this feature. Since the issue description is not very detailed, I'll assume the following:\n\n1. **Feature Description:** The admin interface allows imports of data into different categories, and each category has its own import section.\n2. **Test Requirements:**\n   - Verify that there are separate sections for importing data for different categories.\n   - Ensure that each section is correctly labeled or identifiable.\n   - Optionally, verify that the import functionality works as expected in one or more categories.\n\n### Steps to Create and Run Maestro Flow\n\n#### 1. Sync Amplify Outputs\n```bash\ncd ~/Documents/MapYourHealth && yarn sync:amplify\n```\n\n#### 2. Build Release APK\n```bash\ncd apps/mobile && npx expo prebuild --platform android --clean\ncd android && ./gradlew assembleRelease\n```\n\n#### 3. Install on Android Device\n```bash\nadb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n```\n**App ID:** `com.epiphanyapps.mapyourhealth`\n\n#### 4. Set PATH for Maestro\n```bash\nexport PATH=\"$PATH:$HOME/.maestro/bin\"\n```\n\n#### 5. Create Artifact Directory\n```bash\nmkdir -p ~/Documents/ai-queue-dashboard/artifacts/86\n```\n\n#### 6. Write the Maestro Flow\n\nCreate a new file `apps/mobile/.maestro/flows/admin-import-categories.yaml` with the following content:\n\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n# Launch the app\n- launchApp\n\n# Navigate to Admin Section (Assuming there is a navigation step)\n- tapOn: \"Admin\"\n- assertVisible: \"Admin Dashboard\"\n\n# Verify Import Sections for Categories\n- assertVisible: \"Category 1 Import\" # Replace with actual text or identifier\n- assertVisible: \"Category 2 Import\" # Replace with actual text or identifier\n\n# Optionally, test importing data in one category\n- tapOn: \"Category 1 Import\"\n- inputText:\n    id: \"import-data-input\" # Replace with actual ID\n    text: \"data-for-category-1\"\n- tapOn: \"Import Button\" # Replace with actual button text or identifier\n\n# Optionally, assert that import was successful\n- assertVisible: \"Data Imported Successfully\" # Replace with actual success message\n```\n\n#### 7. Run Maestro Tests with Recording\n\nRun the Maestro flow on the Moto E13 device:\n\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/Documents/MapYourHealth/apps/mobile/.maestro/flows/admin-import-categories.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/86/android-recording.mp4 \\\n  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/86/test-output.log\n```\n\n### Output Requirements\n\n- **Test Results:** The test results will be in `~/Documents/ai-queue-dashboard/artifacts/86/test-output.log`.\n- **Screenshots of Failures:** Automatically captured by Maestro and included in the recording.\n- **Summary Report:** Manually generated from the log file.\n\n### Handling Test Failures\n\nIf tests fail, include the Maestro error output and suggest fixes:\n\n1. **Check Identifiers:** Ensure that all element identifiers (e.g., text labels, IDs) are correct.\n2. **Element Visibility:** Verify that elements are visible before interacting with them.\n3. **Navigation Steps:** Ensure that navigation steps correctly lead to the admin section.\n\n### Example Issue Template\n\n```markdown\n## Summary\nEnsure that admin import sections are separated per category.\n\n## Labels\n`test`, `e2e`\n\n## Files to Modify\n- No code changes required, only test creation.\n\n## Maestro Flow\nCreate: `apps/mobile/.maestro/flows/admin-import-categories.yaml`\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n# Launch the app\n- launchApp\n\n# Navigate to Admin Section (Assuming there is a navigation step)\n- tapOn: \"Admin\"\n- assertVisible: \"Admin Dashboard\"\n\n# Verify Import Sections for Categories\n- assertVisible: \"Category 1 Import\" # Replace with actual text or identifier\n- assertVisible: \"Category 2 Import\" # Replace with actual text or identifier\n\n# Optionally, test importing data in one category\n- tapOn: \"Category 1 Import\"\n- inputText:\n    id: \"import-data-input\" # Replace with actual ID\n    text: \"data-for-category-1\"\n- tapOn: \"Import Button\" # Replace with actual button text or identifier\n\n# Optionally, assert that import was successful\n- assertVisible: \"Data Imported Successfully\" # Replace with actual success message\n```\n\n## Expected Behavior\nAfter the flow is created and run, it should pass on Android (Moto E13), verifying separate admin import sections per category.\n```\n\nThis template provides a structured approach to creating and running Maestro tests for the specified feature. Adjust the identifiers and steps as necessary based on the actual app UI and functionality.",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-16T18:47:36.823Z",
+      "processing_time": 556202,
+      "pipelineExecuted": true,
+      "pipelineSuccess": false,
+      "artifacts": {
+        "dir": "artifacts/86",
+        "recordings": [],
+        "logs": [
+          "pipeline.log"
+        ]
+      },
+      "error": "E2E pipeline failed (exit code: 1). Check artifacts/86/pipeline.log",
+      "failed_at": "2026-02-16T18:47:36.823Z"
     }
   ]
 }

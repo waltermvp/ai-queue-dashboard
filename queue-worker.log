@@ -451,3 +451,71 @@
 📥 Found 8 item(s) in queue. Processing...
 [2026-02-16T18:34:31.035Z] ▶️  Started processing: Playwright parity: Category reorganization, accordion, and external links on mobile web
 [2026-02-16T18:34:31.035Z] 🤖 Processing [e2e]: Playwright parity: Category reorganization, accordion, and external links on mobile web
+[2026-02-16T18:38:19.182Z] 🔧 Executing coding pipeline for issue #99...
+[2026-02-16T18:38:19.216Z] [pipeline] [2026-02-16 13:38:19] === Coding Pipeline Started for Issue #99 ===
+[2026-02-16T18:38:19.219Z] [pipeline] [2026-02-16 13:38:19] Model: ollama/qwen2.5-coder:32b
+[2026-02-16T18:38:19.222Z] [pipeline] [2026-02-16 13:38:19] Timeout: 1800s
+[2026-02-16T18:38:19.225Z] [pipeline] [2026-02-16 13:38:19] Step 1/7: Fetching issue details...
+[2026-02-16T18:38:19.758Z] [pipeline] [2026-02-16 13:38:19] Issue: Verify noreply@mapyourhealth.com is properly configured in SES
+[2026-02-16T18:38:19.761Z] [pipeline] [2026-02-16 13:38:19] Step 2/7: Creating git worktree...
+[2026-02-16T18:38:19.764Z] [pipeline] [2026-02-16 13:38:19] ⚠️ Worktree already exists, removing...
+[2026-02-16T18:38:19.910Z] [pipeline] Deleted branch issue-99 (was 96eb511).
+[2026-02-16T18:38:20.596Z] [pipeline] [2026-02-16 13:38:20] ✅ Worktree created at /Users/waltervargas-pena/Documents/MapYourHealth-issue-99
+[2026-02-16T18:38:20.599Z] [pipeline] [2026-02-16 13:38:20] Step 3/7: Copying amplify_outputs.json...
+[2026-02-16T18:38:20.605Z] [pipeline] [2026-02-16 13:38:20] ✅ Copied root amplify_outputs.json
+[2026-02-16T18:38:20.612Z] [pipeline] [2026-02-16 13:38:20] ✅ Copied mobile amplify_outputs.json
+[2026-02-16T18:38:20.616Z] [pipeline] [2026-02-16 13:38:20] Step 4/7: Preparing task for mini-swe-agent...
+[2026-02-16T18:38:20.619Z] ❌ Pipeline coding failed for issue #99 (exit code: 1)
+[2026-02-16T18:38:20.619Z] ❌ Pipeline failed for coding issue #99
+[2026-02-16T18:38:20.619Z] ✅ Completed: Verify noreply@mapyourhealth.com is properly configured in SES
+[2026-02-16T18:38:20.622Z] 
+📥 Found 7 item(s) in queue. Processing...
+[2026-02-16T18:38:20.622Z] ▶️  Started processing: E2E test: Separate admin import sections per category (#63)
+[2026-02-16T18:38:20.622Z] 🤖 Processing [e2e]: E2E test: Separate admin import sections per category (#63)
+[2026-02-16T18:43:15.464Z] 🔧 Executing e2e pipeline for issue #87...
+[2026-02-16T18:43:15.473Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T18:43:15.473Z] 📝 Extracted Qwen flow 2: qwen-flow-2.yaml
+[2026-02-16T18:43:15.475Z] 📝 Extracted Qwen flow 3: qwen-flow-3.yaml
+[2026-02-16T18:43:15.476Z] 📝 Extracted Qwen flow 4: qwen-flow-4.yaml
+[2026-02-16T18:43:15.477Z] 📝 Extracted Qwen flow 5: qwen-flow-5.yaml
+[2026-02-16T18:43:15.477Z] 📝 Extracted Qwen flow 6: qwen-flow-6.yaml
+[2026-02-16T18:43:15.477Z] 📋 Extracted 6 Maestro flow(s) from Qwen's solution
+[2026-02-16T18:43:15.541Z] [pipeline] [2026-02-16 13:43:15] === E2E Pipeline Started for Issue #87 ===
+[2026-02-16T18:43:15.545Z] [pipeline] [2026-02-16 13:43:15] Step 1/6: Syncing amplify outputs...
+[2026-02-16T18:43:15.959Z] [pipeline] [2026-02-16 13:43:15] ✅ Amplify sync complete
+[2026-02-16T18:43:15.962Z] [pipeline] [2026-02-16 13:43:15] Step 2/6: Checking build cache...
+[2026-02-16T18:43:16.022Z] [pipeline] [2026-02-16 13:43:16] 🔨 Incremental build (skipping prebuild, JS changes only)...
+[2026-02-16T18:43:38.159Z] [pipeline] [2026-02-16 13:43:38] 📦 Cached APK as 9edba9af987072b32f35949e3d7918aeaf57caa3
+[2026-02-16T18:43:38.164Z] [pipeline] [2026-02-16 13:43:38] ✅ Release APK ready: /Users/waltervargas-pena/Documents/MapYourHealth/apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+[2026-02-16T18:43:38.168Z] [pipeline] [2026-02-16 13:43:38] Step 3/6: Checking device connectivity...
+[2026-02-16T18:43:38.188Z] [pipeline] [2026-02-16 13:43:38] ❌ PIPELINE FAILED: Android device ZL73232GKP not connected
+[2026-02-16T18:43:38.189Z] ❌ Pipeline e2e failed for issue #87 (exit code: 1)
+[2026-02-16T18:43:38.189Z] ❌ Pipeline failed for e2e issue #87
+[2026-02-16T18:43:38.189Z] ❌ Marking e2e issue #87 as FAILED
+[2026-02-16T18:43:38.190Z] 📹 Artifacts collected for 87: 0 recordings, 1 logs
+[2026-02-16T18:43:38.192Z] ❌ Failed (pipeline): Playwright parity: Category reorganization, accordion, and external links on mobile web - E2E pipeline failed (exit code: 1). Check artifacts/87/pipeline.log
+[2026-02-16T18:43:38.193Z] 
+📥 Found 6 item(s) in queue. Processing...
+[2026-02-16T18:43:38.195Z] ▶️  Started processing: E2E test: Simplified location granularity (#62)
+[2026-02-16T18:43:38.195Z] 🤖 Processing [e2e]: E2E test: Simplified location granularity (#62)
+[2026-02-16T18:47:36.824Z] 🔧 Executing e2e pipeline for issue #86...
+[2026-02-16T18:47:36.826Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T18:47:36.826Z] 📝 Extracted Qwen flow 2: qwen-flow-2.yaml
+[2026-02-16T18:47:36.826Z] 📋 Extracted 2 Maestro flow(s) from Qwen's solution
+[2026-02-16T18:47:36.867Z] [pipeline] [2026-02-16 13:47:36] === E2E Pipeline Started for Issue #86 ===
+[2026-02-16T18:47:36.871Z] [pipeline] [2026-02-16 13:47:36] Step 1/6: Syncing amplify outputs...
+[2026-02-16T18:47:37.384Z] [pipeline] [2026-02-16 13:47:37] ✅ Amplify sync complete
+[2026-02-16T18:47:37.389Z] [pipeline] [2026-02-16 13:47:37] Step 2/6: Checking build cache...
+[2026-02-16T18:47:37.444Z] [pipeline] [2026-02-16 13:47:37] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16T18:47:37.470Z] [pipeline] [2026-02-16 13:47:37] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16T18:47:37.475Z] [pipeline] [2026-02-16 13:47:37] Step 3/6: Checking device connectivity...
+[2026-02-16T18:47:37.503Z] [pipeline] [2026-02-16 13:47:37] ❌ PIPELINE FAILED: Android device ZL73232GKP not connected
+[2026-02-16T18:47:37.504Z] ❌ Pipeline e2e failed for issue #86 (exit code: 1)
+[2026-02-16T18:47:37.504Z] ❌ Pipeline failed for e2e issue #86
+[2026-02-16T18:47:37.504Z] ❌ Marking e2e issue #86 as FAILED
+[2026-02-16T18:47:37.505Z] 📹 Artifacts collected for 86: 0 recordings, 1 logs
+[2026-02-16T18:47:37.505Z] ❌ Failed (pipeline): E2E test: Separate admin import sections per category (#63) - E2E pipeline failed (exit code: 1). Check artifacts/86/pipeline.log
+[2026-02-16T18:47:37.508Z] 
+📥 Found 5 item(s) in queue. Processing...
+[2026-02-16T18:47:37.510Z] ▶️  Started processing: E2E test: Risk-only display (#61)
+[2026-02-16T18:47:37.511Z] 🤖 Processing [e2e]: E2E test: Risk-only display (#61)

@@ -14,8 +14,35 @@ const PIPELINES_DIR = path.join(__dirname, 'pipelines');
 const QUEUE_STATE_FILE = path.join(__dirname, '..', 'queue-state.json');
 const PROMPTS_DIR = path.join(__dirname, '..', 'prompts');
 const ARTIFACTS_DIR = path.join(__dirname, '..', 'artifacts');
+const LOCK_FILE = path.join(__dirname, '..', 'queue-worker.lock');
 const OLLAMA_URL = 'http://localhost:11434/api/generate';
 const LOG_FILE = path.join(__dirname, '..', 'queue-worker.log');
+
+// Lock file for concurrency control
+function acquireLock() {
+    if (fs.existsSync(LOCK_FILE)) {
+        try {
+            const pid = parseInt(fs.readFileSync(LOCK_FILE, 'utf8').trim(), 10);
+            if (!isNaN(pid)) {
+                process.kill(pid, 0); // throws if not running
+                return false; // another worker is alive
+            }
+        } catch {
+            // Process not running, stale lock — take over
+        }
+    }
+    fs.writeFileSync(LOCK_FILE, String(process.pid));
+    return true;
+}
+
+function releaseLock() {
+    try {
+        if (fs.existsSync(LOCK_FILE)) {
+            const pid = parseInt(fs.readFileSync(LOCK_FILE, 'utf8').trim(), 10);
+            if (pid === process.pid) fs.unlinkSync(LOCK_FILE);
+        }
+    } catch {}
+}
 
 function log(msg) {
     const line = `[${new Date().toISOString()}] ${msg}`;
@@ -30,7 +57,9 @@ function collectArtifacts(issueId) {
 
     const files = fs.readdirSync(artifactDir);
     const recordings = files.filter(f => f.endsWith('.mp4'));
-    const logs = files.filter(f => f.endsWith('.log'));
+    const logs = files.filter(f => 
+        f.endsWith('.log') || f.endsWith('.json') || f.endsWith('.md')
+    );
 
     if (recordings.length === 0 && logs.length === 0) return null;
 
@@ -247,6 +276,14 @@ async function executePipeline(type, issueId, solutionText) {
 
 // Process next item in queue
 async function processNext() {
+    if (!acquireLock()) {
+        log('🔒 Another worker is already running (lock held). Skipping.');
+        return;
+    }
+    try { await _processNext(); } finally { releaseLock(); }
+}
+
+async function _processNext() {
     const state = loadQueueState();
     
     if (state.processing) {
@@ -362,31 +399,29 @@ async function processNext() {
             pipelineSuccess: result.pipelineSuccess || false
         };
 
-        // Collect artifacts for e2e items
-        if (issueType === 'e2e') {
-            const artifacts = collectArtifacts(String(item.issueNumber));
-            if (artifacts) {
-                completedItem.artifacts = artifacts;
-                log(`📹 Artifacts collected for ${item.issueNumber}: ${artifacts.recordings.length} recordings, ${artifacts.logs.length} logs`);
-                
-                // Record artifacts in DB
-                if (runId) {
-                    const artifactDir = path.join(ARTIFACTS_DIR, String(item.issueNumber));
-                    [...artifacts.recordings, ...artifacts.logs].forEach(filename => {
-                        try {
-                            const filePath = path.join(artifactDir, filename);
-                            const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : null;
-                            db.addArtifact(runId, {
-                                filename,
-                                type: filename.endsWith('.mp4') ? 'recording' : 'log',
-                                path: filePath,
-                                size_bytes: stats ? stats.size : null
-                            });
-                        } catch (e) {
-                            log(`⚠️ DB addArtifact failed: ${e.message}`);
-                        }
-                    });
-                }
+        // Collect artifacts for ALL issue types
+        const artifacts = collectArtifacts(String(item.issueNumber));
+        if (artifacts) {
+            completedItem.artifacts = artifacts;
+            log(`📹 Artifacts collected for ${item.issueNumber}: ${artifacts.recordings.length} recordings, ${artifacts.logs.length} logs`);
+            
+            // Record artifacts in DB
+            if (runId) {
+                const artifactDir = path.join(ARTIFACTS_DIR, String(item.issueNumber));
+                [...artifacts.recordings, ...artifacts.logs].forEach(filename => {
+                    try {
+                        const filePath = path.join(artifactDir, filename);
+                        const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : null;
+                        db.addArtifact(runId, {
+                            filename,
+                            type: filename.endsWith('.mp4') ? 'recording' : 'log',
+                            path: filePath,
+                            size_bytes: stats ? stats.size : null
+                        });
+                    } catch (e) {
+                        log(`⚠️ DB addArtifact failed: ${e.message}`);
+                    }
+                });
             }
         }
 
@@ -592,6 +627,29 @@ async function main() {
                 log(`🗑️ Cleared history: ${cc} completed, ${fc} failed`);
                 break;
             }
+            case 'retry': {
+                const retryNum = parseInt(process.argv[3]);
+                if (!retryNum) { log('❌ Usage: node queue-worker.js retry <issueNumber>'); process.exit(1); }
+                const rs2 = loadQueueState();
+                const failedIdx = rs2.failed.findIndex(i => {
+                    const num = i.issueNumber || parseInt(String(i.id || '').split('-').pop());
+                    return num === retryNum;
+                });
+                if (failedIdx === -1) {
+                    log(`⚠️ Issue #${retryNum} not found in failed list`);
+                    process.exit(1);
+                }
+                const retryItem = rs2.failed.splice(failedIdx, 1)[0];
+                // Clean up failure metadata
+                delete retryItem.error;
+                delete retryItem.failed_at;
+                delete retryItem.failed;
+                retryItem.addedAt = new Date().toISOString();
+                rs2.queue.push(retryItem);
+                saveQueueState(rs2);
+                log(`🔄 Moved issue #${retryNum} from failed back to queue`);
+                break;
+            }
             case 'status':
                 const state = loadQueueState();
                 log('📊 Queue Status:');
@@ -602,7 +660,7 @@ async function main() {
                 break;
             default:
                 log('Usage: node queue-worker.js <action>');
-                log('Actions: process | watch [intervalMs] | load-github | add-demo | cleanup | status | remove <issueNumber> | clear-all | clear-history');
+                log('Actions: process | watch [intervalMs] | load-github | add-demo | cleanup | status | remove <issueNumber> | retry <issueNumber> | clear-all | clear-history');
         }
     } catch (error) {
         console.error('❌ Error:', error.message);

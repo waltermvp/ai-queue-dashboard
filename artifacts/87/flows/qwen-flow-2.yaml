@@ -1,0 +1,6 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp
+- tapOn: "Categories"
+- tapOn: "[Accordion Header Text]"
+- assertVisible: "[Expected content inside accordion]"

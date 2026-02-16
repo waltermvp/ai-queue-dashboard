@@ -780,8 +780,9 @@ export default function Dashboard() {
                   )}
                 </div>
                 <button 
-                  onClick={() => executeAction('retry')}
+                  onClick={() => executeAction('retry', { issueNumber: issue.id.split('-').pop() })}
                   className="text-sm text-warning-600 hover:text-warning-700"
+                  title="Retry this issue"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>

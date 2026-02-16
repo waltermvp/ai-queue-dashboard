@@ -1,0 +1,6 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp
+- tapOn: "Categories"
+- tapOn: "[Link text]"
+- assertVisible: "[Expected content of the external link page]"

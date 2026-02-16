@@ -1,0 +1,10 @@
+[2026-02-16 13:47:36] === E2E Pipeline Started for Issue #86 ===
+[2026-02-16 13:47:36] Step 1/6: Syncing amplify outputs...
+✓ Synced amplify_outputs.json from backend to root and mobile
+[2026-02-16 13:47:37] ✅ Amplify sync complete
+[2026-02-16 13:47:37] Step 2/6: Checking build cache...
+[2026-02-16 13:47:37] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16 13:47:37] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16 13:47:37] Step 3/6: Checking device connectivity...
+error: device 'ZL73232GKP' not found
+[2026-02-16 13:47:37] ❌ PIPELINE FAILED: Android device ZL73232GKP not connected

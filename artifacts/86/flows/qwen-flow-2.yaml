@@ -1,0 +1,22 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+# Launch the app
+- launchApp
+
+# Navigate to Admin Section (Assuming there is a navigation step)
+- tapOn: "Admin"
+- assertVisible: "Admin Dashboard"
+
+# Verify Import Sections for Categories
+- assertVisible: "Category 1 Import" # Replace with actual text or identifier
+- assertVisible: "Category 2 Import" # Replace with actual text or identifier
+
+# Optionally, test importing data in one category
+- tapOn: "Category 1 Import"
+- inputText:
+    id: "import-data-input" # Replace with actual ID
+    text: "data-for-category-1"
+- tapOn: "Import Button" # Replace with actual button text or identifier
+
+# Optionally, assert that import was successful
+- assertVisible: "Data Imported Successfully" # Replace with actual success message
