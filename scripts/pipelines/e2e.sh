@@ -8,10 +8,38 @@ MOBILE_ROOT="$REPO_ROOT/apps/mobile"
 ARTIFACTS_DIR="$HOME/Documents/ai-queue-dashboard/artifacts/$ISSUE_ID"
 BUILDS_CACHE="$HOME/Documents/ai-queue-dashboard/artifacts/builds"
 LOG_FILE="$ARTIFACTS_DIR/pipeline.log"
-DEVICE_ID="ZL73232GKP"
-IOS_DEVICE_ID="00008030-001950891A53402E"
 APP_ID="com.epiphanyapps.mapyourhealth"
-APPLE_TEAM_ID="22X6D48M4G"
+CONFIG_FILE="$HOME/Documents/ai-queue-dashboard/routing.config.json"
+
+# Read device IDs from routing.config.json (fall back to hardcoded defaults)
+if [ -f "$CONFIG_FILE" ]; then
+  DEVICE_ID=$(python3 -c "
+import json, sys
+cfg = json.load(open('$CONFIG_FILE'))
+devs = cfg.get('devices',{}).get('android',[])
+enabled = [d['id'] for d in devs if d.get('enabled')]
+print(enabled[0] if enabled else '')
+" 2>/dev/null)
+  IOS_DEVICE_ID=$(python3 -c "
+import json, sys
+cfg = json.load(open('$CONFIG_FILE'))
+devs = cfg.get('devices',{}).get('ios',[])
+enabled = [d['id'] for d in devs if d.get('enabled')]
+print(enabled[0] if enabled else '')
+" 2>/dev/null)
+  APPLE_TEAM_ID=$(python3 -c "
+import json, sys
+cfg = json.load(open('$CONFIG_FILE'))
+devs = cfg.get('devices',{}).get('ios',[])
+enabled = [d for d in devs if d.get('enabled')]
+print(enabled[0].get('teamId','') if enabled else '')
+" 2>/dev/null)
+fi
+
+# Fall back to hardcoded defaults if config parsing failed or returned empty
+DEVICE_ID="${DEVICE_ID:-ZL73232GKP}"
+IOS_DEVICE_ID="${IOS_DEVICE_ID:-00008030-001950891A53402E}"
+APPLE_TEAM_ID="${APPLE_TEAM_ID:-22X6D48M4G}"
 
 # Environment setup (not inherited from shell profile in background processes)
 export ANDROID_HOME="$HOME/Library/Android/sdk"

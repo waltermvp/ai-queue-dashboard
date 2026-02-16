@@ -26,5 +26,13 @@
     "e2e": "e2e",
     "content": "content",
     "*": "coding"
+  },
+  "devices": {
+    "android": [
+      { "id": "ZL73232GKP", "name": "Moto E13", "enabled": true }
+    ],
+    "ios": [
+      { "id": "00008030-001950891A53402E", "name": "iPhone 11", "teamId": "22X6D48M4G", "enabled": false }
+    ]
   }
 }
