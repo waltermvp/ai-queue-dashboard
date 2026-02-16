@@ -13,6 +13,7 @@ const PIPELINES_DIR = path.join(__dirname, 'pipelines');
 const PROMPTS_DIR = path.join(__dirname, '..', 'prompts');
 const ARTIFACTS_DIR = path.join(__dirname, '..', 'artifacts');
 const LOCK_FILE = path.join(__dirname, '..', 'queue-worker.lock');
+const PID_FILE = path.join(__dirname, '..', 'pipeline.pid');
 const LOG_FILE = path.join(__dirname, '..', 'queue-worker.log');
 const CONFIG_FILE = path.join(__dirname, '..', 'routing.config.json');
 
@@ -214,14 +215,19 @@ async function executePipeline(type, issueId, solutionText) {
         CODING_TIMEOUT: String(timeout),
         DASHBOARD_DIR: path.join(__dirname, '..'),
       },
-      stdio: ['ignore', 'pipe', 'pipe']
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,  // Create process group for clean cancel
     });
+
+    // Save child PID so cancel command can kill it
+    fs.writeFileSync(PID_FILE, String(proc.pid));
 
     let stdout = '', stderr = '';
     proc.stdout.on('data', (data) => { const line = data.toString(); stdout += line; log(`[pipeline] ${line.trim()}`); });
     proc.stderr.on('data', (data) => { stderr += data.toString(); });
 
     proc.on('close', (code) => {
+      try { fs.unlinkSync(PID_FILE); } catch {}
       if (code === 0) {
         log(`✅ Pipeline ${type} completed successfully for issue #${issueId}`);
         resolve({ executed: true, success: true, exitCode: 0, stdout, stderr });
@@ -498,6 +504,27 @@ async function main() {
         log(`  Processing: ${processing ? 1 : 0}`);
         log(`  Completed: ${completed.length}`);
         log(`  Failed: ${failed.length}`);
+        break;
+      }
+      case 'cancel': {
+        const processing = db.getProcessingItem();
+        if (!processing) { log('⚠️ Nothing is currently processing'); process.exit(0); }
+        // Kill the pipeline child process
+        let killed = false;
+        try {
+          const pid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim(), 10);
+          if (!isNaN(pid)) {
+            // Kill the process group (negative PID) to get all children
+            try { process.kill(-pid, 'SIGTERM'); } catch { process.kill(pid, 'SIGTERM'); }
+            killed = true;
+            try { fs.unlinkSync(PID_FILE); } catch {}
+          }
+        } catch {}
+        // Move processing item to failed
+        db.updateItemStatus(processing.issue_number, 'failed', { error: 'Cancelled by user' });
+        db.generateCacheFile();
+        releaseLock();
+        log(`🛑 Cancelled issue #${processing.issue_number}: ${processing.title}${killed ? ' (process killed)' : ''}`);
         break;
       }
       case 'add-issue': {

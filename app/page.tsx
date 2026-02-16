@@ -508,6 +508,15 @@ export default function Dashboard() {
               <Play className="w-4 h-4 mr-2" />
               Process One
             </button>
+            {isProcessing && (
+              <button 
+                onClick={() => { if (confirm('Cancel the currently running issue?')) executeAction('cancel') }}
+                className="px-3 py-2 text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600"
+              >
+                <XCircle className="w-4 h-4 mr-2 inline" />
+                Cancel
+              </button>
+            )}
             <button 
               onClick={() => executeAction('cleanup')}
               className="btn-warning"

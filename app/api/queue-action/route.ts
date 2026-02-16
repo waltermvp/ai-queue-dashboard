@@ -79,6 +79,10 @@ export async function POST(request: NextRequest) {
         command = `"${NODE_BIN}" "${workerScript}" clear-history`
         message = 'Completed and failed history cleared'
         break
+      case 'cancel':
+        command = `"${NODE_BIN}" "${workerScript}" cancel`
+        message = 'Processing cancelled'
+        break
       case 'add-issue':
         if (!payload?.issueNumber) {
           return NextResponse.json({ error: 'Missing issueNumber' }, { status: 400 })
