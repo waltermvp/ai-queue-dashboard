@@ -1,106 +1,97 @@
-### Task Details
+### Task Overview
 
-**Title:** E2E: Maestro Device Testing - Basic App Flow Validation  
-**ID:** 100  
+**Task:** E2E: Maestro Device Testing - Basic App Flow Validation  
+**Issue ID:** 100  
 **Priority:** Medium  
+**Description:** No description provided  
 **Repository:** MapYourHealth (React Native + Expo)  
 **Labels:** `e2e`, `test`
 
----
+### Steps to Perform E2E Testing
 
-### Steps to Follow for Building, Installing, and Running Maestro Tests
+Given that this task requires end-to-end testing using Maestro, follow the outlined steps below to build, install, and run the tests on real devices.
 
 #### 1. Sync Amplify Outputs
-Ensure that the app can load by synchronizing the Amplify outputs.
+Navigate to the project directory and sync Amplify outputs.
 ```bash
 cd ~/Documents/MapYourHealth && yarn sync:amplify
 ```
 
 #### 2. Build Release APK
-Navigate to the mobile directory and build a release APK with JS bundled in.
+Switch to the mobile app directory and build a release version of the APK with JS bundled in.
 ```bash
 cd apps/mobile && npx expo prebuild --platform android --clean
 cd android && ./gradlew assembleRelease
 ```
 
 #### 3. Install on Android Device
-Install the built APK on your Moto E13 device.
+Install the built APK onto the Moto E13 device using ADB.
 ```bash
 adb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk
 ```
+
 **App ID:** `com.epiphanyapps.mapyourhealth`
 
 #### 4. Set PATH for Maestro
-Ensure that Maestro is accessible in your path.
+Ensure that the Maestro binary is accessible in your system path.
 ```bash
 export PATH="$PATH:$HOME/.maestro/bin"
 ```
 
 #### 5. Create Artifact Directory
-Create a directory to store test artifacts.
+Create a directory to store test artifacts, including recordings and logs.
 ```bash
-mkdir -p ~/Documents/ai-queue-dashboard/artifacts/{issue-id}
+mkdir -p ~/Documents/ai-queue-dashboard/artifacts/100
 ```
 
 #### 6. Run Maestro Tests with Recording
-Run the Maestro tests and capture video recordings of the test runs.
+Execute the Maestro test flow for Android, capturing video recordings of the test run.
 ```bash
 maestro record --local --device ZL73232GKP \
   ~/maestro-farm/flows/android/mapyourhealth-basic.yaml \
-  ~/Documents/ai-queue-dashboard/artifacts/{issue-id}/android-recording.mp4 \
-  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/{issue-id}/test-output.log
+  ~/Documents/ai-queue-dashboard/artifacts/100/android-recording.mp4 \
+  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/100/test-output.log
 ```
-
----
 
 ### Output Requirements
 
-- **Test Results:** Provide a summary of test results with pass/fail status for each flow.
-- **Screenshots:** Include screenshots of any failures.
-- **Summary Report:** Include total tests, passed, failed, and skipped tests.
-- **Error Handling:** If tests fail, include the Maestro error output and suggest fixes.
-- **No Metro Bundler:** Ensure that no Metro bundler is used as the release APK has JS bundled in.
+- **Test Results:** Provide pass/fail status for each flow.
+- **Screenshots of Failures:** Include screenshots if any tests fail.
+- **Summary Report:** Include total tests, passed, failed, and skipped.
+- **Error Output:** If tests fail, provide the Maestro error output and suggest potential fixes.
+- **No Metro Bundler:** Ensure that a release APK with JS bundled in is used for testing.
 
----
+### Example Summary Report
 
-### Example of Expected Output
+```markdown
+## Test Summary Report (Issue ID: 100)
 
-**Test Results:**
-| Flow Name                          | Status |
-|------------------------------------|--------|
-| Sign In                            | Pass   |
-| Dashboard Navigation                 | Fail   |
-| Profile Update                       | Pass   |
+**Total Tests:** 5  
+**Passed:** 4  
+**Failed:** 1  
+**Skipped:** 0  
 
-**Screenshots:**
-- `dashboard-navigation-failure.png`
+### Failures:
+- **Flow Name:** User Login Flow  
+  - **Description:** The login button was not found during the test execution.  
+  - **Error Output:**
+    ```
+    [Maestro Error] Element 'Sign In' not found after 10 seconds.
+    ```
+  - **Fix Suggestion:**
+    Ensure that the element ID or text used in the Maestro flow matches the actual UI component.
 
-**Summary Report:**
-- Total Tests: 3
-- Passed: 2
-- Failed: 1
-- Skipped: 0
+### Screenshots:
+- ![Login Flow Failure](path/to/screenshot.png)
 
-**Test Output Log:**
+### Test Output Logs:
+Refer to `~/Documents/ai-queue-dashboard/artifacts/100/test-output.log` for detailed logs.
 ```
-<contents of test-output.log>
-```
-
-**Error Handling:**
-- **Dashboard Navigation:** Failed because the navigation button was not visible.
-  - Suggested Fix: Verify that the navigation button is properly rendered in the DashboardScreen.
-
----
 
 ### Additional Notes
 
-Ensure that all critical linting rules are followed when writing or modifying React Native code:
-1. **No Inline Styles**: Use `StyleSheet.create()`.
-2. **Import Order**: Import React first, then third-party libraries, and finally local modules.
-3. **Prettier Formatting**: Ensure proper formatting with line breaks and trailing commas.
-4. **React Hooks Dependencies**: Include all dependencies in `useEffect`/`useCallback` arrays.
-5. **Unused Imports**: Remove unused imports.
+- **Maestro Flow:** Ensure that your Maestro flow file (`mapyourhealth-basic.yaml`) is correctly configured and located in the specified path.
+- **Device IDs:** Use the correct device IDs provided for Android (Moto E13) and iOS (iPhone 11).
+- **Environment Variables:** Make sure all required environment variables and configurations are set up before running tests.
 
----
-
-This task requires careful attention to detail and adherence to best practices for E2E testing using Maestro on real devices. Follow the steps outlined above to ensure a smooth testing process.
+By following these steps, you can effectively perform end-to-end testing on the MapYourHealth React Native app using Maestro on real devices.

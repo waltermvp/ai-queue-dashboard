@@ -1,0 +1,9 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp
+- tapOn: "Forgot Password"
+- inputText:
+    id: "email-input"
+    text: "test@example.com"
+- tapOn: "Send"
+- assertVisible: "Password reset email sent" # or a specific element indicating success

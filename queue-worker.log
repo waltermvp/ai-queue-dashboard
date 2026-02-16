@@ -1,0 +1,402 @@
+[2026-02-15T22:25:19.554Z] 👀 Watching queue (checking every 30s)...
+[2026-02-15T22:25:19.556Z]    Press Ctrl+C to stop
+
+[2026-02-15T22:25:19.556Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-15T22:25:19.558Z] ▶️  Started processing: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-15T22:25:19.558Z] 🤖 Processing [e2e]: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-15T22:29:01.989Z] ✅ Completed: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-15T22:30:02.001Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-15T22:30:02.006Z] ▶️  Started processing: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:30:02.009Z] 🤖 Processing [e2e]: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:32:51.273Z] ✅ Completed: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:36:19.220Z] 👀 Watching queue (checking every 30s)...
+[2026-02-15T22:36:19.222Z]    Press Ctrl+C to stop
+
+[2026-02-15T22:36:19.223Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-15T22:36:19.223Z] ▶️  Started processing: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:36:19.223Z] 🤖 Processing [e2e]: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:38:19.592Z] 🔧 Executing e2e pipeline for issue #103...
+[2026-02-15T22:38:19.653Z] [pipeline] [2026-02-15 17:38:19] === E2E Pipeline Started for Issue #103 ===
+[2026-02-15T22:38:19.658Z] [pipeline] [2026-02-15 17:38:19] Step 1/5: Syncing amplify outputs...
+[2026-02-15T22:38:20.110Z] [pipeline] [2026-02-15 17:38:20] ✅ Amplify sync complete
+[2026-02-15T22:38:20.113Z] [pipeline] [2026-02-15 17:38:20] Step 2/5: Running expo prebuild...
+[2026-02-15T22:38:23.285Z] [pipeline] [2026-02-15 17:38:23] ✅ Prebuild complete
+[2026-02-15T22:38:23.289Z] [pipeline] [2026-02-15 17:38:23] Step 3/5: Building release APK...
+[2026-02-15T22:38:32.171Z] ❌ Pipeline e2e failed for issue #103 (exit code: 1)
+[2026-02-15T22:38:32.171Z] ⚠️ Pipeline failed but Qwen analysis succeeded. Marking as completed with pipeline warning.
+[2026-02-15T22:38:32.171Z] 📹 Artifacts collected for 103: 0 recordings, 1 logs
+[2026-02-15T22:38:32.171Z] ✅ Completed: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:40:02.190Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-15T22:40:02.192Z] ▶️  Started processing: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-15T22:40:02.192Z] 🤖 Processing [e2e]: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-15T22:42:47.928Z] 🔧 Executing e2e pipeline for issue #104...
+[2026-02-15T22:42:48.009Z] [pipeline] [2026-02-15 17:42:48] === E2E Pipeline Started for Issue #104 ===
+[2026-02-15T22:42:48.021Z] [pipeline] [2026-02-15 17:42:48] Step 1/5: Syncing amplify outputs...
+[2026-02-15T22:42:48.436Z] [pipeline] [2026-02-15 17:42:48] ✅ Amplify sync complete
+[2026-02-15T22:42:48.438Z] [pipeline] [2026-02-15 17:42:48] Step 2/5: Running expo prebuild...
+[2026-02-15T22:42:51.097Z] [pipeline] [2026-02-15 17:42:51] ✅ Prebuild complete
+[2026-02-15T22:42:51.101Z] [pipeline] [2026-02-15 17:42:51] Step 3/5: Building release APK...
+[2026-02-15T22:42:54.225Z] ❌ Pipeline e2e failed for issue #104 (exit code: 1)
+[2026-02-15T22:42:54.225Z] ⚠️ Pipeline failed but Qwen analysis succeeded. Marking as completed with pipeline warning.
+[2026-02-15T22:42:54.225Z] 📹 Artifacts collected for 104: 0 recordings, 1 logs
+[2026-02-15T22:42:54.226Z] ✅ Completed: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-15T22:46:34.599Z] 👀 Watching queue (checking every 30s)...
+[2026-02-15T22:46:34.606Z]    Press Ctrl+C to stop
+
+[2026-02-15T22:46:34.606Z] 
+📥 Found 2 item(s) in queue. Processing...
+[2026-02-15T22:46:34.607Z] ▶️  Started processing: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:46:34.607Z] 🤖 Processing [e2e]: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:48:39.020Z] 👀 Watching queue (checking every 30s)...
+[2026-02-15T22:48:39.022Z]    Press Ctrl+C to stop
+
+[2026-02-15T22:49:09.034Z] 
+📥 Found 2 item(s) in queue. Processing...
+[2026-02-15T22:49:09.036Z] ▶️  Started processing: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:49:09.037Z] 🤖 Processing [e2e]: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:52:47.325Z] 🔧 Executing e2e pipeline for issue #103...
+[2026-02-15T22:52:47.358Z] [pipeline] [2026-02-15 17:52:47] === E2E Pipeline Started for Issue #103 ===
+[2026-02-15T22:52:47.369Z] [pipeline] [2026-02-15 17:52:47] Step 1/6: Syncing amplify outputs...
+[2026-02-15T22:52:47.803Z] [pipeline] [2026-02-15 17:52:47] ✅ Amplify sync complete
+[2026-02-15T22:52:47.806Z] [pipeline] [2026-02-15 17:52:47] Step 2/6: Checking build cache...
+[2026-02-15T22:52:47.819Z] ❌ Pipeline e2e failed for issue #103 (exit code: 127)
+[2026-02-15T22:52:47.819Z] ❌ Pipeline failed for e2e issue #103
+[2026-02-15T22:52:47.819Z] ❌ Marking e2e issue #103 as FAILED
+[2026-02-15T22:52:47.819Z] 📹 Artifacts collected for 103: 0 recordings, 1 logs
+[2026-02-15T22:52:47.820Z] ✅ Completed: E2E: Record Basic App Flow Tests on Devices
+[2026-02-15T22:52:47.820Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-15T22:52:47.821Z] ▶️  Started processing: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-15T22:52:47.821Z] 🤖 Processing [e2e]: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-15T22:53:19.278Z] 🧹 Cleared 1 completed items
+[2026-02-15T22:59:04.111Z] 🔧 Executing e2e pipeline for issue #104...
+[2026-02-15T22:59:04.138Z] [pipeline] [2026-02-15 17:59:04] === E2E Pipeline Started for Issue #104 ===
+[2026-02-15T22:59:04.144Z] [pipeline] [2026-02-15 17:59:04] Step 1/6: Syncing amplify outputs...
+[2026-02-15T22:59:04.561Z] [pipeline] [2026-02-15 17:59:04] ✅ Amplify sync complete
+[2026-02-15T22:59:04.564Z] [pipeline] [2026-02-15 17:59:04] Step 2/6: Checking build cache...
+[2026-02-15T22:59:04.575Z] ❌ Pipeline e2e failed for issue #104 (exit code: 127)
+[2026-02-15T22:59:04.575Z] ❌ Pipeline failed for e2e issue #104
+[2026-02-15T22:59:04.575Z] ❌ Marking e2e issue #104 as FAILED
+[2026-02-15T22:59:04.575Z] 📹 Artifacts collected for 104: 0 recordings, 1 logs
+[2026-02-15T22:59:04.576Z] ✅ Completed: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-16T01:00:04.547Z] 📊 Queue Status:
+[2026-02-16T01:00:04.549Z]   Queued: 0
+[2026-02-16T01:00:04.549Z]   Processing: 0
+[2026-02-16T01:00:04.549Z]   Completed: 1
+[2026-02-16T01:00:04.550Z]   Failed: 0
+[2026-02-16T02:46:40.019Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-16T02:46:40.027Z] ⚠️ DB recordRun failed: NOT NULL constraint failed: runs.issue_id
+[2026-02-16T02:46:40.028Z] ▶️  Started processing: E2E: Settings Screen & Dark Mode Toggle
+[2026-02-16T02:46:40.028Z] 🤖 Processing [e2e]: E2E: Settings Screen & Dark Mode Toggle
+[2026-02-16T02:50:10.730Z] 🔧 Executing e2e pipeline for issue #undefined...
+[2026-02-16T02:50:10.764Z] [pipeline] [2026-02-15 21:50:10] === E2E Pipeline Started for Issue #undefined ===
+[2026-02-16T02:50:10.771Z] [pipeline] [2026-02-15 21:50:10] Step 1/6: Syncing amplify outputs...
+[2026-02-16T02:50:11.470Z] [pipeline] [2026-02-15 21:50:11] ✅ Amplify sync complete
+[2026-02-16T02:50:11.475Z] [pipeline] [2026-02-15 21:50:11] Step 2/6: Checking build cache...
+[2026-02-16T02:50:11.492Z] ❌ Pipeline e2e failed for issue #undefined (exit code: 127)
+[2026-02-16T02:50:11.492Z] ❌ Pipeline failed for e2e issue #undefined
+[2026-02-16T02:50:11.492Z] ❌ Marking e2e issue #undefined as FAILED
+[2026-02-16T04:03:58.072Z] 👀 Watching queue (checking every 30s)...
+[2026-02-16T04:03:58.075Z]    Press Ctrl+C to stop
+
+[2026-02-16T04:03:58.075Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-16T04:03:58.076Z] ⚠️ DB recordRun failed: NOT NULL constraint failed: runs.issue_id
+[2026-02-16T04:03:58.076Z] ▶️  Started processing: E2E: Settings Screen & Dark Mode Toggle
+[2026-02-16T04:03:58.076Z] 🤖 Processing [e2e]: E2E: Settings Screen & Dark Mode Toggle
+[2026-02-16T04:09:25.545Z] 🔧 Executing e2e pipeline for issue #undefined...
+[2026-02-16T04:09:25.566Z] [pipeline] [2026-02-15 23:09:25] === E2E Pipeline Started for Issue #undefined ===
+[2026-02-16T04:09:25.570Z] [pipeline] [2026-02-15 23:09:25] Step 1/6: Syncing amplify outputs...
+[2026-02-16T04:09:26.021Z] [pipeline] [2026-02-15 23:09:26] ✅ Amplify sync complete
+[2026-02-16T04:09:26.024Z] [pipeline] [2026-02-15 23:09:26] Step 2/6: Checking build cache...
+[2026-02-16T04:09:26.036Z] ❌ Pipeline e2e failed for issue #undefined (exit code: 127)
+[2026-02-16T04:09:26.036Z] ❌ Pipeline failed for e2e issue #undefined
+[2026-02-16T04:09:26.037Z] ❌ Marking e2e issue #undefined as FAILED
+[2026-02-16T04:26:03.923Z] 👀 Watching queue (checking every 30s)...
+[2026-02-16T04:26:03.925Z]    Press Ctrl+C to stop
+
+[2026-02-16T04:27:43.821Z] 👀 Watching queue (checking every 30s)...
+[2026-02-16T04:27:43.823Z]    Press Ctrl+C to stop
+
+[2026-02-16T05:55:05.971Z] 
+📥 Found 4 item(s) in queue. Processing...
+[2026-02-16T05:55:05.975Z] ▶️  Started processing: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-16T05:55:05.975Z] 🤖 Processing [e2e]: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-16T05:55:11.357Z] 👀 Watching queue (checking every 30s)...
+[2026-02-16T05:55:11.359Z]    Press Ctrl+C to stop
+
+[2026-02-16T12:47:10.079Z] 👀 Watching queue (checking every 30s)...
+[2026-02-16T12:47:10.081Z]    Press Ctrl+C to stop
+
+[2026-02-16T12:47:10.081Z] 
+📥 Found 4 item(s) in queue. Processing...
+[2026-02-16T12:47:10.082Z] ▶️  Started processing: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-16T12:47:10.082Z] 🤖 Processing [e2e]: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-16T12:49:31.099Z] 🔧 Executing e2e pipeline for issue #100...
+[2026-02-16T12:49:31.101Z] ℹ️ No Maestro flows found in Qwen's solution, will use default basic flow
+[2026-02-16T12:49:31.140Z] [pipeline] [2026-02-16 07:49:31] === E2E Pipeline Started for Issue #100 ===
+[2026-02-16T12:49:31.144Z] [pipeline] [2026-02-16 07:49:31] Step 1/6: Syncing amplify outputs...
+[2026-02-16T12:49:31.513Z] [pipeline] [2026-02-16 07:49:31] ✅ Amplify sync complete
+[2026-02-16T12:49:31.515Z] [pipeline] [2026-02-16 07:49:31] Step 2/6: Checking build cache...
+[2026-02-16T12:49:31.561Z] [pipeline] [2026-02-16 07:49:31] 🔨 Incremental build (skipping prebuild, JS changes only)...
+[2026-02-16T12:50:03.913Z] [pipeline] [2026-02-16 07:50:03] 📦 Cached APK as 9edba9af987072b32f35949e3d7918aeaf57caa3
+[2026-02-16T12:50:03.916Z] [pipeline] [2026-02-16 07:50:03] ✅ Release APK ready: /Users/waltervargas-pena/Documents/MapYourHealth/apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+[2026-02-16T12:50:03.918Z] [pipeline] [2026-02-16 07:50:03] Step 3/6: Checking device connectivity...
+[2026-02-16T12:50:03.934Z] [pipeline] [2026-02-16 07:50:03] ✅ Device ZL73232GKP connected
+[2026-02-16T12:50:03.936Z] [pipeline] [2026-02-16 07:50:03] Step 4/6: Installing APK and running health check...
+[2026-02-16T12:52:20.879Z] [pipeline] [2026-02-16 07:52:20] ✅ APK installed on ZL73232GKP
+[2026-02-16T12:52:20.886Z] [pipeline] [2026-02-16 07:52:20] 🏥 Launching app for health check...
+[2026-02-16T12:52:21.445Z] [pipeline] [2026-02-16 07:52:21] ⏳ Waiting 10s for app to load on Moto E13...
+[2026-02-16T12:52:31.617Z] [pipeline] [2026-02-16 07:52:31] 🏥 Running health check flow...
+[2026-02-16T12:52:58.503Z] [pipeline] [2026-02-16 07:52:58] ✅ Health check passed — app is loaded and visible
+[2026-02-16T12:52:58.510Z] [pipeline] [2026-02-16 07:52:58] Step 5/6: Running Maestro tests with recording (Android)...
+[2026-02-16T12:52:58.517Z] [pipeline] [2026-02-16 07:52:58] 📋 Using default basic flow
+[2026-02-16T12:52:58.521Z] [pipeline] [2026-02-16 07:52:58] 🔢 Total flows to run: 1
+[2026-02-16T12:52:58.525Z] [pipeline] [2026-02-16 07:52:58] --- Running flow 1/1: mapyourhealth-basic ---
+[2026-02-16T12:52:58.529Z] [pipeline] [2026-02-16 07:52:58] 📹 Started screen recording (PID: 48410)
+[2026-02-16T12:56:07.142Z] [pipeline] [2026-02-16 07:56:07] ⚠️ No screenshots found for mapyourhealth-basic (flow may not use takeScreenshot)
+[2026-02-16T12:56:07.145Z] [pipeline] [2026-02-16 07:56:07] ✅ Flow mapyourhealth-basic PASSED
+[2026-02-16T12:56:07.155Z] [pipeline] [2026-02-16 07:56:07] 🎬 Video for mapyourhealth-basic: 3.1M
+[2026-02-16T12:56:07.166Z] [pipeline] [2026-02-16 07:56:07] --- End flow mapyourhealth-basic ---
+[2026-02-16T12:56:07.169Z] [pipeline] [2026-02-16 07:56:07] Step 6/6: Checking iOS device...
+[2026-02-16T12:56:07.322Z] [pipeline] [2026-02-16 07:56:07] 📱 iOS device found, skipping iOS build for now (use cached .app when available)
+[2026-02-16T12:56:07.327Z] [pipeline] [2026-02-16 07:56:07]
+[2026-02-16T12:56:07.331Z] [pipeline] [2026-02-16 07:56:07] === E2E Pipeline Complete for Issue #100 ===
+[2026-02-16T12:56:07.335Z] [pipeline] [2026-02-16 07:56:07] 📊 Summary: 1/1 flows passed, 1 video(s) recorded
+[2026-02-16T12:56:07.338Z] [pipeline] [2026-02-16 07:56:07] Artifacts:
+[2026-02-16T12:56:07.349Z] ✅ Pipeline e2e completed successfully for issue #100
+[2026-02-16T13:03:46.974Z] 👀 Watching queue (checking every 30s)...
+[2026-02-16T13:03:46.975Z]    Press Ctrl+C to stop
+
+[2026-02-16T13:03:46.976Z] 
+📥 Found 3 item(s) in queue. Processing...
+[2026-02-16T13:03:46.976Z] ▶️  Started processing: E2E: Record Basic App Flow Tests on Devices
+[2026-02-16T13:03:46.977Z] 🤖 Processing [e2e]: E2E: Record Basic App Flow Tests on Devices
+[2026-02-16T13:06:47.611Z] 🔧 Executing e2e pipeline for issue #103...
+[2026-02-16T13:06:47.611Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T13:06:47.612Z] 📋 Extracted 1 Maestro flow(s) from Qwen's solution
+[2026-02-16T13:06:47.635Z] [pipeline] [2026-02-16 08:06:47] === E2E Pipeline Started for Issue #103 ===
+[2026-02-16T13:06:47.638Z] [pipeline] [2026-02-16 08:06:47] Step 1/6: Syncing amplify outputs...
+[2026-02-16T13:06:48.015Z] [pipeline] [2026-02-16 08:06:48] ✅ Amplify sync complete
+[2026-02-16T13:06:48.018Z] [pipeline] [2026-02-16 08:06:48] Step 2/6: Checking build cache...
+[2026-02-16T13:06:48.060Z] [pipeline] [2026-02-16 08:06:48] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16T13:06:48.064Z] [pipeline] [2026-02-16 08:06:48] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16T13:06:48.067Z] [pipeline] [2026-02-16 08:06:48] Step 3/6: Checking device connectivity...
+[2026-02-16T13:06:48.082Z] [pipeline] [2026-02-16 08:06:48] ✅ Device ZL73232GKP connected
+[2026-02-16T13:06:48.086Z] [pipeline] [2026-02-16 08:06:48] Step 4/6: Installing APK and running health check...
+[2026-02-16T13:09:05.211Z] [pipeline] [2026-02-16 08:09:05] ✅ APK installed on ZL73232GKP
+[2026-02-16T13:09:05.217Z] [pipeline] [2026-02-16 08:09:05] 🏥 Launching app for health check...
+[2026-02-16T13:09:05.366Z] [pipeline] [2026-02-16 08:09:05] ⏳ Waiting 10s for app to load on Moto E13...
+[2026-02-16T13:09:15.470Z] [pipeline] [2026-02-16 08:09:15] 🏥 Running health check flow...
+[2026-02-16T13:09:42.777Z] [pipeline] [2026-02-16 08:09:42] ✅ Health check passed — app is loaded and visible
+[2026-02-16T13:09:42.780Z] [pipeline] [2026-02-16 08:09:42] Step 5/6: Running Maestro tests with recording (Android)...
+[2026-02-16T13:09:42.788Z] [pipeline] [2026-02-16 08:09:42] 📋 Found Qwen-generated flows in /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/103/flows
+[2026-02-16T13:09:42.796Z] [pipeline] [2026-02-16 08:09:42]    → qwen-flow-1.yaml
+[2026-02-16T13:09:42.799Z] [pipeline] [2026-02-16 08:09:42] 🔢 Total flows to run: 1
+[2026-02-16T13:09:42.803Z] [pipeline] [2026-02-16 08:09:42] --- Running flow 1/1: qwen-flow-1 ---
+[2026-02-16T13:09:42.806Z] [pipeline] [2026-02-16 08:09:42] 📹 Started screen recording (PID: 50789)
+[2026-02-16T13:13:17.320Z] ❌ Pipeline e2e failed for issue #103 (exit code: 1)
+[2026-02-16T13:13:17.321Z] ❌ Pipeline failed for e2e issue #103
+[2026-02-16T13:13:17.321Z] ❌ Marking e2e issue #103 as FAILED
+[2026-02-16T13:13:17.322Z] 📹 Artifacts collected for 103: 11 recordings, 3 logs
+[2026-02-16T13:13:17.324Z] ❌ Failed (pipeline): E2E: Record Basic App Flow Tests on Devices - E2E pipeline failed (exit code: 1). Check artifacts/103/pipeline.log
+[2026-02-16T13:13:17.327Z] 
+📥 Found 2 item(s) in queue. Processing...
+[2026-02-16T13:13:17.328Z] ▶️  Started processing: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-16T13:13:17.328Z] 🤖 Processing [e2e]: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-16T13:19:36.637Z] 🔧 Executing e2e pipeline for issue #104...
+[2026-02-16T13:19:36.639Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T13:19:36.640Z] 📝 Extracted Qwen flow 2: qwen-flow-2.yaml
+[2026-02-16T13:19:36.640Z] 📝 Extracted Qwen flow 3: qwen-flow-3.yaml
+[2026-02-16T13:19:36.640Z] 📋 Extracted 3 Maestro flow(s) from Qwen's solution
+[2026-02-16T13:19:36.680Z] [pipeline] [2026-02-16 08:19:36] === E2E Pipeline Started for Issue #104 ===
+[2026-02-16T13:19:36.684Z] [pipeline] [2026-02-16 08:19:36] Step 1/6: Syncing amplify outputs...
+[2026-02-16T13:19:37.158Z] [pipeline] [2026-02-16 08:19:37] ✅ Amplify sync complete
+[2026-02-16T13:19:37.161Z] [pipeline] [2026-02-16 08:19:37] Step 2/6: Checking build cache...
+[2026-02-16T13:19:37.203Z] [pipeline] [2026-02-16 08:19:37] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16T13:19:37.206Z] [pipeline] [2026-02-16 08:19:37] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16T13:19:37.210Z] [pipeline] [2026-02-16 08:19:37] Step 3/6: Checking device connectivity...
+[2026-02-16T13:19:37.230Z] [pipeline] [2026-02-16 08:19:37] ❌ PIPELINE FAILED: Android device ZL73232GKP not connected
+[2026-02-16T13:19:37.230Z] ❌ Pipeline e2e failed for issue #104 (exit code: 1)
+[2026-02-16T13:19:37.230Z] ❌ Pipeline failed for e2e issue #104
+[2026-02-16T13:19:37.230Z] ❌ Marking e2e issue #104 as FAILED
+[2026-02-16T13:19:37.230Z] 📹 Artifacts collected for 104: 0 recordings, 1 logs
+[2026-02-16T13:19:37.231Z] ❌ Failed (pipeline): E2E: Auth Flow Test - Login, Signup & Forgot Password - E2E pipeline failed (exit code: 1). Check artifacts/104/pipeline.log
+[2026-02-16T13:19:37.232Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-16T13:19:37.232Z] ▶️  Started processing: E2E: Settings Screen & Dark Mode Toggle
+[2026-02-16T13:19:37.232Z] 🤖 Processing [e2e]: E2E: Settings Screen & Dark Mode Toggle
+[2026-02-16T13:23:54.048Z] 🔧 Executing e2e pipeline for issue #105...
+[2026-02-16T13:23:54.050Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T13:23:54.050Z] 📋 Extracted 1 Maestro flow(s) from Qwen's solution
+[2026-02-16T13:23:54.091Z] [pipeline] [2026-02-16 08:23:54] === E2E Pipeline Started for Issue #105 ===
+[2026-02-16T13:23:54.095Z] [pipeline] [2026-02-16 08:23:54] Step 1/6: Syncing amplify outputs...
+[2026-02-16T13:23:54.588Z] [pipeline] [2026-02-16 08:23:54] ✅ Amplify sync complete
+[2026-02-16T13:23:54.592Z] [pipeline] [2026-02-16 08:23:54] Step 2/6: Checking build cache...
+[2026-02-16T13:23:54.631Z] [pipeline] [2026-02-16 08:23:54] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16T13:23:54.635Z] [pipeline] [2026-02-16 08:23:54] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16T13:23:54.639Z] [pipeline] [2026-02-16 08:23:54] Step 3/6: Checking device connectivity...
+[2026-02-16T13:23:54.659Z] [pipeline] [2026-02-16 08:23:54] ❌ PIPELINE FAILED: Android device ZL73232GKP not connected
+[2026-02-16T13:23:54.660Z] ❌ Pipeline e2e failed for issue #105 (exit code: 1)
+[2026-02-16T13:23:54.660Z] ❌ Pipeline failed for e2e issue #105
+[2026-02-16T13:23:54.660Z] ❌ Marking e2e issue #105 as FAILED
+[2026-02-16T13:23:54.660Z] 📹 Artifacts collected for 105: 0 recordings, 1 logs
+[2026-02-16T13:23:54.661Z] ❌ Failed (pipeline): E2E: Settings Screen & Dark Mode Toggle - E2E pipeline failed (exit code: 1). Check artifacts/105/pipeline.log
+[2026-02-16T14:00:05.881Z] 📊 Queue Status:
+[2026-02-16T14:00:05.884Z]   Queued: 0
+[2026-02-16T14:00:05.884Z]   Processing: 0
+[2026-02-16T14:00:05.884Z]   Completed: 0
+[2026-02-16T14:00:05.884Z]   Failed: 3
+[2026-02-16T14:16:07.482Z] 👀 Watching queue (checking every 30s)...
+[2026-02-16T14:16:07.489Z]    Press Ctrl+C to stop
+
+[2026-02-16T14:16:07.489Z] 
+📥 Found 4 item(s) in queue. Processing...
+[2026-02-16T14:16:07.490Z] ▶️  Started processing: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-16T14:16:07.490Z] 🤖 Processing [e2e]: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-16T14:18:52.376Z] 🔧 Executing e2e pipeline for issue #100...
+[2026-02-16T14:18:52.378Z] ℹ️ No Maestro flows found in Qwen's solution, will use default basic flow
+[2026-02-16T14:18:52.420Z] [pipeline] [2026-02-16 09:18:52] === E2E Pipeline Started for Issue #100 ===
+[2026-02-16T14:18:52.424Z] [pipeline] [2026-02-16 09:18:52] Step 1/6: Syncing amplify outputs...
+[2026-02-16T14:18:52.810Z] [pipeline] [2026-02-16 09:18:52] ✅ Amplify sync complete
+[2026-02-16T14:18:52.813Z] [pipeline] [2026-02-16 09:18:52] Step 2/6: Checking build cache...
+[2026-02-16T14:18:52.858Z] [pipeline] [2026-02-16 09:18:52] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16T14:18:52.860Z] [pipeline] [2026-02-16 09:18:52] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16T14:18:52.863Z] [pipeline] [2026-02-16 09:18:52] Step 3/6: Checking device connectivity...
+[2026-02-16T14:18:52.881Z] [pipeline] [2026-02-16 09:18:52] ✅ Device ZL73232GKP connected
+[2026-02-16T14:18:52.883Z] [pipeline] [2026-02-16 09:18:52] Step 4/6: Installing APK and running health check...
+[2026-02-16T14:19:02.111Z] [pipeline] [2026-02-16 09:19:02] ✅ APK installed on ZL73232GKP
+[2026-02-16T14:19:02.118Z] [pipeline] [2026-02-16 09:19:02] 🏥 Launching app for health check...
+[2026-02-16T14:19:02.565Z] [pipeline] [2026-02-16 09:19:02] ⏳ Waiting 10s for app to load on Moto E13...
+[2026-02-16T14:19:12.593Z] [pipeline] [2026-02-16 09:19:12] 🏥 Running health check flow...
+[2026-02-16T14:19:25.912Z] [pipeline] [2026-02-16 09:19:25] ✅ Health check passed — app is loaded and visible
+[2026-02-16T14:19:25.916Z] [pipeline] [2026-02-16 09:19:25] Step 5/6: Running Maestro tests with recording (Android)...
+[2026-02-16T14:19:25.920Z] [pipeline] [2026-02-16 09:19:25] 📋 Using default basic flow
+[2026-02-16T14:19:25.924Z] [pipeline] [2026-02-16 09:19:25] 🔢 Total flows to run: 1
+[2026-02-16T14:19:25.927Z] [pipeline] [2026-02-16 09:19:25] --- Running flow 1/1: mapyourhealth-basic ---
+[2026-02-16T14:19:25.931Z] [pipeline] [2026-02-16 09:19:25] 📹 Started screen recording (PID: 58129)
+[2026-02-16T14:20:07.201Z] [pipeline] [2026-02-16 09:20:07] ⚠️ No screenshots found for mapyourhealth-basic (flow may not use takeScreenshot)
+[2026-02-16T14:20:07.204Z] [pipeline] [2026-02-16 09:20:07] ✅ Flow mapyourhealth-basic PASSED
+[2026-02-16T14:20:07.215Z] [pipeline] [2026-02-16 09:20:07] 🎬 Video for mapyourhealth-basic: 2.3M
+[2026-02-16T14:20:07.218Z] [pipeline] [2026-02-16 09:20:07] --- End flow mapyourhealth-basic ---
+[2026-02-16T14:20:07.221Z] [pipeline] [2026-02-16 09:20:07] Step 6/6: Checking iOS device...
+[2026-02-16T14:20:07.333Z] [pipeline] [2026-02-16 09:20:07] 📱 iOS device found, skipping iOS build for now (use cached .app when available)
+[2026-02-16T14:20:07.336Z] [pipeline] [2026-02-16 09:20:07]
+[2026-02-16T14:20:07.339Z] [pipeline] [2026-02-16 09:20:07] === E2E Pipeline Complete for Issue #100 ===
+[2026-02-16T14:20:07.343Z] [pipeline] [2026-02-16 09:20:07] 📊 Summary: 1/1 flows passed, 1 video(s) recorded
+[2026-02-16T14:20:07.346Z] [pipeline] [2026-02-16 09:20:07] Artifacts:
+[2026-02-16T14:20:07.353Z] ✅ Pipeline e2e completed successfully for issue #100
+[2026-02-16T14:20:07.353Z] 📹 Artifacts collected for 100: 1 recordings, 3 logs
+[2026-02-16T14:20:07.354Z] ✅ Completed: E2E: Maestro Device Testing - Basic App Flow Validation
+[2026-02-16T14:20:07.355Z] 
+📥 Found 3 item(s) in queue. Processing...
+[2026-02-16T14:20:07.355Z] ▶️  Started processing: E2E: Record Basic App Flow Tests on Devices
+[2026-02-16T14:20:07.356Z] 🤖 Processing [e2e]: E2E: Record Basic App Flow Tests on Devices
+[2026-02-16T14:22:47.742Z] 🔧 Executing e2e pipeline for issue #103...
+[2026-02-16T14:22:47.745Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T14:22:47.746Z] 📋 Extracted 1 Maestro flow(s) from Qwen's solution
+[2026-02-16T14:22:47.790Z] [pipeline] [2026-02-16 09:22:47] === E2E Pipeline Started for Issue #103 ===
+[2026-02-16T14:22:47.793Z] [pipeline] [2026-02-16 09:22:47] Step 1/6: Syncing amplify outputs...
+[2026-02-16T14:22:48.175Z] [pipeline] [2026-02-16 09:22:48] ✅ Amplify sync complete
+[2026-02-16T14:22:48.178Z] [pipeline] [2026-02-16 09:22:48] Step 2/6: Checking build cache...
+[2026-02-16T14:22:48.209Z] [pipeline] [2026-02-16 09:22:48] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16T14:22:48.212Z] [pipeline] [2026-02-16 09:22:48] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16T14:22:48.215Z] [pipeline] [2026-02-16 09:22:48] Step 3/6: Checking device connectivity...
+[2026-02-16T14:22:48.232Z] [pipeline] [2026-02-16 09:22:48] ✅ Device ZL73232GKP connected
+[2026-02-16T14:22:48.234Z] [pipeline] [2026-02-16 09:22:48] Step 4/6: Installing APK and running health check...
+[2026-02-16T14:22:57.414Z] [pipeline] [2026-02-16 09:22:57] ✅ APK installed on ZL73232GKP
+[2026-02-16T14:22:57.422Z] [pipeline] [2026-02-16 09:22:57] 🏥 Launching app for health check...
+[2026-02-16T14:22:57.611Z] [pipeline] [2026-02-16 09:22:57] ⏳ Waiting 10s for app to load on Moto E13...
+[2026-02-16T14:23:07.709Z] [pipeline] [2026-02-16 09:23:07] 🏥 Running health check flow...
+[2026-02-16T14:23:20.636Z] [pipeline] [2026-02-16 09:23:20] ✅ Health check passed — app is loaded and visible
+[2026-02-16T14:23:20.642Z] [pipeline] [2026-02-16 09:23:20] Step 5/6: Running Maestro tests with recording (Android)...
+[2026-02-16T14:23:20.651Z] [pipeline] [2026-02-16 09:23:20] 📋 Found Qwen-generated flows in /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/103/flows
+[2026-02-16T14:23:20.662Z] [pipeline] [2026-02-16 09:23:20]    → qwen-flow-1.yaml
+[2026-02-16T14:23:20.665Z] [pipeline] [2026-02-16 09:23:20] 🔢 Total flows to run: 1
+[2026-02-16T14:23:20.668Z] [pipeline] [2026-02-16 09:23:20] --- Running flow 1/1: qwen-flow-1 ---
+[2026-02-16T14:23:20.672Z] [pipeline] [2026-02-16 09:23:20] 📹 Started screen recording (PID: 58680)
+[2026-02-16T14:26:22.333Z] ❌ Pipeline e2e failed for issue #103 (exit code: 1)
+[2026-02-16T14:26:22.334Z] ❌ Pipeline failed for e2e issue #103
+[2026-02-16T14:26:22.334Z] ❌ Marking e2e issue #103 as FAILED
+[2026-02-16T14:26:22.334Z] 📹 Artifacts collected for 103: 11 recordings, 3 logs
+[2026-02-16T14:26:22.336Z] ❌ Failed (pipeline): E2E: Record Basic App Flow Tests on Devices - E2E pipeline failed (exit code: 1). Check artifacts/103/pipeline.log
+[2026-02-16T14:26:22.338Z] 
+📥 Found 2 item(s) in queue. Processing...
+[2026-02-16T14:26:22.339Z] ▶️  Started processing: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-16T14:26:22.339Z] 🤖 Processing [e2e]: E2E: Auth Flow Test - Login, Signup & Forgot Password
+[2026-02-16T14:32:41.822Z] 🔧 Executing e2e pipeline for issue #104...
+[2026-02-16T14:32:41.823Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T14:32:41.824Z] 📝 Extracted Qwen flow 2: qwen-flow-2.yaml
+[2026-02-16T14:32:41.824Z] 📝 Extracted Qwen flow 3: qwen-flow-3.yaml
+[2026-02-16T14:32:41.824Z] 📋 Extracted 3 Maestro flow(s) from Qwen's solution
+[2026-02-16T14:32:41.864Z] [pipeline] [2026-02-16 09:32:41] === E2E Pipeline Started for Issue #104 ===
+[2026-02-16T14:32:41.868Z] [pipeline] [2026-02-16 09:32:41] Step 1/6: Syncing amplify outputs...
+[2026-02-16T14:32:42.226Z] [pipeline] [2026-02-16 09:32:42] ✅ Amplify sync complete
+[2026-02-16T14:32:42.229Z] [pipeline] [2026-02-16 09:32:42] Step 2/6: Checking build cache...
+[2026-02-16T14:32:42.256Z] [pipeline] [2026-02-16 09:32:42] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16T14:32:42.259Z] [pipeline] [2026-02-16 09:32:42] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16T14:32:42.262Z] [pipeline] [2026-02-16 09:32:42] Step 3/6: Checking device connectivity...
+[2026-02-16T14:32:42.277Z] [pipeline] [2026-02-16 09:32:42] ✅ Device ZL73232GKP connected
+[2026-02-16T14:32:42.280Z] [pipeline] [2026-02-16 09:32:42] Step 4/6: Installing APK and running health check...
+[2026-02-16T14:34:15.718Z] [pipeline] [2026-02-16 09:34:15] ✅ APK installed on ZL73232GKP
+[2026-02-16T14:34:15.722Z] [pipeline] [2026-02-16 09:34:15] 🏥 Launching app for health check...
+[2026-02-16T14:34:16.075Z] [pipeline] [2026-02-16 09:34:16] ⏳ Waiting 10s for app to load on Moto E13...
+[2026-02-16T14:34:26.141Z] [pipeline] [2026-02-16 09:34:26] 🏥 Running health check flow...
+[2026-02-16T14:34:39.027Z] [pipeline] [2026-02-16 09:34:39] ✅ Health check passed — app is loaded and visible
+[2026-02-16T14:34:39.030Z] [pipeline] [2026-02-16 09:34:39] Step 5/6: Running Maestro tests with recording (Android)...
+[2026-02-16T14:34:39.038Z] [pipeline] [2026-02-16 09:34:39] 📋 Found Qwen-generated flows in /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/104/flows
+[2026-02-16T14:34:39.047Z] [pipeline] [2026-02-16 09:34:39]    → qwen-flow-1.yaml
+[2026-02-16T14:34:39.054Z] [pipeline] [2026-02-16 09:34:39]    → qwen-flow-2.yaml
+[2026-02-16T14:34:39.061Z] [pipeline] [2026-02-16 09:34:39]    → qwen-flow-3.yaml
+[2026-02-16T14:34:39.064Z] [pipeline] [2026-02-16 09:34:39] 🔢 Total flows to run: 3
+[2026-02-16T14:34:39.067Z] [pipeline] [2026-02-16 09:34:39] --- Running flow 1/3: qwen-flow-1 ---
+[2026-02-16T14:34:39.070Z] [pipeline] [2026-02-16 09:34:39] 📹 Started screen recording (PID: 59383)
+[2026-02-16T14:38:03.007Z] ❌ Pipeline e2e failed for issue #104 (exit code: 1)
+[2026-02-16T14:38:03.007Z] ❌ Pipeline failed for e2e issue #104
+[2026-02-16T14:38:03.007Z] ❌ Marking e2e issue #104 as FAILED
+[2026-02-16T14:38:03.007Z] 📹 Artifacts collected for 104: 0 recordings, 3 logs
+[2026-02-16T14:38:03.008Z] ❌ Failed (pipeline): E2E: Auth Flow Test - Login, Signup & Forgot Password - E2E pipeline failed (exit code: 1). Check artifacts/104/pipeline.log
+[2026-02-16T14:38:03.008Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-16T14:38:03.009Z] ▶️  Started processing: E2E: Settings Screen & Dark Mode Toggle
+[2026-02-16T14:38:03.009Z] 🤖 Processing [e2e]: E2E: Settings Screen & Dark Mode Toggle
+[2026-02-16T14:49:02.865Z] 🔧 Executing e2e pipeline for issue #105...
+[2026-02-16T14:49:02.868Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T14:49:02.868Z] 📋 Extracted 1 Maestro flow(s) from Qwen's solution
+[2026-02-16T14:49:02.898Z] [pipeline] [2026-02-16 09:49:02] === E2E Pipeline Started for Issue #105 ===
+[2026-02-16T14:49:02.902Z] [pipeline] [2026-02-16 09:49:02] Step 1/6: Syncing amplify outputs...
+[2026-02-16T14:49:03.242Z] [pipeline] [2026-02-16 09:49:03] ✅ Amplify sync complete
+[2026-02-16T14:49:03.244Z] [pipeline] [2026-02-16 09:49:03] Step 2/6: Checking build cache...
+[2026-02-16T14:49:03.264Z] [pipeline] [2026-02-16 09:49:03] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16T14:49:03.267Z] [pipeline] [2026-02-16 09:49:03] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16T14:49:03.269Z] [pipeline] [2026-02-16 09:49:03] Step 3/6: Checking device connectivity...
+[2026-02-16T14:49:03.283Z] [pipeline] [2026-02-16 09:49:03] ✅ Device ZL73232GKP connected
+[2026-02-16T14:49:03.285Z] [pipeline] [2026-02-16 09:49:03] Step 4/6: Installing APK and running health check...
+[2026-02-16T14:51:05.944Z] [pipeline] [2026-02-16 09:51:05] ✅ APK installed on ZL73232GKP
+[2026-02-16T14:51:05.949Z] [pipeline] [2026-02-16 09:51:05] 🏥 Launching app for health check...
+[2026-02-16T14:51:06.597Z] [pipeline] [2026-02-16 09:51:06] ⏳ Waiting 10s for app to load on Moto E13...
+[2026-02-16T14:51:16.764Z] [pipeline] [2026-02-16 09:51:16] 🏥 Running health check flow...
+[2026-02-16T14:51:29.270Z] [pipeline] [2026-02-16 09:51:29] ✅ Health check passed — app is loaded and visible
+[2026-02-16T14:51:29.275Z] [pipeline] [2026-02-16 09:51:29] Step 5/6: Running Maestro tests with recording (Android)...
+[2026-02-16T14:51:29.281Z] [pipeline] [2026-02-16 09:51:29] 📋 Found Qwen-generated flows in /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/105/flows
+[2026-02-16T14:51:29.290Z] [pipeline] [2026-02-16 09:51:29]    → qwen-flow-1.yaml
+[2026-02-16T14:51:29.293Z] [pipeline] [2026-02-16 09:51:29] 🔢 Total flows to run: 1
+[2026-02-16T14:51:29.296Z] [pipeline] [2026-02-16 09:51:29] --- Running flow 1/1: qwen-flow-1 ---
+[2026-02-16T14:51:29.300Z] [pipeline] [2026-02-16 09:51:29] 📹 Started screen recording (PID: 59740)
+[2026-02-16T14:57:09.258Z] ❌ Pipeline e2e failed for issue #105 (exit code: 1)
+[2026-02-16T14:57:09.258Z] ❌ Pipeline failed for e2e issue #105
+[2026-02-16T14:57:09.259Z] ❌ Marking e2e issue #105 as FAILED
+[2026-02-16T14:57:09.259Z] 📹 Artifacts collected for 105: 0 recordings, 3 logs
+[2026-02-16T14:57:09.259Z] ❌ Failed (pipeline): E2E: Settings Screen & Dark Mode Toggle - E2E pipeline failed (exit code: 1). Check artifacts/105/pipeline.log
+[2026-02-16T18:16:50.062Z] ➕ Added demo items to queue
+[2026-02-16T18:16:50.877Z] ➕ Added demo items to queue
+[2026-02-16T18:17:06.186Z] 
+📥 Found 3 item(s) in queue. Processing...
+[2026-02-16T18:17:06.198Z] ⚠️ DB recordRun failed: NOT NULL constraint failed: runs.issue_id
+[2026-02-16T18:17:06.198Z] ▶️  Started processing: Optimize API Performance
+[2026-02-16T18:17:06.198Z] 🤖 Processing [coding]: Optimize API Performance

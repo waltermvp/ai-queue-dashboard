@@ -1429,3 +1429,48 @@ drwxr-xr-x@ 2 waltervargas-pena  staff       64 Feb 16 07:49 flows
 -rw-r--r--@ 1 waltervargas-pena  staff    91642 Feb 16 07:56 pipeline.log
 -rw-r--r--@ 1 waltervargas-pena  staff     3379 Feb 16 07:49 qwen-solution.md
 -rw-r--r--@ 1 waltervargas-pena  staff     1782 Feb 16 07:55 test-output-mapyourhealth-basic.log
+[2026-02-16 09:18:52] === E2E Pipeline Started for Issue #100 ===
+[2026-02-16 09:18:52] Step 1/6: Syncing amplify outputs...
+✓ Synced amplify_outputs.json from backend to root and mobile
+[2026-02-16 09:18:52] ✅ Amplify sync complete
+[2026-02-16 09:18:52] Step 2/6: Checking build cache...
+[2026-02-16 09:18:52] ♻️ Using cached APK (native deps unchanged: 9edba9af987072b32f35949e3d7918aeaf57caa3)
+[2026-02-16 09:18:52] ✅ Release APK ready: /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/builds/9edba9af987072b32f35949e3d7918aeaf57caa3-android.apk
+[2026-02-16 09:18:52] Step 3/6: Checking device connectivity...
+device
+[2026-02-16 09:18:52] ✅ Device ZL73232GKP connected
+[2026-02-16 09:18:52] Step 4/6: Installing APK and running health check...
+Performing Streamed Install
+Success
+[2026-02-16 09:19:02] ✅ APK installed on ZL73232GKP
+[2026-02-16 09:19:02] 🏥 Launching app for health check...
+Starting: Intent { cmp=com.epiphanyapps.mapyourhealth/.MainActivity }
+[2026-02-16 09:19:02] ⏳ Waiting 10s for app to load on Moto E13...
+[2026-02-16 09:19:12] 🏥 Running health check flow...
+[2026-02-16 09:19:25] ✅ Health check passed — app is loaded and visible
+[2026-02-16 09:19:25] Step 5/6: Running Maestro tests with recording (Android)...
+[2026-02-16 09:19:25] 📋 Using default basic flow
+[2026-02-16 09:19:25] 🔢 Total flows to run: 1
+[2026-02-16 09:19:25] --- Running flow 1/1: mapyourhealth-basic ---
+[2026-02-16 09:19:25] 📹 Started screen recording (PID: 58129)
+/sdcard/e2e-recording-mapyourhealth-basic.mp4: 1 file pulled, 0 skipped. 22.2 MB/s (2368761 bytes in 0.102s)
+[2026-02-16 09:20:07] ⚠️ No screenshots found for mapyourhealth-basic (flow may not use takeScreenshot)
+[2026-02-16 09:20:07] ✅ Flow mapyourhealth-basic PASSED
+[2026-02-16 09:20:07] 🎬 Video for mapyourhealth-basic: 2.3M
+[2026-02-16 09:20:07] --- End flow mapyourhealth-basic ---
+[2026-02-16 09:20:07] Step 6/6: Checking iOS device...
+Dann💗🥥
+[2026-02-16 09:20:07] 📱 iOS device found, skipping iOS build for now (use cached .app when available)
+[2026-02-16 09:20:07] 
+[2026-02-16 09:20:07] === E2E Pipeline Complete for Issue #100 ===
+[2026-02-16 09:20:07] 📊 Summary: 1/1 flows passed, 1 video(s) recorded
+[2026-02-16 09:20:07] Artifacts:
+total 4920
+drwxr-xr-x@ 8 waltervargas-pena  staff      256 Feb 16 09:20 .
+drwxr-xr-x@ 9 waltervargas-pena  staff      288 Feb 16 08:23 ..
+-rw-r--r--@ 1 waltervargas-pena  staff  2368761 Feb 16 09:20 android-mapyourhealth-basic.mp4
+drwxr-xr-x@ 2 waltervargas-pena  staff       64 Feb 16 07:49 flows
+-rw-r--r--@ 1 waltervargas-pena  staff     2252 Feb 16 09:19 healthcheck-output.log
+-rw-r--r--@ 1 waltervargas-pena  staff    94552 Feb 16 09:20 pipeline.log
+-rw-r--r--@ 1 waltervargas-pena  staff     3402 Feb 16 09:18 qwen-solution.md
+-rw-r--r--@ 1 waltervargas-pena  staff     3564 Feb 16 09:20 test-output-mapyourhealth-basic.log

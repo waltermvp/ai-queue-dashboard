@@ -1,0 +1,18 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp
+- tapOn: "Sign Up"
+- inputText:
+    id: "name-input"
+    text: "John Doe"
+- inputText:
+    id: "email-input"
+    text: "newuser@example.com"
+- inputText:
+    id: "password-input"
+    text: "securepassword123"
+- inputText:
+    id: "confirm-password-input"
+    text: "securepassword123"
+- tapOn: "Sign Up"
+- assertVisible: "Registration Successful" # or a specific element indicating success

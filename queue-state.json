@@ -1,19 +1,13 @@
 {
   "current_issue": null,
   "processing": {
-    "issueNumber": 100,
-    "repo": "epiphanyapps/MapYourHealth",
-    "title": "E2E: Maestro Device Testing - Basic App Flow Validation",
-    "labels": [
-      "e2e",
-      "test"
-    ],
-    "priority": "medium",
-    "addedAt": "2026-02-16T04:30:00Z",
-    "started_at": "2026-02-16T12:47:10.081Z"
+    "id": "demo-1771265810061-1",
+    "title": "Optimize API Performance",
+    "priority": "high",
+    "created_at": "2026-02-16T18:16:50.061Z",
+    "started_at": "2026-02-16T18:17:06.191Z"
   },
-  "completed": [],
-  "queue": [
+  "completed": [
     {
       "issueNumber": 100,
       "repo": "epiphanyapps/MapYourHealth",
@@ -23,8 +17,28 @@
         "test"
       ],
       "priority": "medium",
-      "addedAt": "2026-02-16T04:30:00Z"
-    },
+      "addedAt": "2026-02-16T13:30:00Z",
+      "solution": "### Task Overview\n\n**Task:** E2E: Maestro Device Testing - Basic App Flow Validation  \n**Issue ID:** 100  \n**Priority:** Medium  \n**Description:** No description provided  \n**Repository:** MapYourHealth (React Native + Expo)  \n**Labels:** `e2e`, `test`\n\n### Steps to Perform E2E Testing\n\nGiven that this task requires end-to-end testing using Maestro, follow the outlined steps below to build, install, and run the tests on real devices.\n\n#### 1. Sync Amplify Outputs\nNavigate to the project directory and sync Amplify outputs.\n```bash\ncd ~/Documents/MapYourHealth && yarn sync:amplify\n```\n\n#### 2. Build Release APK\nSwitch to the mobile app directory and build a release version of the APK with JS bundled in.\n```bash\ncd apps/mobile && npx expo prebuild --platform android --clean\ncd android && ./gradlew assembleRelease\n```\n\n#### 3. Install on Android Device\nInstall the built APK onto the Moto E13 device using ADB.\n```bash\nadb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n```\n\n**App ID:** `com.epiphanyapps.mapyourhealth`\n\n#### 4. Set PATH for Maestro\nEnsure that the Maestro binary is accessible in your system path.\n```bash\nexport PATH=\"$PATH:$HOME/.maestro/bin\"\n```\n\n#### 5. Create Artifact Directory\nCreate a directory to store test artifacts, including recordings and logs.\n```bash\nmkdir -p ~/Documents/ai-queue-dashboard/artifacts/100\n```\n\n#### 6. Run Maestro Tests with Recording\nExecute the Maestro test flow for Android, capturing video recordings of the test run.\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/maestro-farm/flows/android/mapyourhealth-basic.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/100/android-recording.mp4 \\\n  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/100/test-output.log\n```\n\n### Output Requirements\n\n- **Test Results:** Provide pass/fail status for each flow.\n- **Screenshots of Failures:** Include screenshots if any tests fail.\n- **Summary Report:** Include total tests, passed, failed, and skipped.\n- **Error Output:** If tests fail, provide the Maestro error output and suggest potential fixes.\n- **No Metro Bundler:** Ensure that a release APK with JS bundled in is used for testing.\n\n### Example Summary Report\n\n```markdown\n## Test Summary Report (Issue ID: 100)\n\n**Total Tests:** 5  \n**Passed:** 4  \n**Failed:** 1  \n**Skipped:** 0  \n\n### Failures:\n- **Flow Name:** User Login Flow  \n  - **Description:** The login button was not found during the test execution.  \n  - **Error Output:**\n    ```\n    [Maestro Error] Element 'Sign In' not found after 10 seconds.\n    ```\n  - **Fix Suggestion:**\n    Ensure that the element ID or text used in the Maestro flow matches the actual UI component.\n\n### Screenshots:\n- ![Login Flow Failure](path/to/screenshot.png)\n\n### Test Output Logs:\nRefer to `~/Documents/ai-queue-dashboard/artifacts/100/test-output.log` for detailed logs.\n```\n\n### Additional Notes\n\n- **Maestro Flow:** Ensure that your Maestro flow file (`mapyourhealth-basic.yaml`) is correctly configured and located in the specified path.\n- **Device IDs:** Use the correct device IDs provided for Android (Moto E13) and iOS (iPhone 11).\n- **Environment Variables:** Make sure all required environment variables and configurations are set up before running tests.\n\nBy following these steps, you can effectively perform end-to-end testing on the MapYourHealth React Native app using Maestro on real devices.",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-16T14:18:52.375Z",
+      "processing_time": 164885,
+      "pipelineExecuted": true,
+      "pipelineSuccess": true,
+      "artifacts": {
+        "dir": "artifacts/100",
+        "recordings": [
+          "android-mapyourhealth-basic.mp4"
+        ],
+        "logs": [
+          "healthcheck-output.log",
+          "pipeline.log",
+          "test-output-mapyourhealth-basic.log"
+        ]
+      }
+    }
+  ],
+  "queue": [],
+  "failed": [
     {
       "issueNumber": 103,
       "repo": "epiphanyapps/MapYourHealth",
@@ -34,7 +48,36 @@
         "test"
       ],
       "priority": "medium",
-      "addedAt": "2026-02-16T04:30:00Z"
+      "addedAt": "2026-02-16T13:30:00Z",
+      "solution": "### Task Overview\n\n**Task:** Record Basic App Flow Tests on Devices  \n**ID:** 103  \n**Priority:** Medium  \n**Repository:** MapYourHealth (React Native + Expo)  \n**Labels:** `e2e`, `test`\n\n### Steps to Follow\n\nWe will follow the steps outlined in your prompt to build, install, and run Maestro tests on real devices for the **MapYourHealth** React Native app.\n\n#### 1. Sync Amplify Outputs\n```bash\ncd ~/Documents/MapYourHealth && yarn sync:amplify\n```\n\n#### 2. Build Release APK\nEnsure you are in the correct directory and follow these steps:\n```bash\ncd apps/mobile && npx expo prebuild --platform android --clean\ncd android && ./gradlew assembleRelease\n```\n\n#### 3. Install on Android Device\nInstall the release APK to your Moto E13 device.\n```bash\nadb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n```\n\n**App ID:** `com.epiphanyapps.mapyourhealth` (Ensure this matches with the app installed)\n\n#### 4. Set PATH for Maestro\nMake sure Maestro is in your PATH.\n```bash\nexport PATH=\"$PATH:$HOME/.maestro/bin\"\n```\n\n#### 5. Create Artifact Directory\nCreate a directory to store test artifacts.\n```bash\nmkdir -p ~/Documents/ai-queue-dashboard/artifacts/103\n```\n\n#### 6. Run Maestro Tests with Recording\n\nFor Android (Moto E13):\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/maestro-farm/flows/android/mapyourhealth-basic.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/103/android-recording.mp4 \\\n  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/103/test-output.log\n```\n\nFor iOS (iPhone 11) \u2014 requires bridge running first:\n```bash\n# Terminal 1 \u2014 keep running:\nmaestro-ios-device --team-id 22X6D48M4G --device 00008030-001950891A53402E\n\n# Terminal 2:\nmaestro record --local --driver-host-port 6001 --device 00008030-001950891A53402E \\\n  ~/maestro-farm/flows/ios/mapyourhealth-basic.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/103/ios-recording.mp4 \\\n  2>&1 | tee -a ~/Documents/ai-queue-dashboard/artifacts/103/test-output.log\n```\n\n### Output Requirements\n\n- **Test Results:** Pass/Fail for each flow.\n- **Screenshots of Failures:** If any test fails, capture screenshots to diagnose the issue.\n- **Summary Report:**\n  - Total Tests\n  - Passed Tests\n  - Failed Tests\n  - Skipped Tests\n- **Error Output and Fixes:** If tests fail, include Maestro error output and suggest fixes.\n\n### Additional Notes\n\nEnsure that all Maestro flows are correctly defined in `apps/mobile/.maestro/flows/`. Here is an example of a simple flow:\n\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Sign In\"\n- inputText:\n    id: \"email-input\"\n    text: \"test@example.com\"\n- inputText:\n    id: \"password-input\"\n    text: \"password123\"\n- tapOn: \"Submit\"\n- assertVisible: \"Dashboard\"\n```\n\n### Final Steps\n\nAfter running the tests, check the artifact directory for the recordings and logs. Ensure that all required outputs are captured as per the requirements.\n\nIf there are any issues or failures, review the Maestro error output and take necessary actions to fix them. This might involve adjusting the flows or fixing bugs in the application.\n\n### Example of Reviewing Logs\n\nAfter running the tests, you can open the `test-output.log` file:\n```bash\ncat ~/Documents/ai-queue-dashboard/artifacts/103/test-output.log\n```\n\nLook for any errors and review the corresponding screenshots to understand what went wrong. Adjust your Maestro flows or fix application issues as needed.\n\n### Conclusion\n\nBy following these steps, you will be able to build, install, and run Maestro tests on real devices for the **MapYourHealth** React Native app. This process ensures that your application is functioning correctly in a production-like environment.",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-16T14:22:47.741Z",
+      "processing_time": 160387,
+      "pipelineExecuted": true,
+      "pipelineSuccess": false,
+      "artifacts": {
+        "dir": "artifacts/103",
+        "recordings": [
+          "android-E2E-001-subscription-flow.mp4",
+          "android-E2E-002-search-validation.mp4",
+          "android-E2E-003-category-reorganization.mp4",
+          "android-E2E-004-external-links.mp4",
+          "android-E2E-005-dashboard-accordion.mp4",
+          "android-E2E-006-risk-factors-display.mp4",
+          "android-E2E-009-autocomplete-selection.mp4",
+          "android-E2E-010-accordion-subitem-selection.mp4",
+          "android-E2E-100-basic-app-launch.mp4",
+          "android-E2E-101-basic-navigation.mp4",
+          "android-E2E-102-search-functionality.mp4"
+        ],
+        "logs": [
+          "healthcheck-output.log",
+          "pipeline.log",
+          "test-output-qwen-flow-1.log"
+        ]
+      },
+      "error": "E2E pipeline failed (exit code: 1). Check artifacts/103/pipeline.log",
+      "failed_at": "2026-02-16T14:22:47.741Z"
     },
     {
       "issueNumber": 104,
@@ -45,7 +88,24 @@
         "test"
       ],
       "priority": "medium",
-      "addedAt": "2026-02-16T04:30:00Z"
+      "addedAt": "2026-02-16T13:30:00Z",
+      "solution": "### Summary\nImplement and run end-to-end tests for the authentication flow in the MapYourHealth app, covering login, signup, and forgot password functionalities.\n\n### Files to Modify\n- Create new Maestro YAML flows for each part of the auth flow:\n  - `apps/mobile/.maestro/flows/auth-login.yaml`\n  - `apps/mobile/.maestro/flows/auth-signup.yaml`\n  - `apps/mobile/.maestro/flows/auth-forgot-password.yaml`\n\n### Files NOT to Modify\n- Config files such as `amplifyconfiguration.json`, `app.config.js` \u2014 these contain configuration details and should not be altered for this task.\n- Utility functions that handle authentication logic globally (e.g., `authService.ts`) \u2014 focus on the UI flow.\n\n### Search Pattern\nLook for:\n- Login screen elements: \"Sign In\", \"Email\", \"Password\", \"Login\"\n- Signup screen elements: \"Sign Up\", \"Name\", \"Email\", \"Password\", \"Confirm Password\"\n- Forgot password screen elements: \"Forgot Password\", \"Email\", \"Send\"\n\n### Expected Change\nCreate new Maestro flows that simulate user interactions for login, signup, and forgot password functionalities. Ensure the flows cover:\n1. **Login Flow**: Enter valid credentials and assert successful navigation to the dashboard.\n2. **Signup Flow**: Enter new user details, confirm password, and assert successful registration or appropriate error messages.\n3. **Forgot Password Flow**: Enter an email address, trigger the password reset process, and assert receipt of a confirmation message.\n\n### Maestro Flows\n\n#### Login Flow (`apps/mobile/.maestro/flows/auth-login.yaml`)\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Sign In\"\n- inputText:\n    id: \"email-input\"\n    text: \"test@example.com\"\n- inputText:\n    id: \"password-input\"\n    text: \"securepassword123\"\n- tapOn: \"Login\"\n- assertVisible: \"Dashboard\" # or a specific element on the dashboard\n```\n\n#### Signup Flow (`apps/mobile/.maestro/flows/auth-signup.yaml`)\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Sign Up\"\n- inputText:\n    id: \"name-input\"\n    text: \"John Doe\"\n- inputText:\n    id: \"email-input\"\n    text: \"newuser@example.com\"\n- inputText:\n    id: \"password-input\"\n    text: \"securepassword123\"\n- inputText:\n    id: \"confirm-password-input\"\n    text: \"securepassword123\"\n- tapOn: \"Sign Up\"\n- assertVisible: \"Registration Successful\" # or a specific element indicating success\n```\n\n#### Forgot Password Flow (`apps/mobile/.maestro/flows/auth-forgot-password.yaml`)\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Forgot Password\"\n- inputText:\n    id: \"email-input\"\n    text: \"test@example.com\"\n- tapOn: \"Send\"\n- assertVisible: \"Password reset email sent\" # or a specific element indicating success\n```\n\n### Expected Behavior\nAfter implementing and running the Maestro flows, ensure that each flow passes on Android (Moto E13). Recordings and logs should be captured as specified in the pipeline.\n\n### Testing Instructions\n\n1. **Sync Amplify Outputs**\n   ```bash\n   cd ~/Documents/MapYourHealth && yarn sync:amplify\n   ```\n\n2. **Build Release APK**\n   ```bash\n   cd apps/mobile && npx expo prebuild --platform android --clean\n   cd android && ./gradlew assembleRelease\n   ```\n\n3. **Install on Android Device**\n   ```bash\n   adb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n   ```\n\n4. **Set PATH for Maestro**\n   ```bash\n   export PATH=\"$PATH:$HOME/.maestro/bin\"\n   ```\n\n5. **Create Artifact Directory**\n   ```bash\n   mkdir -p ~/Documents/ai-queue-dashboard/artifacts/104\n   ```\n\n6. **Run Maestro Tests with Recording**\n   ```bash\n   maestro record --local --device ZL73232GKP \\\n     apps/mobile/.maestro/flows/auth-login.yaml \\\n     ~/Documents/ai-queue-dashboard/artifacts/104/auth-login-recording.mp4 \\\n     2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/104/auth-login-output.log\n\n   maestro record --local --device ZL73232GKP \\\n     apps/mobile/.maestro/flows/auth-signup.yaml \\\n     ~/Documents/ai-queue-dashboard/artifacts/104/auth-signup-recording.mp4 \\\n     2>&1 | tee -a ~/Documents/ai-queue-dashboard/artifacts/104/auth-signup-output.log\n\n   maestro record --local --device ZL73232GKP \\\n     apps/mobile/.maestro/flows/auth-forgot-password.yaml \\\n     ~/Documents/ai-queue-dashboard/artifacts/104/auth-forgot-password-recording.mp4 \\\n     2>&1 | tee -a ~/Documents/ai-queue-dashboard/artifacts/104/auth-forgot-password-output.log\n   ```\n\n### Output Requirements\n\n- **Test Results**: Include pass/fail status for each flow.\n- **Screenshots of Failures**: Capture and include screenshots if any tests fail.\n- **Summary Report**: Provide a summary report including total tests, passed, failed, and skipped.\n- **Error Output**: If tests fail, include the Maestro error output and suggest potential fixes.\n\nBy following these steps, you can ensure that the authentication flows in the MapYourHealth app are thoroughly tested on real devices.",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-16T14:32:41.821Z",
+      "processing_time": 379483,
+      "pipelineExecuted": true,
+      "pipelineSuccess": false,
+      "artifacts": {
+        "dir": "artifacts/104",
+        "recordings": [],
+        "logs": [
+          "healthcheck-output.log",
+          "pipeline.log",
+          "test-output-qwen-flow-1.log"
+        ]
+      },
+      "error": "E2E pipeline failed (exit code: 1). Check artifacts/104/pipeline.log",
+      "failed_at": "2026-02-16T14:32:41.821Z"
     },
     {
       "issueNumber": 105,
@@ -56,8 +116,24 @@
         "test"
       ],
       "priority": "medium",
-      "addedAt": "2026-02-16T04:30:00Z"
+      "addedAt": "2026-02-16T13:30:00Z",
+      "solution": "To handle the **E2E Testing** for the **Settings Screen & Dark Mode Toggle** in the **MapYourHealth** React Native app, we will follow the detailed pipeline and steps outlined. Below is a comprehensive guide to building, installing, and running Maestro tests on real devices (Android Moto E13 and iOS iPhone 11).\n\n### Step-by-Step Guide\n\n#### 1. Sync Amplify Outputs\nNavigate to your project directory and sync Amplify outputs to ensure the app can load correctly.\n\n```bash\ncd ~/Documents/MapYourHealth && yarn sync:amplify\n```\n\n#### 2. Build Release APK\nBuild a release version of the Android APK with JS bundled in.\n\n```bash\ncd apps/mobile && npx expo prebuild --platform android --clean\ncd android && ./gradlew assembleRelease\n```\n\n**Note:** Ensure you're using the `--clean` flag to avoid any lingering dev dependencies or configurations.\n\n#### 3. Install on Android Device\nInstall the APK on your connected Moto E13 device.\n\n```bash\nadb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n```\n\n**App ID:** `com.epiphanyapps.mapyourhealth`\n\n#### 4. Set PATH for Maestro\nEnsure that the Maestro CLI is accessible in your shell's PATH.\n\n```bash\nexport PATH=\"$PATH:$HOME/.maestro/bin\"\n```\n\n#### 5. Create Artifact Directory\nCreate a directory to store test artifacts (logs, recordings) under `~/Documents/ai-queue-dashboard/artifacts/{issue-id}`.\n\nReplace `{issue-id}` with the actual issue ID, e.g., `105`.\n\n```bash\nmkdir -p ~/Documents/ai-queue-dashboard/artifacts/105\n```\n\n#### 6. Define Maestro Flow for Settings & Dark Mode Toggle\n\nCreate a new YAML file named `settings-dark-mode-toggle.yaml` under `~/maestro-farm/flows/android/` (or appropriate path).\n\n**Example `settings-dark-mode-toggle.yaml`:**\n\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Settings\"  # Assuming there's a button or tab labeled \"Settings\"\n- assertVisible: \"Dark Mode\"  # Ensure the Dark Mode toggle is visible\n- tapOn: \"Dark Mode Toggle\"  # Tap on the toggle to switch modes\n- wait: 1000  # Wait for 1 second to allow mode change\n- assertVisible: \"Light Mode\"  # Ensure it switched to Light Mode\n- tapOn: \"Dark Mode Toggle\"  # Tap again to switch back\n- wait: 1000  # Wait for 1 second to allow mode change\n- assertVisible: \"Dark Mode\"  # Ensure it switched back to Dark Mode\n```\n\n**Note:** Adjust the `tapOn` and `assertVisible` commands based on the actual UI elements in your app. You may need to inspect the app to find the correct identifiers.\n\n#### 7. Run Maestro Tests with Recording\n\nFor Android (Moto E13):\n\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/maestro-farm/flows/android/settings-dark-mode-toggle.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/105/android-recording.mp4 \\\n  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/105/test-output.log\n```\n\nFor iOS (iPhone 11) \u2014 requires bridge running first:\n\n**Terminal 1:**\n```bash\nmaestro-ios-device --team-id 22X6D48M4G --device 00008030-001950891A53402E\n```\n\n**Terminal 2:**\n```bash\nmaestro record --local --driver-host-port 6001 --device 00008030-001950891A53402E \\\n  ~/maestro-farm/flows/ios/settings-dark-mode-toggle.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/105/ios-recording.mp4 \\\n  2>&1 | tee -a ~/Documents/ai-queue-dashboard/artifacts/105/test-output.log\n```\n\n### Output Requirements\n\n- **Test Results:** Ensure the test results are captured and include pass/fail status for each flow.\n- **Screenshots of Failures:** If any test fails, capture screenshots to diagnose issues.\n- **Summary Report:** Provide a summary report including total tests, passed, failed, and skipped.\n- **Error Output and Fixes:** Include Maestro error output if tests fail and suggest potential fixes.\n\n### Example Summary Report\n\n**Report:**\n\n```\nTotal Tests: 1\nPassed: 1\nFailed: 0\nSkipped: 0\n\nLogs stored in: ~/Documents/ai-queue-dashboard/artifacts/105/\nRecordings:\n- Android: android-recording.mp4\n- iOS: ios-recording.mp4\n```\n\n### Handling Failures\n\nIf tests fail, inspect the `test-output.log` for detailed error messages. Common issues include:\n\n- **Element Not Found:** Ensure the UI elements (e.g., \"Settings\", \"Dark Mode\") are correctly identified in the Maestro flow.\n- **Timing Issues:** Use `wait` commands to allow time for animations or state changes to complete.\n- **App Crashes:** Investigate app logs for any runtime errors.\n\n### Additional Considerations\n\n- **Device Compatibility:** Ensure the devices (Moto E13 and iPhone 11) are correctly connected and recognized by ADB/Fastlane.\n- **Maestro Configuration:** Verify that Maestro is properly configured on your machine, including any necessary dependencies or environment variables.\n- **Consistent Testing Environment:** Maintain a consistent testing environment to minimize variability in test results.\n\nBy following these steps, you can effectively perform E2E testing for the Settings Screen & Dark Mode Toggle feature in the MapYourHealth app.",
+      "model": "qwen2.5-coder:32b",
+      "completed_at": "2026-02-16T14:49:02.865Z",
+      "processing_time": 659857,
+      "pipelineExecuted": true,
+      "pipelineSuccess": false,
+      "artifacts": {
+        "dir": "artifacts/105",
+        "recordings": [],
+        "logs": [
+          "healthcheck-output.log",
+          "pipeline.log",
+          "test-output-qwen-flow-1.log"
+        ]
+      },
+      "error": "E2E pipeline failed (exit code: 1). Check artifacts/105/pipeline.log",
+      "failed_at": "2026-02-16T14:49:02.865Z"
     }
-  ],
-  "failed": []
+  ]
 }

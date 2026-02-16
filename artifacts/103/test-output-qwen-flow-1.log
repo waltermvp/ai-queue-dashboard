@@ -1,26 +1,26 @@
 Running on ZL73232GKP
- > Flow mapyourhealth-basic
-Launch app "com.epiphanyapps.mapyourhealth" with clear state... COMPLETED
-Wait for animation to end... COMPLETED
-Take screenshot app-launch... COMPLETED
-Assert that ".*" is visible... COMPLETED
-Tap on (Optional) Index: 0... COMPLETED
-Wait for animation to end... COMPLETED
-Take screenshot first-tab... COMPLETED
-Tap on (Optional) "Search"... WARNED
+ > Flow qwen-flow-1
+Launch app "com.epiphanyapps.mapyourhealth"...Exception in thread "pool-6-thread-1" java.io.IOException: Command failed (host:transport:ZL73232GKP): device 'ZL73232GKP' not found
+	at dadb.adbserver.AdbServer.send$dadb(AdbServer.kt:103)
+	at dadb.adbserver.AdbServerDadb.open(AdbServer.kt:148)
+	at dadb.forwarding.TcpForwarder.handleForwarding$lambda$1(TcpForwarder.kt:64)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Exception in thread "pool-6-thread-2" java.io.IOException: Command failed (host:transport:ZL73232GKP): device 'ZL73232GKP' not found
+	at dadb.adbserver.AdbServer.send$dadb(AdbServer.kt:103)
+	at dadb.adbserver.AdbServerDadb.open(AdbServer.kt:148)
+	at dadb.forwarding.TcpForwarder.handleForwarding$lambda$1(TcpForwarder.kt:64)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+ FAILED
 
+Unable to launch app com.epiphanyapps.mapyourhealth
 
- Warning: Element not found: Text matching regex: Search
-Tap on (Optional) "search"... WARNED
+==== Debug output (logs & screenshots) ====
 
-
- Warning: Element not found: Text matching regex: search
-Take screenshot search-area... COMPLETED
-Press back... COMPLETED
-Wait for animation to end... COMPLETED
-Take screenshot after-back... COMPLETED
-Assert that ".*" is visible... COMPLETED
-Take screenshot final-state... COMPLETED
+/Users/waltervargas-pena/.maestro/tests/2026-02-16_080945
 
 [33m🚀 Update: We built maestro-runner from scratch — 3.6x faster, real iOS device support, runs locally or on any Appium cloud, true parallel execution, no paywall. Fixes 78% of Maestro's top issues. Same YAML.[0m
 
@@ -33,28 +33,22 @@ Take screenshot final-state... COMPLETED
 
 
 Running on ZL73232GKP
- > Flow mapyourhealth-basic
-Launch app "com.epiphanyapps.mapyourhealth" with clear state... COMPLETED
-Wait for animation to end... COMPLETED
-Take screenshot app-launch... COMPLETED
-Assert that ".*" is visible... COMPLETED
-Tap on (Optional) Index: 0... COMPLETED
-Wait for animation to end... COMPLETED
-Take screenshot first-tab... COMPLETED
-Tap on (Optional) "Search"... WARNED
+ > Flow qwen-flow-1
+Launch app "com.epiphanyapps.mapyourhealth"... COMPLETED
+Tap on "Sign In"... FAILED
 
+Element not found: Text matching regex: Sign In
 
- Warning: Element not found: Text matching regex: Search
-Tap on (Optional) "search"... WARNED
+Element with Text matching regex: Sign In not found. Check the UI hierarchy in debug artifacts to verify if the element exists.
 
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state.
+- This could be a real regression that needs to be addressed.
 
- Warning: Element not found: Text matching regex: search
-Take screenshot search-area... COMPLETED
-Press back... COMPLETED
-Wait for animation to end... COMPLETED
-Take screenshot after-back... COMPLETED
-Assert that ".*" is visible... COMPLETED
-Take screenshot final-state... COMPLETED
+==== Debug output (logs & screenshots) ====
+
+/Users/waltervargas-pena/.maestro/tests/2026-02-16_092324
 
 [33m🚀 Update: We built maestro-runner from scratch — 3.6x faster, real iOS device support, runs locally or on any Appium cloud, true parallel execution, no paywall. Fixes 78% of Maestro's top issues. Same YAML.[0m
 

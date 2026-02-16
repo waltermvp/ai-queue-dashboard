@@ -441,23 +441,62 @@ async function processNext() {
     saveQueueState(updatedState);
 }
 
-// Add demo items to queue
-function addDemoItems() {
+// Load open issues from GitHub and add to queue
+function loadFromGitHub() {
+    const { execSync } = require('child_process');
+    const REPO = 'epiphanyapps/MapYourHealth';
+    const SUPPORTED_LABELS = ['e2e', 'coding', 'content'];
+
+    // Fetch open issues via gh CLI
+    let issues;
+    try {
+        const raw = execSync(
+            `gh issue list --repo ${REPO} --state open --json number,title,labels,createdAt --limit 50`,
+            { encoding: 'utf8' }
+        );
+        issues = JSON.parse(raw);
+    } catch (err) {
+        log(`❌ Failed to fetch issues from GitHub: ${err.message}`);
+        return;
+    }
+
     const state = loadQueueState();
-    const demoItems = [
-        { id: `demo-${Date.now()}-1`, title: 'Optimize API Performance', priority: 'high', created_at: new Date().toISOString() },
-        { id: `demo-${Date.now()}-2`, title: 'Fix UI Bug in Dashboard', priority: 'medium', created_at: new Date().toISOString() },
-        { id: `demo-${Date.now()}-3`, title: 'Update Documentation', priority: 'low', created_at: new Date().toISOString() }
-    ];
-    
-    demoItems.forEach(item => {
-        if (!state.queue.find(q => q.title === item.title)) {
-            state.queue.push(item);
-        }
-    });
-    
+
+    // Collect all existing issue numbers across all states
+    const existingNumbers = new Set();
+    state.queue.forEach(i => existingNumbers.add(i.issueNumber));
+    if (state.processing) existingNumbers.add(state.processing.issueNumber);
+    state.completed.forEach(i => existingNumbers.add(i.issueNumber));
+    state.failed.forEach(i => existingNumbers.add(i.issueNumber));
+
+    let added = 0;
+    for (const issue of issues) {
+        if (existingNumbers.has(issue.number)) continue;
+
+        const labelNames = (issue.labels || []).map(l => typeof l === 'string' ? l : l.name || '');
+        const lowerLabels = labelNames.map(l => l.toLowerCase());
+
+        // Filter: only issues with at least one supported label, or include all if none have supported labels
+        const hasSupported = lowerLabels.some(l => SUPPORTED_LABELS.includes(l));
+        // Include all open issues — type detection happens in detectIssueType()
+        // but skip if you only want labeled ones: if (!hasSupported) continue;
+
+        const item = {
+            issueNumber: issue.number,
+            repo: REPO,
+            title: issue.title,
+            labels: labelNames,
+            priority: 'medium',
+            addedAt: new Date().toISOString(),
+            url: `https://github.com/${REPO}/issues/${issue.number}`
+        };
+
+        state.queue.push(item);
+        added++;
+    }
+
     saveQueueState(state);
-    log('➕ Added demo items to queue');
+    log(`📥 Loaded ${added} new issue(s) from GitHub (${issues.length} total open, ${existingNumbers.size} already tracked)`);
 }
 
 // Clear completed items
@@ -511,7 +550,8 @@ async function main() {
                 await watch(interval);
                 break;
             case 'add-demo':
-                addDemoItems();
+            case 'load-github':
+                loadFromGitHub();
                 break;
             case 'cleanup':
                 cleanup();
@@ -526,7 +566,7 @@ async function main() {
                 break;
             default:
                 log('Usage: node queue-worker.js <action>');
-                log('Actions: process | watch [intervalMs] | add-demo | cleanup | status');
+                log('Actions: process | watch [intervalMs] | load-github | add-demo | cleanup | status');
         }
     } catch (error) {
         console.error('❌ Error:', error.message);

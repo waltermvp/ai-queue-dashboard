@@ -1,0 +1,17 @@
+
+> Invalid Command: wait
+
+/Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/105/flows/qwen-flow-1.yaml:7
+╭────────────────────────────────────────────────────────────────────────────╮
+│ 5 | - assertVisible: "Dark Mode"  # Ensure the Dark Mode toggle is visible │
+│ 6 | - tapOn: "Dark Mode Toggle"  # Tap on the toggle to switch modes       │
+│ 7 | - wait: 1000  # Wait for 1 second to allow mode change                 │
+│           ^                                                                │
+│ ╭──────────────────────────────────────────────────╮                       │
+│ │ `wait` is not a valid command.                   │                       │
+│ │                                                  │                       │
+│ │ Did you mean one of: waitForAnimationToEnd, back │                       │
+│ ╰──────────────────────────────────────────────────╯                       │
+│ 8 | - assertVisible: "Light Mode"  # Ensure it switched to Light Mode      │
+│ 9 | - tapOn: "Dark Mode Toggle"  # Tap again to switch back                │
+╰────────────────────────────────────────────────────────────────────────────╯

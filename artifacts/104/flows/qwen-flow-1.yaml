@@ -1,0 +1,12 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp
+- tapOn: "Sign In"
+- inputText:
+    id: "email-input"
+    text: "test@example.com"
+- inputText:
+    id: "password-input"
+    text: "securepassword123"
+- tapOn: "Login"
+- assertVisible: "Dashboard" # or a specific element on the dashboard

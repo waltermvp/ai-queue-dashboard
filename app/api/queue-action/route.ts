@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
     
     switch (action) {
       case 'populate':
-        command = `node "${workerScript}" add-demo`
-        message = 'Demo tasks added to queue'
+        command = `node "${workerScript}" load-github`
+        message = 'GitHub issues loaded into queue'
         break
       case 'process-one':
         command = `node "${workerScript}" process`

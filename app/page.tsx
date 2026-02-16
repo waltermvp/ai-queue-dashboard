@@ -473,7 +473,7 @@ export default function Dashboard() {
               className="btn-primary"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Load Issues
+              Load from GitHub
             </button>
             <button 
               onClick={() => executeAction('process-one')}

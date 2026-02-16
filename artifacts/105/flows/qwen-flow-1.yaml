@@ -1,0 +1,11 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp
+- tapOn: "Settings"  # Assuming there's a button or tab labeled "Settings"
+- assertVisible: "Dark Mode"  # Ensure the Dark Mode toggle is visible
+- tapOn: "Dark Mode Toggle"  # Tap on the toggle to switch modes
+- wait: 1000  # Wait for 1 second to allow mode change
+- assertVisible: "Light Mode"  # Ensure it switched to Light Mode
+- tapOn: "Dark Mode Toggle"  # Tap again to switch back
+- wait: 1000  # Wait for 1 second to allow mode change
+- assertVisible: "Dark Mode"  # Ensure it switched back to Dark Mode
