@@ -84,7 +84,8 @@ export async function GET(request: NextRequest) {
       failed,
       needs_clarification: liveState.needs_clarification || [],
       bug_confirmed: liveState.bug_confirmed || [],
-      stats
+      stats,
+      lastUpdated: new Date().toISOString()
     })
   } catch (error) {
     console.error('Error reading queue state:', error)

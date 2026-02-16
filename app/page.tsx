@@ -122,6 +122,7 @@ interface QueueState {
     labels?: string[]
   }>
   stats?: QueueStats
+  lastUpdated?: string
 }
 
 function ElapsedTimer({ startedAt }: { startedAt: string }) {
@@ -438,6 +439,13 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Last Updated */}
+      {queueState.lastUpdated && (
+        <div className="text-xs text-gray-400 text-right -mt-4 mb-2">
+          Last updated: {new Date(queueState.lastUpdated).toLocaleString()}
+        </div>
+      )}
 
       {/* Enhanced System Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 rounded-lg mb-6">
