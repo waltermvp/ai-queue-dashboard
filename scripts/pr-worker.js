@@ -57,6 +57,7 @@ function ollamaGenerate(prompt, systemPrompt = "") {
       prompt,
       system: systemPrompt,
       stream: false,
+      keep_alive: "30m",
       options: { num_ctx: 16384 },
     })
 
@@ -363,8 +364,11 @@ async function runE2EPipeline(worktreeDir, fullRepo, prNumber) {
   const e2eErrors = []
   const e2eResults = []
 
-  // Step 1: Build Android app
+  // Step 1: Build Android app (or use existing APK from main clone)
   console.log("\n   📦 Building Android release APK (no dev menu)...")
+  const mainApkPath = path.join(DOCS_DIR, "MapYourHealth/apps/mobile/android/app/build/outputs/apk/release/app-release.apk")
+  const worktreeApkPath = `${worktreeDir}/apps/mobile/android/app/build/outputs/apk/release/app-release.apk`
+
   const buildCmd = `
     export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20
     export ANDROID_HOME="$HOME/Library/Android/sdk"
@@ -377,21 +381,29 @@ async function runE2EPipeline(worktreeDir, fullRepo, prNumber) {
     cd android && ./gradlew assembleRelease
   `
   const buildResult = runSafe(`bash -c '${buildCmd.replace(/'/g, "'\\''")}' 2>&1`)
-  if (buildResult === null) {
-    const errMsg = "❌ Android build failed"
-    console.log(`   ${errMsg}`)
-    e2eErrors.push(errMsg)
-    e2eResults.push("### Build\\n" + errMsg)
-    // Post failure and return early
-    runSafe(`gh pr comment ${prNumber} --repo ${fullRepo} --body "## 🧪 Maestro E2E Results\\n\\n${errMsg}\\n\\nBuild failed — skipping device tests."`)
-    return { success: false, errors: e2eErrors }
+  let apkPath = worktreeApkPath
+
+  if (buildResult === null || !fs.existsSync(worktreeApkPath)) {
+    // Try using existing APK from main clone
+    if (fs.existsSync(mainApkPath)) {
+      console.log("   ⚠️ Worktree build failed — using existing APK from main clone")
+      apkPath = mainApkPath
+      e2eResults.push("### Build\\n⚠️ Worktree build failed, using existing APK from main clone")
+    } else {
+      const errMsg = "❌ Android build failed (no fallback APK available)"
+      console.log(`   ${errMsg}`)
+      e2eErrors.push(errMsg)
+      e2eResults.push("### Build\\n" + errMsg)
+      runSafe(`gh pr comment ${prNumber} --repo ${fullRepo} --body "## 🧪 Maestro E2E Results\\n\\n${errMsg}\\n\\nBuild failed — skipping device tests."`)
+      return { success: false, errors: e2eErrors }
+    }
+  } else {
+    e2eResults.push("### Build\\n✅ Android release APK built successfully")
+    console.log("   ✅ Build succeeded")
   }
-  e2eResults.push("### Build\\n✅ Android release APK built successfully")
-  console.log("   ✅ Build succeeded")
 
   // Step 2: Install on device
   console.log("\n   📱 Installing on Android device (ZL73232GKP)...")
-  const apkPath = `${worktreeDir}/apps/mobile/android/app/build/outputs/apk/release/app-release.apk`
   const installResult = runSafe(`adb -s ZL73232GKP install -r "${apkPath}" 2>&1`)
   if (installResult === null) {
     const errMsg = "❌ APK install failed (device may be disconnected)"
@@ -404,24 +416,107 @@ async function runE2EPipeline(worktreeDir, fullRepo, prNumber) {
   e2eResults.push("### Install\\n✅ APK installed on Moto E13")
   console.log("   ✅ Install succeeded")
 
-  // Step 3: Run Maestro tests
-  console.log("\n   🎭 Running Maestro tests...")
+  // Step 3: Run Maestro tests on Android (with video) and iOS (test only)
+  console.log("\n   🎭 Running Maestro tests on Android & iOS...")
   const flowsDir = `${worktreeDir}/apps/mobile/.maestro/flows/`
+  const issueId = prNumber // use PR number as artifact folder name
+  const artifactsDir = path.join(__dirname, "..", "artifacts", String(issueId))
+  const recordings = []
+
   if (!fs.existsSync(flowsDir)) {
     const msg = "⚠️ No Maestro flows found at apps/mobile/.maestro/flows/ — skipping tests"
     console.log(`   ${msg}`)
     e2eResults.push("### Tests\\n" + msg)
   } else {
-    const maestroResult = runSafe(`export PATH="$PATH:$HOME/.maestro/bin" && maestro --device ZL73232GKP test "${flowsDir}" 2>&1`)
-    if (maestroResult === null) {
-      const errMsg = "❌ Maestro tests failed"
-      console.log(`   ${errMsg}`)
-      e2eErrors.push(errMsg)
-      e2eResults.push("### Tests\\n" + errMsg)
-    } else {
-      e2eResults.push("### Tests\\n✅ All Maestro tests passed\\n\\n```\\n" + (maestroResult || "").substring(0, 2000) + "\\n```")
-      console.log("   ✅ Maestro tests passed")
+    // Create artifacts directory
+    fs.mkdirSync(artifactsDir, { recursive: true })
+
+    // Get individual flow files
+    const flowFiles = fs.readdirSync(flowsDir).filter(f => f.endsWith('.yaml') || f.endsWith('.yml')).sort()
+    console.log(`   Found ${flowFiles.length} test flows: ${flowFiles.join(', ')}`)
+
+    // ── Android (Moto E13) — with video recording ──
+    console.log("\n   📱 ANDROID (Moto E13) — with video recording")
+
+    // Shut down iOS simulators so maestro record auto-selects Android
+    runSafe(`xcrun simctl shutdown all 2>/dev/null`)
+
+    let androidPassed = 0
+    let androidFailed = 0
+    const androidResults = []
+
+    for (const flowFile of flowFiles) {
+      const flowName = flowFile.replace(/\.(yaml|yml)$/, '')
+      const videoPath = path.join(artifactsDir, `android-${flowName}.mp4`)
+      const flowPath = path.join(flowsDir, flowFile)
+
+      console.log(`\n   ▶ [Android] Recording ${flowName}...`)
+      const result = runSafe(`export PATH="$PATH:$HOME/.maestro/bin" && echo "1" | maestro record --local "${flowPath}" "${videoPath}" 2>&1`)
+
+      if (result === null) {
+        androidFailed++
+        androidResults.push(`❌ **${flowName}** — FAILED`)
+        console.log(`   ❌ ${flowName} failed`)
+      } else {
+        androidPassed++
+        androidResults.push(`✅ **${flowName}** — PASSED`)
+        console.log(`   ✅ ${flowName} passed`)
+        if (fs.existsSync(videoPath)) {
+          recordings.push(`android-${flowName}.mp4`)
+          const sizeMB = (fs.statSync(videoPath).size / 1024 / 1024).toFixed(1)
+          console.log(`   🎬 Video: android-${flowName}.mp4 (${sizeMB}MB)`)
+        }
+      }
     }
+
+    e2eResults.push(`### Android (Moto E13)\\n**${androidPassed + androidFailed} tests: ${androidPassed} passed, ${androidFailed} failed**\\n\\n${androidResults.join("\\n")}`)
+
+    // ── iOS (Dann's iPhone 11) — test only (no video, maestro record doesn't support --driver-host-port) ──
+    console.log("\n   📱 iOS (iPhone 11) — test only")
+
+    // Check if iOS bridge is running
+    const bridgeCheck = runSafe(`curl -s http://localhost:6001/status 2>/dev/null || echo "bridge-down"`)
+    const iosBridgeRunning = bridgeCheck && !bridgeCheck.includes("bridge-down") && !bridgeCheck.includes("Connection refused")
+
+    // Also check via process
+    const bridgeProcess = runSafe(`ps aux | grep "maestro-ios-device" | grep -v grep | head -1`)
+
+    if (!bridgeProcess) {
+      console.log("   ⚠️ iOS bridge not running — starting it...")
+      // Start bridge in background (non-blocking)
+      runSafe(`export PATH="$PATH:$HOME/.maestro/bin" && nohup maestro-ios-device --team-id 22X6D48M4G --device 00008030-001950891A53402E > /dev/null 2>&1 &`)
+      // Wait for bridge to be ready
+      runSafe(`sleep 10`)
+    }
+
+    let iosPassed = 0
+    let iosFailed = 0
+    const iosResults = []
+
+    for (const flowFile of flowFiles) {
+      const flowName = flowFile.replace(/\.(yaml|yml)$/, '')
+      const flowPath = path.join(flowsDir, flowFile)
+
+      console.log(`\n   ▶ [iOS] Testing ${flowName}...`)
+      const result = runSafe(`export PATH="$PATH:$HOME/.maestro/bin" && maestro --driver-host-port 6001 --device 00008030-001950891A53402E test "${flowPath}" 2>&1`)
+
+      if (result === null) {
+        iosFailed++
+        iosResults.push(`❌ **${flowName}** — FAILED`)
+        console.log(`   ❌ ${flowName} failed`)
+      } else {
+        iosPassed++
+        iosResults.push(`✅ **${flowName}** — PASSED`)
+        console.log(`   ✅ ${flowName} passed`)
+      }
+    }
+
+    e2eResults.push(`### iOS (iPhone 11)\\n**${iosPassed + iosFailed} tests: ${iosPassed} passed, ${iosFailed} failed**\\n\\n${iosResults.join("\\n")}`)
+
+    // Combined summary
+    const totalPassed = androidPassed + iosPassed
+    const totalFailed = androidFailed + iosFailed
+    if (totalFailed > 0) e2eErrors.push(`${totalFailed} Maestro test(s) failed (Android: ${androidFailed}, iOS: ${iosFailed})`)
   }
 
   // Step 4: Post results to PR
@@ -429,7 +524,20 @@ async function runE2EPipeline(worktreeDir, fullRepo, prNumber) {
   const resultsBody = `## 🧪 Maestro E2E Results\\n\\n${e2eResults.join("\\n\\n")}`
   runSafe(`gh pr comment ${prNumber} --repo ${fullRepo} --body "${resultsBody.replace(/"/g, '\\"')}"`)
 
-  return { success: e2eErrors.length === 0, errors: e2eErrors }
+  // Save pipeline log
+  if (fs.existsSync(artifactsDir)) {
+    fs.writeFileSync(path.join(artifactsDir, 'pipeline.log'), e2eResults.join('\n\n'))
+  }
+
+  return {
+    success: e2eErrors.length === 0,
+    errors: e2eErrors,
+    artifacts: {
+      dir: `artifacts/${issueId}`,
+      recordings,
+      logs: ['pipeline.log']
+    }
+  }
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -490,7 +598,35 @@ async function main() {
   runSafe(`cd "${repoDir}" && git branch -D ${branchName}`)
   run(`cd "${repoDir}" && git worktree add "${worktreeDir}" -b ${branchName} origin/${defaultBranch}`)
 
-  // 4. Discover and read relevant files
+  // E2E FAST PATH: Skip LLM for pure E2E issues — just build, install, and run tests
+  if (shouldRunE2E(issue)) {
+    console.log("\n🎭 E2E issue detected — skipping LLM, running tests directly...")
+
+    try {
+      const e2eResult = await runE2EPipeline(worktreeDir, fullRepo, issueNumber)
+      const e2eArtifacts = e2eResult.artifacts || null
+
+      if (e2eResult.success) {
+        console.log("\n✅ E2E tests passed!")
+        updateQueueState(fullRepo, issueNumber, issue.title, "completed", `E2E tests passed`, startTime, e2eArtifacts)
+      } else {
+        console.log(`\n⚠️  E2E had issues: ${e2eResult.errors.join(", ")}`)
+        updateQueueState(fullRepo, issueNumber, issue.title, "completed", `E2E tests had issues: ${e2eResult.errors.join(", ")}`, startTime, e2eArtifacts)
+      }
+    } catch (err) {
+      console.log(`\n❌ E2E pipeline error: ${err.message}`)
+      updateQueueState(fullRepo, issueNumber, issue.title, "failed", `E2E pipeline crashed: ${err.message}`, startTime)
+    }
+
+    // Clean up worktree
+    console.log("\n🧹 Cleaning up worktree...")
+    runSafe(`cd "${repoDir}" && git worktree remove "${worktreeDir}" --force`)
+
+    console.log(`\n🎉 Done! Total time: ${Math.round((Date.now() - startTime) / 1000)}s`)
+    return
+  }
+
+  // 4. Discover and read relevant files (coding issues only)
   console.log("\n4️⃣  Reading relevant source files...")
   const searchDirs = []
   const dirHints = issue.body.match(/`([^`]*\/)`|apps\/\S+|packages\/\S+|src\/\S+/g)
@@ -626,10 +762,12 @@ ${validationErrors.length > 0 ? "\n## ⚠️ Known Issues\n" + validationErrors.
   console.log(`\n✅ PR created: ${prUrl}`)
 
   // 10b. E2E Testing (if applicable)
+  let e2eArtifacts = null
   if (shouldRunE2E(issue)) {
     const prNumber = prUrl.match(/\/pull\/(\d+)/)?.[1] || prUrl.trim().split("/").pop()
     try {
       const e2eResult = await runE2EPipeline(worktreeDir, fullRepo, prNumber)
+      e2eArtifacts = e2eResult.artifacts || null
       if (e2eResult.success) {
         console.log("\n✅ E2E tests passed!")
       } else {
@@ -648,19 +786,19 @@ ${validationErrors.length > 0 ? "\n## ⚠️ Known Issues\n" + validationErrors.
   runSafe(`cd "${repoDir}" && git worktree remove "${worktreeDir}" --force`)
 
   // 12. Update queue state
-  updateQueueState(fullRepo, issueNumber, issue.title, "completed", prUrl, startTime)
+  updateQueueState(fullRepo, issueNumber, issue.title, "completed", prUrl, startTime, e2eArtifacts)
 
   console.log(`\n🎉 Done! Total time: ${Math.round((Date.now() - startTime) / 1000)}s`)
 }
 
-function updateQueueState(repo, issueNumber, title, status, result, startTime) {
+function updateQueueState(repo, issueNumber, title, status, result, startTime, artifacts) {
   let state = {}
   try {
     state = JSON.parse(fs.readFileSync(QUEUE_STATE_PATH, "utf-8"))
   } catch {}
 
   if (!state.completed) state.completed = []
-  state.completed.push({
+  const entry = {
     id: `${repo}#${issueNumber}`,
     title,
     repo,
@@ -669,7 +807,9 @@ function updateQueueState(repo, issueNumber, title, status, result, startTime) {
     model: OLLAMA_MODEL,
     completed_at: new Date().toISOString(),
     processing_time: Date.now() - startTime,
-  })
+  }
+  if (artifacts) entry.artifacts = artifacts
+  state.completed.push(entry)
   state.current_issue = null
   state.processing = null
 
