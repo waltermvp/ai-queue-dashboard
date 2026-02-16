@@ -500,9 +500,37 @@ async function main() {
         log(`  Failed: ${failed.length}`);
         break;
       }
+      case 'add-issue': {
+        const issueNum = parseInt(process.argv[3]);
+        if (!issueNum) { log('❌ Usage: node queue-worker.js add-issue <issueNumber>'); process.exit(1); }
+        const existing = db.allIssueNumbers();
+        if (existing.has(issueNum)) { log(`⚠️ Issue #${issueNum} is already tracked`); process.exit(0); }
+        const { execSync: execS } = require('child_process');
+        const REPO = 'epiphanyapps/MapYourHealth';
+        try {
+          const raw = execS(`gh issue view ${issueNum} --repo ${REPO} --json number,title,body,labels,createdAt`, { encoding: 'utf8' });
+          const issue = JSON.parse(raw);
+          const labelNames = (issue.labels || []).map(l => typeof l === 'string' ? l : l.name || '');
+          db.enqueue({
+            issue_number: issue.number,
+            repo: REPO,
+            title: issue.title,
+            body: issue.body || '',
+            labels: labelNames,
+            priority: 'medium',
+            url: `https://github.com/${REPO}/issues/${issue.number}`
+          });
+          db.generateCacheFile();
+          log(`✅ Added issue #${issueNum} to queue: ${issue.title}`);
+        } catch (err) {
+          log(`❌ Failed to fetch issue #${issueNum}: ${err.message}`);
+          process.exit(1);
+        }
+        break;
+      }
       default:
         log('Usage: node queue-worker.js <action>');
-        log('Actions: process | watch [intervalMs] | load-github | add-demo | cleanup | status | remove <issueNumber> | retry <issueNumber> | clear-all | clear-history');
+        log('Actions: process | watch [intervalMs] | load-github | add-issue <num> | add-demo | cleanup | status | remove <issueNumber> | retry <issueNumber> | clear-all | clear-history');
     }
   } catch (error) {
     console.error('❌ Error:', error.message);

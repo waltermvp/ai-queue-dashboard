@@ -12,7 +12,97 @@
     "addedAt": "2026-02-16 20:32:32",
     "started_at": "2026-02-16 20:34:50"
   },
-  "queue": [],
+  "queue": [
+    {
+      "issueNumber": 114,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "E2E Test: Delete Account Confirmation Dialog",
+      "body": "## Overview\nAutomated E2E test for the Delete Account confirmation dialog UI using Maestro. Depends on #112 being merged.\n\n## Tech Stack\n- React Native / Expo / TypeScript\n- Maestro for E2E automation\n\n## Device\n- **Moto E13** — Device ID: `ZL73232GKP`\n- **App ID**: `com.epiphanyapps.mapyourhealth`\n\n## Test Flow\n\n### 1. Launch App & Login\n```yaml\n- launchApp:\n    appId: \"com.epiphanyapps.mapyourhealth\"\n    clearState: true\n```\n- Login with test credentials (reuse login flow or env vars)\n\n### 2. Navigate to Settings\n- Tap Settings tab in bottom navigation\n- Wait for Settings screen to load\n\n### 3. Find Delete Account Button\n- Scroll down to the \"Account\" section\n- Assert \"Delete Account\" button is visible (red button)\n```yaml\n- scrollUntilVisible:\n    element: \"Delete Account\"\n    direction: DOWN\n```\n\n### 4. Test Cancel Flow\n- Tap \"Delete Account\" button\n- Assert confirmation dialog appears with:\n  - Title: \"Delete Account?\"\n  - Body: \"This action cannot be undone. All your data will be permanently deleted.\"\n  - \"Cancel\" button visible\n  - \"Delete\" button visible\n- Tap \"Cancel\"\n- Assert dialog is dismissed\n- Assert Settings screen is still visible\n\n### 5. Test Delete Flow (Placeholder)\n- Tap \"Delete Account\" button again\n- Assert confirmation dialog appears again\n- Tap \"Delete\" button\n- Assert placeholder behavior occurs:\n  - Alert saying \"Account deletion not yet implemented\" OR\n  - Console log (verify screen does not navigate away)\n- Assert user is still on Settings screen (since deletion is placeholder)\n\n## Acceptance Criteria\n- [ ] Maestro flow YAML created at `~/maestro-farm/flows/android/delete-account-dialog.yaml`\n- [ ] Test passes on Moto E13 with release build\n- [ ] Verifies dialog text content matches exactly\n- [ ] Verifies Cancel dismisses dialog\n- [ ] Verifies Delete triggers placeholder behavior\n- [ ] All assertions pass\n\n## Dependencies\n- #112 — Delete Account UI must be merged first\n\n## Notes\n- Must use **release build** (dev builds break Maestro)\n- Agent should discover actual element IDs via Maestro Studio\n- If the app uses React Native Alert.alert(), Maestro can interact with native Android dialogs",
+      "labels": [
+        "test",
+        "e2e"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16 20:42:11",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/114"
+    },
+    {
+      "issueNumber": 113,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "Backend: Account Deletion API Endpoint",
+      "body": "## Overview\nCreate the backend logic for account deletion using AWS Amplify/Cognito. This is the backend counterpart to #112 (UI-only Delete Account button).\n\n## Tech Stack\n- AWS Amplify (Gen 2)\n- AWS Cognito (user authentication)\n- DynamoDB (or whatever database the app uses)\n- TypeScript\n\n## Requirements\n\n### API Endpoint / Amplify Function\nCreate a server-side function (Lambda via Amplify) that handles account deletion:\n\n1. **Verify Authentication** — Ensure the requesting user is authenticated and can only delete their own account\n2. **Delete User Data** — Remove all user data from the database (DynamoDB tables, S3 objects if any)\n3. **Delete Cognito Account** — Delete the user from the Cognito User Pool\n4. **Return Response** — Return success/failure with appropriate status codes\n\n### Wire Up to UI\n- Update the placeholder in the Settings screen (#112) to call this endpoint\n- Replace the console.log / Alert placeholder with actual API call\n- Handle loading state, success (sign out + navigate to welcome), and error states\n\n### Error Handling\n- If database deletion fails, do NOT delete the Cognito account\n- Return meaningful error messages\n\n## File Locations (expected)\n- Amplify backend: `amplify/` directory\n- Functions: `amplify/functions/`\n- Frontend integration: Same Settings screen file from #112\n\n## Acceptance Criteria\n- [ ] Amplify function/API route created for account deletion\n- [ ] Deletes all user data from database\n- [ ] Deletes Cognito user account\n- [ ] Proper authentication verification\n- [ ] Error handling — no partial deletions\n- [ ] Frontend wired up: Delete button triggers real API call\n- [ ] On success: user is signed out and returned to welcome screen\n- [ ] On failure: error message shown to user\n- [ ] TypeScript compiles without errors\n\n## Dependencies\n- #112 — UI-only Delete Account button (should be merged first)\n\n## Notes\n- Sensitive operation — ensure proper auth checks\n- Hard-delete for now\n- Test with a throwaway account",
+      "labels": [
+        "backend"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16 20:42:11",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/113"
+    },
+    {
+      "issueNumber": 110,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "Add devices config to routing.config.json",
+      "body": "## Context\nDevice info is hardcoded in e2e.sh. Should be config-driven so pipelines can check which devices are available/enabled.\n\n## Tasks\n1. Add `devices` section to `routing.config.json`:\n```json\n\"devices\": {\n  \"android\": [\n    { \"id\": \"ZL73232GKP\", \"name\": \"Moto E13\", \"enabled\": true }\n  ],\n  \"ios\": [\n    { \"id\": \"00008030-001950891A53402E\", \"name\": \"iPhone 11\", \"enabled\": false, \"teamId\": \"22X6D48M4G\" }\n  ]\n}\n```\n2. Update `e2e.sh` to read device list from config\n3. Pipeline iterates over enabled devices and runs tests on each\n4. Dashboard shows which devices ran for each E2E issue\n\n## Benefits\n- Enable/disable iOS testing with a config change\n- Add new devices without touching pipeline code\n- Dashboard visibility into device fleet",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16 20:42:11",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/110"
+    },
+    {
+      "issueNumber": 109,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "iOS E2E testing: build and install .app on device",
+      "body": "## Context\nE2E pipeline step 6 (iOS) is currently a stub. Need to build the iOS app and install on iPhone 11 for Maestro testing.\n\n## Tasks\n1. Update `e2e.sh` step 6 to actually build for device:\n   ```bash\n   expo prebuild --platform ios --clean\n   LANG=en_US.UTF-8 pod install\n   xcodebuild -workspace MapYourHealth.xcworkspace \\\n     -scheme MapYourHealth -configuration Release \\\n     -sdk iphoneos -derivedDataPath ./build \\\n     DEVELOPMENT_TEAM=22X6D48M4G\n   ```\n2. Install on device via `ideviceinstaller -u 00008030-001950891A53402E -i MapYourHealth.app`\n3. Start Maestro iOS bridge: `maestro-ios-device --team-id 22X6D48M4G --device 00008030-001950891A53402E`\n4. Run Maestro flows for iOS: `maestro --driver-host-port 6001 --device 00008030-001950891A53402E test flows/ios/`\n5. Capture screen recording on iOS\n6. Add iOS build caching (similar to Android APK cache)\n\n## Devices\n- iPhone 11 — UDID: `00008030-001950891A53402E` (Dann's device)\n- Team ID: `22X6D48M4G`\n\n## Dependencies\n- `ideviceinstaller` installed (`brew install ideviceinstaller`)\n- iOS Maestro flows created (currently only Android flows exist)\n- Maestro iOS bridge must be running during tests\n\n## Notes\n- iOS builds take longer than Android (~5-7 min)\n- CocoaPods needs UTF-8 locale: `LANG=en_US.UTF-8`\n- No need for IPA/archive — just .app installed directly on device",
+      "labels": [
+        "enhancement",
+        "e2e"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16 20:42:11",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/109"
+    },
+    {
+      "issueNumber": 108,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "Add deploy/testflight issue type to AI queue system",
+      "body": "## Context\nNew issue type for the AI queue: `deploy` label triggers an automated TestFlight submission.\n\n## Tasks\n1. Create `scripts/pipelines/deploy.sh` in ai-queue-dashboard:\n   - Sync amplify outputs\n   - Run `fastlane beta` (or `fastlane gym` + `fastlane pilot upload`)\n   - Save build logs + IPA metadata to artifacts\n   - Report success/failure with build number and TestFlight link\n2. Add `deploy` pipeline to `routing.config.json`\n3. Add `deploy` routing rule (label → pipeline)\n4. Update dashboard UI to show deploy-specific info (build number, TestFlight status)\n\n## Pipeline flow\n```\nIssue labeled 'deploy' → queue picks up → deploy.sh:\n  1. yarn sync:amplify\n  2. expo prebuild --platform ios --clean\n  3. LANG=en_US.UTF-8 pod install\n  4. fastlane beta\n  5. Save artifacts (build log, IPA size, build number)\n  6. Comment on GitHub issue with TestFlight link\n```\n\n## Dependencies\n- Fastlane setup (see related issue)\n- App Store Connect API key configured",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16 20:42:11",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/108"
+    },
+    {
+      "issueNumber": 107,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "Set up Fastlane for automated TestFlight deploys",
+      "body": "## Context\nWe need an automated deploy pipeline that archives the iOS app and submits to TestFlight. This will be triggered by the AI queue system via a `deploy` label on issues.\n\n## Tasks\n1. `fastlane init` in `apps/mobile/ios`\n2. Create Fastfile with:\n   - `lane :beta` — builds archive + uploads to TestFlight\n   - `lane :build_only` — builds archive without uploading (for testing)\n3. Set up App Store Connect API key authentication (no interactive Apple ID login)\n4. Configure code signing (manual or `fastlane match`)\n5. Test full pipeline: prebuild → fastlane beta → verify in TestFlight\n\n## Prerequisites\n- App Store Connect API key (create at https://appstoreconnect.apple.com/access/api)\n- Bundle ID registered in Apple Developer portal\n- Provisioning profile for App Store distribution\n\n## Notes\n- Team ID: 22X6D48M4G\n- Archive already tested successfully via xcodebuild (128MB, Feb 16 2026)\n- CocoaPods requires `LANG=en_US.UTF-8` env var",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16 20:42:11",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/107"
+    },
+    {
+      "issueNumber": 106,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "[E2E] Mobile App Sharing URL Validation - Record with Maestro",
+      "body": "## E2E Test: Mobile App Sharing URL Validation\n\n**Related Issue**: #94 - Use valid link when sharing content from mobile app  \n**Test Type**: Automated E2E validation with video recording  \n**AI Queue Labels**: `ai-queue-e2e`, `ai-queue-ready`\n\n## Test Objective\nValidate that the mobile app's share functionality uses correct `app.mapyourhealth.info` URLs and record the test execution using Maestro for documentation.\n\n## Test Scope\n\n### Screens to Validate\n- `CategoryDetailScreen.tsx` - Content category sharing\n- `DashboardScreen.tsx` - Dashboard content sharing  \n- Any other screens using `Share.share()` functionality\n\n### URL Validation Requirements\n- All shared links must use base URL: `https://app.mapyourhealth.info/`\n- Links should be properly formatted and accessible\n- No hardcoded incorrect domains\n- Deep linking should work correctly\n\n## Maestro Test Implementation\n\n### Test Flow Recording\n```yaml\n# maestro_share_test.yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Category Detail Button\"\n- tapOn: \"Share Button\"\n- assertVisible: \"Share Modal\"\n- tapOn: \"Copy Link\"\n- assertVisible: \"Link Copied\"\n- runScript: |\n    const clipboardText = await getClipboard();\n    assert(clipboardText.includes('app.mapyourhealth.info'), 'URL should use correct domain');\n- tapOn: \"Dashboard\"\n- tapOn: \"Share Dashboard\"\n- assertVisible: \"Share Options\"\n- tapOn: \"Messages\"\n- assertVisible: \"Message App\"\n```\n\n### Video Recording Setup\n```bash\n# Maestro will automatically record the test execution\nmaestro test maestro_share_test.yaml --format mp4 --output share_test_recording.mp4\n```\n\n## Expected Test Results\n\n### ✅ Success Criteria\n- [ ] Share modal opens successfully on all screens\n- [ ] Copied/shared URLs contain `app.mapyourhealth.info` domain\n- [ ] URLs are properly formatted (no malformed links)\n- [ ] Links are accessible when opened in browser\n- [ ] Test execution recorded in high-quality video\n- [ ] No crashes or errors during sharing flow\n\n### 📱 Device Testing Matrix\n- **iOS**: iPhone 14/15 Pro (latest iOS)\n- **Android**: Google Pixel (latest Android)\n- **Recording Quality**: 1080p minimum for clarity\n\n## Technical Implementation\n\n### Maestro Configuration\n```yaml\n# maestro.config.yaml\nrecording:\n  enabled: true\n  format: mp4\n  quality: high\n  framerate: 30\n\nnetwork:\n  enabled: true\n  validateUrls: true\n\nassertions:\n  screenshotOnFailure: true\n  detailedLogs: true\n```\n\n### URL Validation Script\n```javascript\n// validate_share_urls.js\nfunction validateShareUrl(url) {\n  const validDomain = 'app.mapyourhealth.info';\n  const isValid = url.includes(`https://${validDomain}`);\n  \n  return {\n    isValid,\n    actualDomain: new URL(url).hostname,\n    expectedDomain: validDomain,\n    fullUrl: url\n  };\n}\n```\n\n## AI Queue Processing Instructions\n\n### Model Assignment\n- **Primary Model**: Qwen2.5-Coder:32b (E2E testing optimized)\n- **Tools**: Maestro + mobile testing framework\n- **Context Window**: 32K for detailed test scenarios\n- **Temperature**: 0.05 (deterministic test execution)\n\n### Expected AI Actions\n1. **Test Setup**: Configure Maestro test environment\n2. **Test Execution**: Run automated sharing flow tests\n3. **Video Recording**: Capture full test execution\n4. **URL Validation**: Verify all shared links use correct domain\n5. **Results Documentation**: Generate comprehensive test report\n6. **Issue Update**: Post results and video link to this issue\n\n## Success Artifacts\n\n### Required Deliverables\n- [ ] **Maestro test file** (`maestro_share_test.yaml`)\n- [ ] **Test execution video** (MP4 format, uploaded to issue)\n- [ ] **URL validation report** (JSON format with all tested URLs)\n- [ ] **Screenshot evidence** of correct share dialogs\n- [ ] **Performance metrics** (test execution time, app responsiveness)\n\n### Video Requirements\n- **Duration**: Complete test flow (estimated 2-3 minutes)\n- **Quality**: Minimum 1080p resolution\n- **Content**: Show share button taps, modal appearances, URL copying\n- **Audio**: Optional but helpful for narration\n- **Upload**: Attach directly to GitHub issue or provide accessible link\n\n## Additional Validation\n\n### Link Accessibility Test\n```javascript\n// Test that shared URLs actually work\nasync function validateLinkAccessibility(sharedUrl) {\n  try {\n    const response = await fetch(sharedUrl);\n    return {\n      status: response.status,\n      accessible: response.ok,\n      redirected: response.redirected,\n      finalUrl: response.url\n    };\n  } catch (error) {\n    return { error: error.message, accessible: false };\n  }\n}\n```\n\n### Deep Link Testing\n- Test shared links open correctly in mobile browsers\n- Verify deep linking behavior (app vs. web)\n- Ensure consistent experience across platforms\n\n## Timeline & Priority\n\n**Priority**: High - Core user functionality  \n**Estimated Duration**: 2-3 hours for complete testing  \n**Dependencies**: Mobile app build with #94 fix implemented  \n\n**Execution Schedule**:\n- Day 1: Maestro test setup and configuration\n- Day 2: Test execution and video recording  \n- Day 3: Results analysis and documentation\n\n## Notes for AI Processing\n\nThis issue is specifically designed for our AI queue system to:\n1. **Automatically execute** Maestro-based mobile testing\n2. **Record comprehensive video** of the testing process\n3. **Validate URL correctness** programmatically\n4. **Generate detailed reports** with screenshots and metrics\n5. **Update this issue** with results and artifacts\n\nThe AI should treat this as a complete E2E testing workflow with video documentation as the primary deliverable.\n\n",
+      "labels": [
+        "test",
+        "e2e",
+        "mobile",
+        "priority:high"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16 20:42:11",
+      "url": "https://github.com/epiphanyapps/MapYourHealth/issues/106"
+    }
+  ],
   "completed": [
     {
       "issueNumber": 10,

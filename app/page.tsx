@@ -262,6 +262,9 @@ export default function Dashboard() {
   const [historyStats, setHistoryStats] = useState<HistoryStats | null>(null)
   const [historyOffset, setHistoryOffset] = useState(0)
   const [showHistory, setShowHistory] = useState(false)
+  const [showIssuePicker, setShowIssuePicker] = useState(false)
+  const [githubIssues, setGithubIssues] = useState<Array<{number: number; title: string; labels: string[]; createdAt: string; alreadyQueued: boolean}>>([])
+  const [loadingIssues, setLoadingIssues] = useState(false)
 
   const isProcessing = !!queueState?.processing
 
@@ -319,6 +322,22 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Action failed:', error)
     }
+  }
+
+  const fetchGithubIssues = async () => {
+    setLoadingIssues(true)
+    try {
+      const res = await fetch('/api/github-issues')
+      const data = await res.json()
+      setGithubIssues(data.issues || [])
+    } catch (e) { console.error('Failed to fetch GitHub issues:', e) }
+    finally { setLoadingIssues(false) }
+  }
+
+  const addIssueToQueue = async (issueNumber: number) => {
+    await executeAction('add-issue', { issueNumber })
+    // Mark as queued in local state
+    setGithubIssues(prev => prev.map(i => i.number === issueNumber ? { ...i, alreadyQueued: true } : i))
   }
 
   // Dynamic refresh: 5s when processing, 30s when idle
@@ -469,11 +488,11 @@ export default function Dashboard() {
           <h2 className="text-lg font-medium text-gray-900">Queue Controls</h2>
           <div className="flex space-x-2">
             <button 
-              onClick={() => executeAction('populate')}
+              onClick={() => { setShowIssuePicker(true); fetchGithubIssues() }}
               className="btn-primary"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Load from GitHub
+              Add Issues
             </button>
             <button 
               onClick={() => executeAction('process-one')}
@@ -965,6 +984,62 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Issue Picker Modal */}
+      {showIssuePicker && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Add GitHub Issues to Queue</h3>
+              <button onClick={() => setShowIssuePicker(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4">
+              {loadingIssues ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                  <span className="ml-2 text-gray-600">Loading issues from GitHub...</span>
+                </div>
+              ) : githubIssues.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No open issues found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {githubIssues.map(issue => (
+                    <div key={issue.number} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-mono text-gray-500">#{issue.number}</span>
+                          <span className="text-sm font-medium text-gray-900 truncate">{issue.title}</span>
+                        </div>
+                        {issue.labels.length > 0 && (
+                          <div className="flex space-x-1 mt-1">
+                            {issue.labels.map(l => <LabelBadge key={l} label={l} />)}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => addIssueToQueue(issue.number)}
+                        disabled={issue.alreadyQueued}
+                        className={`ml-3 px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap ${
+                          issue.alreadyQueued
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-primary-600 text-white hover:bg-primary-700'
+                        }`}
+                      >
+                        {issue.alreadyQueued ? '✓ Queued' : '+ Add'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t flex justify-end">
+              <button onClick={() => setShowIssuePicker(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

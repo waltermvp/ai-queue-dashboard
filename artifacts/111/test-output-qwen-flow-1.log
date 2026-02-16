@@ -1,0 +1,23 @@
+
+> Invalid Command Format: tapOn
+
+/Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/111/flows/qwen-flow-1.yaml:11
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ 9 |                                                                          │
+│ 10 | - tapOn: "Sign In"                                                      │
+│ 11 |   optional: true                                                        │
+│               ^                                                              │
+│ ╭──────────────────────────────────────────────────────────────────────────╮ │
+│ │ Found unexpected top-level field: `optional`. Missing an indent or dash? │ │
+│ │                                                                          │ │
+│ │ Example of correctly formatted list of commands:                         │ │
+│ │ ```yaml                                                                  │ │
+│ │ - tapOn:                                                                 │ │
+│ │ text: submit                                                             │ │
+│ │ optional: true                                                           │ │
+│ │ - inputText: hello                                                       │ │
+│ │ ```                                                                      │ │
+│ ╰──────────────────────────────────────────────────────────────────────────╯ │
+│ 12 |                                                                         │
+│ 13 | - waitForAnimationToEnd                                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯

@@ -573,3 +573,7 @@
 [2026-02-16T20:36:53.290Z] [pipeline] [2026-02-16 15:36:53] 🔢 Total flows to run: 1
 [2026-02-16T20:36:53.296Z] [pipeline] [2026-02-16 15:36:53] --- Running flow 1/1: qwen-flow-1 ---
 [2026-02-16T20:36:53.302Z] [pipeline] [2026-02-16 15:36:53] 📹 Started screen recording (PID: 96223)
+[2026-02-16T20:36:58.992Z] 👀 Watching queue (checking every 30s)...
+[2026-02-16T20:36:58.995Z]    Press Ctrl+C to stop
+
+[2026-02-16T20:42:11.101Z] 📥 Loaded 7 new issue(s) from GitHub (22 total open, 16 already tracked)
