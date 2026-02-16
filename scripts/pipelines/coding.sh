@@ -25,7 +25,11 @@ TIMEOUT_SECONDS="${CODING_TIMEOUT:-1800}"
 # 3 = infra failure
 # 4 = agent failure (timeout, no changes)
 
-export PATH="$PATH:$HOME/.local/bin"
+export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/uv/tools/mini-swe-agent/bin"
+MINI_BIN="$HOME/.local/bin/mini"
+if [ ! -f "$MINI_BIN" ]; then
+  MINI_BIN=$(which mini 2>/dev/null || echo "mini")
+fi
 
 mkdir -p "$ARTIFACTS_DIR"
 
@@ -162,8 +166,8 @@ fi
 TRAJECTORY_FILE="$ARTIFACTS_DIR/mini-trajectory.json"
 
 # Run with timeout
-log "Running: mini $MINI_ARGS -t <task>"
-timeout "$TIMEOUT_SECONDS" mini $MINI_ARGS -t "$TASK_CONTENT" > "$ARTIFACTS_DIR/mini-output.log" 2>&1
+log "Running: $MINI_BIN $MINI_ARGS -t <task>"
+timeout "$TIMEOUT_SECONDS" "$MINI_BIN" $MINI_ARGS -t "$TASK_CONTENT" > "$ARTIFACTS_DIR/mini-output.log" 2>&1
 MINI_EXIT=$?
 
 if [ $MINI_EXIT -eq 124 ]; then

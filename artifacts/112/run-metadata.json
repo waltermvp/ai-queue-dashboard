@@ -1,0 +1,11 @@
+{
+  "model": "qwen2.5-coder:32b",
+  "issueType": "coding",
+  "startedAt": "2026-02-16T20:34:49.151Z",
+  "config": {
+    "script": "scripts/pipelines/coding.sh",
+    "prompt": "prompts/coding.md",
+    "model": "qwen2.5-coder:32b"
+  },
+  "ollamaUrl": "http://localhost:11434/api/generate"
+}

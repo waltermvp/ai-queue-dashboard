@@ -1,0 +1,57 @@
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp:
+    clearState: true
+
+- waitForAnimationToEnd
+
+- takeScreenshot: app-launch
+
+- tapOn: "Sign In"
+  optional: true
+
+- waitForAnimationToEnd
+
+- takeScreenshot: sign-in-screen
+
+- assertVisible: "Email"
+
+- tapOn:
+    id: "email-input"  # Assuming the email input has a testID
+- inputText: "test@example.com"
+
+- tapOn:
+    id: "password-input"  # Assuming the password input has a testID
+- inputText: "securepassword123"
+
+- takeScreenshot: credentials-entered
+
+- tapOn: "Sign In"
+  optional: true
+
+- waitForAnimationToEnd
+
+- takeScreenshot: post-sign-in
+
+- assertVisible: "Dashboard"
+
+- tapOn: "Menu"  # Assuming there's a menu button or drawer icon
+  optional: true
+
+- waitForAnimationToEnd
+
+- scrollUntilVisible:
+    element:
+      text: "Logout"
+    direction: DOWN
+
+- takeScreenshot: pre-logout
+
+- tapOn: "Logout"
+  optional: true
+
+- waitForAnimationToEnd
+
+- takeScreenshot: post-logout
+
+- assertVisible: "Sign In"  # Confirming we're back at the login screen

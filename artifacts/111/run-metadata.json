@@ -1,0 +1,11 @@
+{
+  "model": "qwen2.5-coder:32b",
+  "issueType": "e2e",
+  "startedAt": "2026-02-16T20:36:17.502Z",
+  "config": {
+    "script": "scripts/pipelines/e2e.sh",
+    "prompt": "prompts/e2e.md",
+    "model": "qwen2.5-coder:32b"
+  },
+  "ollamaUrl": "http://localhost:11434/api/generate"
+}
