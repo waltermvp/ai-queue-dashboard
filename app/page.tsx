@@ -270,6 +270,9 @@ export default function Dashboard() {
 
   const isProcessing = !!queueState?.processing
 
+  // Extract issue number from any item shape
+  const getIssueNum = (item: any) => item?.issueNumber || item?.number || item?.issue_number || item?.id?.split('-').pop() || '?'
+
   // Helper function to detect if issue is likely a bug
   const isBugReport = (title: string) => {
     return /bug|error|broken|fail|doesn'?t work|not working|crash|exception|undefined|null/i.test(title)
@@ -568,7 +571,7 @@ export default function Dashboard() {
                   rel="noopener noreferrer"
                   className="font-medium text-gray-900 hover:text-primary-600 flex items-center space-x-1"
                 >
-                  <span className="font-mono text-primary-600">#{queueState.processing.id?.split('-').pop()}</span>
+                  <span className="font-mono text-primary-600">#{getIssueNum(queueState.processing)}</span>
                   <span>{queueState.processing.title}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
@@ -653,7 +656,7 @@ export default function Dashboard() {
                 <div key={issue.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <span className="badge-primary font-mono">#{issue.number || issue.id.split('-').pop()}</span>
+                      <span className="badge-primary font-mono">#{getIssueNum(issue)}</span>
                       {isBugReport(issue.title) ? (
                         <div className="flex items-center space-x-1">
                           <span className="text-orange-600">🐛</span>
@@ -677,7 +680,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <button
-                    onClick={() => executeAction('remove', { issueNumber: issue.number || issue.id.split('-').pop() })}
+                    onClick={() => executeAction('remove', { issueNumber: getIssueNum(issue) })}
                     className="ml-2 p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                     title="Remove from queue"
                   >
@@ -702,7 +705,7 @@ export default function Dashboard() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <CheckCircle className="w-4 h-4 text-success-600" />
-                        <span className="text-sm font-mono text-gray-500">#{issue.id?.split('-').pop()}</span>
+                        <span className="text-sm font-mono text-gray-500">#{getIssueNum(issue)}</span>
                         <span className="text-sm font-medium text-gray-900">{issue.title}</span>
                         {issue.artifacts && <Film className="w-3.5 h-3.5 text-purple-500" title="Has recordings" />}
                         {issue.resolution === 'not_a_bug' && (
@@ -781,7 +784,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <button 
-                  onClick={() => window.open(`https://github.com/${issue.repo}/issues/${issue.id.split('-').pop()}`, '_blank')}
+                  onClick={() => window.open(`https://github.com/${issue.repo}/issues/${getIssueNum(issue)}`, '_blank')}
                   className="text-sm text-primary-600 hover:text-primary-700 ml-4"
                   title="View on GitHub"
                 >
@@ -803,7 +806,7 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <XCircle className="w-4 h-4 text-danger-600" />
-                    <span className="text-sm font-mono text-gray-500">#{issue.id?.split('-').pop()}</span>
+                    <span className="text-sm font-mono text-gray-500">#{getIssueNum(issue)}</span>
                     <span className="text-sm font-medium text-gray-900">{issue.title}</span>
                     {issue.type && <LabelBadge label={issue.type} />}
                     {(issue.labels || []).map((label) => (
@@ -822,7 +825,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 <button 
-                  onClick={() => executeAction('retry', { issueNumber: issue.id.split('-').pop() })}
+                  onClick={() => executeAction('retry', { issueNumber: getIssueNum(issue) })}
                   className="text-sm text-warning-600 hover:text-warning-700"
                   title="Retry this issue"
                 >
@@ -864,7 +867,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <button 
-                  onClick={() => window.open(`https://github.com/${issue.repo}/issues/${issue.id.split('-').pop()}`, '_blank')}
+                  onClick={() => window.open(`https://github.com/${issue.repo}/issues/${getIssueNum(issue)}`, '_blank')}
                   className="text-sm text-primary-600 hover:text-primary-700 ml-4"
                   title="View on GitHub"
                 >

@@ -13,3 +13,18 @@ Take screenshot healthcheck... COMPLETED
 [36m╚═══════════════════════════════════════════════════════════════════╝[0m
 
 
+Running on ZL73232GKP
+ > Flow healthcheck
+Assert that ".*" is visible... COMPLETED
+Take screenshot healthcheck... COMPLETED
+
+[33m🚀 Update: We built maestro-runner from scratch — 3.6x faster, real iOS device support, runs locally or on any Appium cloud, true parallel execution, no paywall. Fixes 78% of Maestro's top issues. Same YAML.[0m
+
+[4;36mTry maestro-runner: https://github.com/devicelab-dev/maestro-runner[0m
+
+[36m╔═══════════════════════════════════════════════════════════════════╗[0m
+[36m║[0m  [1;32mMaestro iOS Real Device Support[0m - by ]8;;https://devicelab.dev[1;38;2;23;162;184mDeviceLab.dev[0m]8;;               [36m║[0m
+[36m║[0m  Build your own distributed lab: [4;36mhttps://devicelab.dev[0m            [36m║[0m
+[36m╚═══════════════════════════════════════════════════════════════════╝[0m
+
+
