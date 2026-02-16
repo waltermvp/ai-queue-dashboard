@@ -165,10 +165,17 @@ fi
 
 TRAJECTORY_FILE="$ARTIFACTS_DIR/mini-trajectory.json"
 
-# Run with timeout
+# Run with timeout (use gtimeout on macOS via coreutils, fallback to timeout)
 log "Running: $MINI_BIN $MINI_ARGS -t <task>"
-timeout "$TIMEOUT_SECONDS" "$MINI_BIN" $MINI_ARGS -t "$TASK_CONTENT" > "$ARTIFACTS_DIR/mini-output.log" 2>&1
-MINI_EXIT=$?
+TIMEOUT_CMD="$(command -v gtimeout || command -v timeout || echo "")"
+if [ -n "$TIMEOUT_CMD" ]; then
+  "$TIMEOUT_CMD" "$TIMEOUT_SECONDS" "$MINI_BIN" $MINI_ARGS -t "$TASK_CONTENT" > "$ARTIFACTS_DIR/mini-output.log" 2>&1
+  MINI_EXIT=$?
+else
+  log "⚠️ No timeout command available, running without timeout"
+  "$MINI_BIN" $MINI_ARGS -t "$TASK_CONTENT" > "$ARTIFACTS_DIR/mini-output.log" 2>&1
+  MINI_EXIT=$?
+fi
 
 if [ $MINI_EXIT -eq 124 ]; then
   log "⚠️ mini-swe-agent timed out after ${TIMEOUT_SECONDS}s"
