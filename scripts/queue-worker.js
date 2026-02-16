@@ -521,7 +521,7 @@ async function main() {
           }
         } catch {}
         // Move processing item to failed
-        db.updateItemStatus(processing.issue_number, 'failed', { error: 'Cancelled by user' });
+        db.failItem(processing.issue_number, { error: 'Cancelled by user' });
         db.generateCacheFile();
         releaseLock();
         log(`🛑 Cancelled issue #${processing.issue_number}: ${processing.title}${killed ? ' (process killed)' : ''}`);

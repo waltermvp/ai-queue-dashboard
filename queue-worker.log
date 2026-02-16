@@ -600,3 +600,5 @@
 [2026-02-16T20:47:55.771Z]   Processing: 1
 [2026-02-16T20:47:55.771Z]   Completed: 0
 [2026-02-16T20:47:55.771Z]   Failed: 0
+[2026-02-16T20:52:08.348Z] 🗑️ Cleared 0 item(s) from queue
+[2026-02-16T21:06:34.352Z] 🛑 Cancelled issue #111: E2E Test: Login and Logout Flow
