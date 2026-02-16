@@ -1,18 +1,22 @@
 {
   "current_issue": null,
-  "processing": {
-    "issueNumber": 111,
-    "repo": "epiphanyapps/MapYourHealth",
-    "title": "E2E Test: Login and Logout Flow",
-    "labels": [
-      "e2e",
-      "test"
-    ],
-    "priority": "medium",
-    "addedAt": "2026-02-16 20:32:32",
-    "started_at": "2026-02-16 21:21:59"
-  },
+  "processing": null,
   "queue": [],
   "completed": [],
-  "failed": []
+  "failed": [
+    {
+      "issueNumber": 111,
+      "repo": "epiphanyapps/MapYourHealth",
+      "title": "E2E Test: Login and Logout Flow",
+      "labels": [
+        "e2e",
+        "test"
+      ],
+      "priority": "medium",
+      "addedAt": "2026-02-16 20:32:32",
+      "error": "Pipeline failed (exit code: 1, class: build). Check artifacts/111/pipeline.log",
+      "error_class": "build",
+      "failed_at": "2026-02-16 21:27:04"
+    }
+  ]
 }

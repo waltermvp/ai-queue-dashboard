@@ -39,8 +39,9 @@ export async function GET(request: Request) {
 
   const repo = searchParams.get('repo') || repos[0] || 'epiphanyapps/MapYourHealth'
 
-  // Validate repo is accessible
-  if (!repos.includes(repo)) {
+  // Validate repo is accessible (case-insensitive — GitHub API returns lowercase)
+  const matchedRepo = repos.find(r => r.toLowerCase() === repo.toLowerCase()) || repo
+  if (!repos.find(r => r.toLowerCase() === repo.toLowerCase())) {
     return NextResponse.json({ error: `Repo not found: ${repo}`, repos }, { status: 400 })
   }
 
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
     // Get open issues from GitHub
     const raw = execFileSync('gh', [
       'issue', 'list',
-      '--repo', repo,
+      '--repo', matchedRepo,
       '--state', 'open',
       '--json', 'number,title,labels,createdAt',
       '--limit', '50'
@@ -76,10 +77,10 @@ export async function GET(request: Request) {
       labels: (issue.labels || []).map((l: any) => typeof l === 'string' ? l : l.name || ''),
       createdAt: issue.createdAt,
       alreadyQueued: tracked.has(issue.number),
-      repo,
+      repo: matchedRepo,
     }))
 
-    return NextResponse.json({ issues: result, repos: REPOS, currentRepo: repo })
+    return NextResponse.json({ issues: result, repos, currentRepo: matchedRepo })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

@@ -630,3 +630,21 @@
 [2026-02-16T21:24:02.969Z] [pipeline] [2026-02-16 16:24:02] 🔢 Total flows to run: 1
 [2026-02-16T21:24:02.979Z] [pipeline] [2026-02-16 16:24:02] --- Running flow 1/1: qwen-flow-1 ---
 [2026-02-16T21:24:02.982Z] [pipeline] [2026-02-16 16:24:02] 📹 Started screen recording (PID: 5659)
+[2026-02-16T21:27:04.400Z] ❌ Pipeline e2e failed for issue #111 (exit code: 1)
+[2026-02-16T21:27:04.405Z] ❌ Pipeline failed: build (exit 1)
+[2026-02-16T21:27:04.411Z] 📹 Artifacts: 0 recordings, 6 logs
+[2026-02-16T21:34:53.215Z] 📊 Queue Status:
+[2026-02-16T21:34:53.217Z]   Queued: 0
+[2026-02-16T21:34:53.217Z]   Processing: 0
+[2026-02-16T21:34:53.217Z]   Completed: 0
+[2026-02-16T21:34:53.217Z]   Failed: 1
+[2026-02-16T21:35:19.878Z] 📊 Queue Status:
+[2026-02-16T21:35:19.903Z]   Queued: 0
+[2026-02-16T21:35:19.903Z]   Processing: 0
+[2026-02-16T21:35:19.903Z]   Completed: 0
+[2026-02-16T21:35:19.904Z]   Failed: 1
+[2026-02-16T21:36:31.524Z] 📊 Queue Status:
+[2026-02-16T21:36:31.527Z]   Queued: 0
+[2026-02-16T21:36:31.527Z]   Processing: 0
+[2026-02-16T21:36:31.527Z]   Completed: 0
+[2026-02-16T21:36:31.527Z]   Failed: 1
