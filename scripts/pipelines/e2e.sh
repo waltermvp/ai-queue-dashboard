@@ -123,17 +123,43 @@ if [ ! -f "$FLOW_FILE" ]; then
   fail "Maestro flow not found: $FLOW_FILE"
 fi
 
-maestro record --local --device "$DEVICE_ID" \
-  "$FLOW_FILE" \
-  "$ARTIFACTS_DIR/android-recording.mp4" \
-  >> "$ARTIFACTS_DIR/test-output.log" 2>&1
+# Start screen recording in background
+DEVICE_RECORDING="/sdcard/e2e-recording.mp4"
+adb -s "$DEVICE_ID" shell screenrecord --bugreport "$DEVICE_RECORDING" &
+RECORD_PID=$!
+log "📹 Started screen recording (PID: $RECORD_PID)"
+
+# Give screenrecord time to initialize
+sleep 2
+
+# Run Maestro tests
+maestro test --udid "$DEVICE_ID" "$FLOW_FILE" >> "$ARTIFACTS_DIR/test-output.log" 2>&1
 MAESTRO_EXIT=$?
 
+# Stop recording
+kill $RECORD_PID 2>/dev/null
+wait $RECORD_PID 2>/dev/null
+sleep 2
+
+# Pull recording from device
+adb -s "$DEVICE_ID" pull "$DEVICE_RECORDING" "$ARTIFACTS_DIR/android-recording.mp4" >> "$LOG_FILE" 2>&1
+adb -s "$DEVICE_ID" shell rm "$DEVICE_RECORDING" 2>/dev/null
+
 if [ $MAESTRO_EXIT -ne 0 ]; then
-  log "⚠️ Maestro tests had failures (exit code: $MAESTRO_EXIT) — check test-output.log"
-else
-  log "✅ Maestro tests passed with recording"
+  fail "Maestro tests failed (exit code: $MAESTRO_EXIT) — check test-output.log"
 fi
+
+# Video recording is REQUIRED — no video = failure
+if [ ! -f "$ARTIFACTS_DIR/android-recording.mp4" ]; then
+  fail "No video recording produced — screen recording failed"
+fi
+
+VIDSIZE=$(du -h "$ARTIFACTS_DIR/android-recording.mp4" | cut -f1)
+if [ "$VIDSIZE" = "0B" ] || [ "$VIDSIZE" = "0" ]; then
+  fail "Video recording is empty (0 bytes)"
+fi
+
+log "✅ Maestro tests passed with recording ($VIDSIZE)"
 
 # -------------------------------------------------------
 # Step 6: iOS tests (if device available)
@@ -155,12 +181,8 @@ log "=== E2E Pipeline Complete for Issue #$ISSUE_ID ==="
 log "Artifacts:"
 ls -la "$ARTIFACTS_DIR" >> "$LOG_FILE" 2>&1
 
-# Check if we got a recording
-if [ -f "$ARTIFACTS_DIR/android-recording.mp4" ]; then
-  SIZE=$(du -h "$ARTIFACTS_DIR/android-recording.mp4" | cut -f1)
-  log "🎬 Video recording: $SIZE"
-else
-  log "⚠️ No video recording produced"
-fi
+# Report recording size
+SIZE=$(du -h "$ARTIFACTS_DIR/android-recording.mp4" | cut -f1)
+log "🎬 Video recording: $SIZE"
 
-exit $MAESTRO_EXIT
+exit 0

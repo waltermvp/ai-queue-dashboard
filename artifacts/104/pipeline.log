@@ -111,3 +111,8 @@ For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/comma
 
 BUILD FAILED in 2s
 28 actionable tasks: 28 up-to-date
+[2026-02-15 17:59:04] === E2E Pipeline Started for Issue #104 ===
+[2026-02-15 17:59:04] Step 1/6: Syncing amplify outputs...
+✓ Synced amplify_outputs.json from backend to root and mobile
+[2026-02-15 17:59:04] ✅ Amplify sync complete
+[2026-02-15 17:59:04] Step 2/6: Checking build cache...

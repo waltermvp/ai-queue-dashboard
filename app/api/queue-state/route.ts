@@ -1,45 +1,104 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
+import { readFile, readdir, stat } from 'fs/promises'
+import { execSync } from 'child_process'
 import { join } from 'path'
+
+// Use the same Node 20 that Next.js runs under
+const NODE_BIN = process.execPath
+const DB_API = join(process.cwd(), 'scripts', 'db-api.js')
+
+function queryDB(args: string): any {
+  try {
+    const result = execSync(`"${NODE_BIN}" "${DB_API}" ${args}`, { timeout: 5000, encoding: 'utf-8' })
+    return JSON.parse(result)
+  } catch {
+    return null
+  }
+}
+
+function parseLabels(labels: string | null): string[] {
+  if (!labels) return []
+  try { return JSON.parse(labels) } catch { return labels.split(',').map(s => s.trim()) }
+}
+
+async function getArtifacts(issueId: string) {
+  try {
+    const artDir = join(process.cwd(), 'artifacts', issueId)
+    await stat(artDir)
+    const files = await readdir(artDir)
+    const recordings = files.filter((f: string) => /\.(mp4|mov|webm)$/i.test(f))
+    const logs = files.filter((f: string) => /\.(log|txt)$/i.test(f))
+    if (recordings.length > 0 || logs.length > 0) {
+      return { dir: `artifacts/${issueId}`, recordings, logs }
+    }
+  } catch {}
+  return undefined
+}
 
 export async function GET(request: NextRequest) {
   try {
-    // Read from local queue-state.json file  
+    // Live state from queue-state.json
     const queueStatePath = join(process.cwd(), 'queue-state.json')
-    
-    const data = await readFile(queueStatePath, 'utf-8')
-    const queueState = JSON.parse(data)
-    
-    // Ensure all required arrays exist to prevent frontend crashes
-    if (!queueState.queue) queueState.queue = []
-    if (!queueState.completed) queueState.completed = []
-    if (!queueState.failed) queueState.failed = []
-    
-    return NextResponse.json(queueState)
+    let liveState: any = { processing: null, queue: [] }
+    try {
+      const data = await readFile(queueStatePath, 'utf-8')
+      liveState = JSON.parse(data)
+    } catch {}
+
+    // Historical data from SQLite
+    const stats = queryDB('stats') || { totalRuns: 0, completed: 0, failed: 0, avgProcessingTime: 0, byType: {} }
+    const recentCompleted = queryDB('history --status completed --limit 20') || []
+    const recentFailed = queryDB('history --status failed --limit 20') || []
+
+    const completed = await Promise.all(recentCompleted.map(async (r: any) => ({
+      id: r.issue_id,
+      title: r.title,
+      repo: r.repo || '',
+      completed: r.completed_at,
+      completed_at: r.completed_at,
+      type: r.type,
+      labels: parseLabels(r.labels),
+      priority: r.priority,
+      processing_time_ms: r.processing_time_ms,
+      model: r.model,
+      pr_url: r.pr_url,
+      github_url: r.github_url,
+      artifacts: await getArtifacts(r.issue_id)
+    })))
+
+    const failed = recentFailed.map((r: any) => ({
+      id: r.issue_id,
+      title: r.title,
+      repo: r.repo || '',
+      failed: r.completed_at,
+      failed_at: r.completed_at,
+      type: r.type,
+      error: r.error,
+      labels: parseLabels(r.labels),
+    }))
+
+    return NextResponse.json({
+      processing: liveState.processing || null,
+      queue: liveState.queue || [],
+      completed,
+      failed,
+      needs_clarification: liveState.needs_clarification || [],
+      bug_confirmed: liveState.bug_confirmed || [],
+      stats
+    })
   } catch (error) {
     console.error('Error reading queue state:', error)
-    
-    // Return default empty state if file doesn't exist
-    const defaultState = {
-      processing: null,
-      completed: [],
-      failed: [],
-      queue: [
-        { id: 'demo-1', title: 'Sample Task 1', priority: 'high', created_at: new Date().toISOString() },
-        { id: 'demo-2', title: 'Sample Task 2', priority: 'medium', created_at: new Date().toISOString() }
-      ]
-    }
-    
-    return NextResponse.json(defaultState)
+    return NextResponse.json({
+      processing: null, completed: [], failed: [], queue: [],
+      needs_clarification: [], bug_confirmed: [],
+      stats: { totalRuns: 0, completed: 0, failed: 0, avgProcessingTime: 0, byType: {} }
+    })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { action } = await request.json()
-    
-    // For now, just return success - the actual implementation would
-    // call the bash scripts to perform the actions
     return NextResponse.json({ success: true, action })
   } catch (error) {
     console.error('Error updating queue state:', error)

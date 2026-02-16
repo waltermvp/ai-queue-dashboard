@@ -364,15 +364,17 @@ async function runE2EPipeline(worktreeDir, fullRepo, prNumber) {
   const e2eResults = []
 
   // Step 1: Build Android app
-  console.log("\n   📦 Building Android debug APK...")
+  console.log("\n   📦 Building Android release APK (no dev menu)...")
   const buildCmd = `
     export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20
+    export ANDROID_HOME="$HOME/Library/Android/sdk"
     cd "${worktreeDir}"
     yarn install
     yarn sync:amplify
     cd apps/mobile
     npx expo prebuild --platform android --clean
-    cd android && ./gradlew assembleDebug
+    echo "sdk.dir=$HOME/Library/Android/sdk" > android/local.properties
+    cd android && ./gradlew assembleRelease
   `
   const buildResult = runSafe(`bash -c '${buildCmd.replace(/'/g, "'\\''")}' 2>&1`)
   if (buildResult === null) {
@@ -384,12 +386,12 @@ async function runE2EPipeline(worktreeDir, fullRepo, prNumber) {
     runSafe(`gh pr comment ${prNumber} --repo ${fullRepo} --body "## 🧪 Maestro E2E Results\\n\\n${errMsg}\\n\\nBuild failed — skipping device tests."`)
     return { success: false, errors: e2eErrors }
   }
-  e2eResults.push("### Build\\n✅ Android debug APK built successfully")
+  e2eResults.push("### Build\\n✅ Android release APK built successfully")
   console.log("   ✅ Build succeeded")
 
   // Step 2: Install on device
   console.log("\n   📱 Installing on Android device (ZL73232GKP)...")
-  const apkPath = `${worktreeDir}/apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk`
+  const apkPath = `${worktreeDir}/apps/mobile/android/app/build/outputs/apk/release/app-release.apk`
   const installResult = runSafe(`adb -s ZL73232GKP install -r "${apkPath}" 2>&1`)
   if (installResult === null) {
     const errMsg = "❌ APK install failed (device may be disconnected)"

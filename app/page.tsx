@@ -59,6 +59,14 @@ interface HistoryStats {
   byType: Record<string, number>
 }
 
+interface QueueStats {
+  totalRuns: number
+  completed: number
+  failed: number
+  avgProcessingTime: number
+  byType: Record<string, number>
+}
+
 interface QueueState {
   processing: ProcessingItem | null
   completed: Array<{
@@ -68,6 +76,13 @@ interface QueueState {
     completed: string
     completed_at?: string
     resolution?: string
+    type?: string
+    labels?: string[]
+    priority?: string
+    processing_time_ms?: number
+    model?: string
+    pr_url?: string
+    github_url?: string
     artifacts?: {
       dir: string
       recordings: string[]
@@ -80,6 +95,9 @@ interface QueueState {
     repo: string
     failed: string
     failed_at?: string
+    error?: string
+    type?: string
+    labels?: string[]
   }>
   needs_clarification: Array<{
     id: string
@@ -103,6 +121,7 @@ interface QueueState {
     priority?: string
     labels?: string[]
   }>
+  stats?: QueueStats
 }
 
 function ElapsedTimer({ startedAt }: { startedAt: string }) {
@@ -375,7 +394,7 @@ export default function Dashboard() {
             </div>
             <div className="ml-4">
               <h3 className="text-sm font-medium text-gray-900">Completed</h3>
-              <p className="text-2xl font-semibold text-gray-900">{queueState.completed.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{queueState.stats?.completed ?? queueState.completed.length}</p>
             </div>
           </div>
         </div>
@@ -383,11 +402,11 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="h-8 w-8 text-orange-600 flex items-center justify-center">🐛</div>
+              <BarChart3 className="h-8 w-8 text-purple-600" />
             </div>
             <div className="ml-4">
-              <h3 className="text-sm font-medium text-gray-900">Bug Confirmed</h3>
-              <p className="text-2xl font-semibold text-gray-900">{queueState.bug_confirmed?.length || 0}</p>
+              <h3 className="text-sm font-medium text-gray-900">Total Runs</h3>
+              <p className="text-2xl font-semibold text-gray-900">{queueState.stats?.totalRuns ?? 0}</p>
             </div>
           </div>
         </div>
@@ -399,7 +418,7 @@ export default function Dashboard() {
             </div>
             <div className="ml-4">
               <h3 className="text-sm font-medium text-gray-900">Failed</h3>
-              <p className="text-2xl font-semibold text-gray-900">{queueState.failed.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{queueState.stats?.failed ?? queueState.failed.length}</p>
             </div>
           </div>
         </div>
@@ -407,11 +426,13 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <FileText className="h-8 w-8 text-warning-500" />
+              <Clock className="h-8 w-8 text-indigo-500" />
             </div>
             <div className="ml-4">
-              <h3 className="text-sm font-medium text-gray-900">Needs Clarification</h3>
-              <p className="text-2xl font-semibold text-gray-900">{queueState.needs_clarification?.length || 0}</p>
+              <h3 className="text-sm font-medium text-gray-900">Avg Time</h3>
+              <p className="text-2xl font-semibold text-gray-900">
+                {queueState.stats?.avgProcessingTime ? `${Math.round(queueState.stats.avgProcessingTime / 1000)}s` : '—'}
+              </p>
             </div>
           </div>
         </div>
@@ -598,15 +619,36 @@ export default function Dashboard() {
                         )}
                       </div>
                       <p className="text-sm text-gray-600 mt-1">{issue.title}</p>
-                      <div className="flex items-center space-x-2 mt-1">
+                      <div className="flex items-center space-x-2 mt-1 flex-wrap gap-y-1">
                         <span className="text-xs text-gray-500">
                           {issue.resolution === 'not_a_bug' ? 'Analyzed' : 'Completed'}: {new Date(issue.completed_at || issue.completed).toLocaleString()}
                         </span>
+                        {issue.processing_time_ms && (
+                          <>
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-gray-500 font-mono">
+                              {Math.round(issue.processing_time_ms / 1000)}s
+                            </span>
+                          </>
+                        )}
+                        {issue.type && <LabelBadge label={issue.type} />}
+                        {(issue.labels || []).map((label) => (
+                          <LabelBadge key={label} label={label} />
+                        ))}
                       </div>
                     </div>
-                    <button className="text-sm text-primary-600 hover:text-primary-700">
-                      <FileText className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      {issue.pr_url && (
+                        <a href={issue.pr_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary-600 hover:text-primary-700" title="View PR">
+                          <GitBranch className="w-4 h-4" />
+                        </a>
+                      )}
+                      {issue.github_url && (
+                        <a href={issue.github_url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 hover:text-gray-700" title="View Issue">
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                   {issue.artifacts && <ArtifactsPanel artifacts={issue.artifacts} />}
                 </div>
@@ -670,6 +712,10 @@ export default function Dashboard() {
                   <div className="flex items-center space-x-2">
                     <XCircle className="w-4 h-4 text-danger-600" />
                     <span className="text-sm font-medium text-gray-900">{issue.id}</span>
+                    {issue.type && <LabelBadge label={issue.type} />}
+                    {(issue.labels || []).map((label) => (
+                      <LabelBadge key={label} label={label} />
+                    ))}
                   </div>
                   <p className="text-sm text-gray-600 mt-1">{issue.title}</p>
                   <div className="flex items-center space-x-2 mt-1">
@@ -677,6 +723,11 @@ export default function Dashboard() {
                       Failed: {new Date(issue.failed_at || issue.failed).toLocaleString()}
                     </span>
                   </div>
+                  {issue.error && (
+                    <p className="text-xs text-red-600 mt-1 truncate max-w-md" title={issue.error}>
+                      Error: {issue.error}
+                    </p>
+                  )}
                 </div>
                 <button 
                   onClick={() => executeAction('retry')}
