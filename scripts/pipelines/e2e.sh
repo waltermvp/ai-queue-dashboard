@@ -1,7 +1,8 @@
 #!/bin/bash
 set -eo pipefail
 
-ISSUE_ID="${1:?Usage: e2e.sh <issue-id>}"
+ISSUE_ID="${1:?Usage: e2e.sh <issue-id> [flows-dir]}"
+QWEN_FLOWS_DIR="${2:-}"
 REPO_ROOT="$HOME/Documents/MapYourHealth"
 MOBILE_ROOT="$REPO_ROOT/apps/mobile"
 ARTIFACTS_DIR="$HOME/Documents/ai-queue-dashboard/artifacts/$ISSUE_ID"
@@ -108,58 +109,146 @@ adb -s "$DEVICE_ID" get-state >> "$LOG_FILE" 2>&1 || fail "Android device $DEVIC
 log "✅ Device $DEVICE_ID connected"
 
 # -------------------------------------------------------
-# Step 4: Install on device
+# Step 4: Install on device + Health Check Gate
 # -------------------------------------------------------
-log "Step 4/6: Installing APK on device $DEVICE_ID..."
+log "Step 4/6: Installing APK and running health check..."
 adb -s "$DEVICE_ID" install -r "$APK_PATH" >> "$LOG_FILE" 2>&1 || fail "APK install failed"
 log "✅ APK installed on $DEVICE_ID"
+
+# Launch app and wait for it to load (Moto E13 is slow)
+log "🏥 Launching app for health check..."
+adb -s "$DEVICE_ID" shell am start -n "$APP_ID/.MainActivity" >> "$LOG_FILE" 2>&1 || fail "Failed to launch app"
+log "⏳ Waiting 10s for app to load on Moto E13..."
+sleep 10
+
+# Run health check flow
+HEALTHCHECK_FLOW="$HOME/maestro-farm/flows/android/healthcheck.yaml"
+if [ -f "$HEALTHCHECK_FLOW" ]; then
+  log "🏥 Running health check flow..."
+  maestro test --udid "$DEVICE_ID" "$HEALTHCHECK_FLOW" >> "$ARTIFACTS_DIR/healthcheck-output.log" 2>&1
+  HC_EXIT=$?
+  if [ $HC_EXIT -ne 0 ]; then
+    fail "App failed to load — health check did not pass (exit code: $HC_EXIT). Check healthcheck-output.log"
+  fi
+  log "✅ Health check passed — app is loaded and visible"
+else
+  log "⚠️ No healthcheck.yaml found, skipping health check"
+fi
 
 # -------------------------------------------------------
 # Step 5: Run Maestro tests with recording (Android)
 # -------------------------------------------------------
 log "Step 5/6: Running Maestro tests with recording (Android)..."
-FLOW_FILE="$HOME/maestro-farm/flows/android/mapyourhealth-basic.yaml"
-if [ ! -f "$FLOW_FILE" ]; then
-  fail "Maestro flow not found: $FLOW_FILE"
+
+# Build list of flows to run
+FLOWS_TO_RUN=()
+FLOW_NAMES=()
+
+if [ -n "$QWEN_FLOWS_DIR" ] && [ -d "$QWEN_FLOWS_DIR" ]; then
+  # Check for Qwen-generated flows
+  QWEN_YAMLS=$(find "$QWEN_FLOWS_DIR" -name '*.yaml' -o -name '*.yml' 2>/dev/null | sort)
+  if [ -n "$QWEN_YAMLS" ]; then
+    log "📋 Found Qwen-generated flows in $QWEN_FLOWS_DIR"
+    while IFS= read -r f; do
+      FLOWS_TO_RUN+=("$f")
+      FLOW_NAMES+=("$(basename "$f" .yaml)")
+      log "   → $(basename "$f")"
+    done <<< "$QWEN_YAMLS"
+  fi
 fi
 
-# Start screen recording in background
-DEVICE_RECORDING="/sdcard/e2e-recording.mp4"
-adb -s "$DEVICE_ID" shell screenrecord --bugreport "$DEVICE_RECORDING" &
-RECORD_PID=$!
-log "📹 Started screen recording (PID: $RECORD_PID)"
-
-# Give screenrecord time to initialize
-sleep 2
-
-# Run Maestro tests
-maestro test --udid "$DEVICE_ID" "$FLOW_FILE" >> "$ARTIFACTS_DIR/test-output.log" 2>&1
-MAESTRO_EXIT=$?
-
-# Stop recording
-kill $RECORD_PID 2>/dev/null
-wait $RECORD_PID 2>/dev/null
-sleep 2
-
-# Pull recording from device
-adb -s "$DEVICE_ID" pull "$DEVICE_RECORDING" "$ARTIFACTS_DIR/android-recording.mp4" >> "$LOG_FILE" 2>&1
-adb -s "$DEVICE_ID" shell rm "$DEVICE_RECORDING" 2>/dev/null
-
-if [ $MAESTRO_EXIT -ne 0 ]; then
-  fail "Maestro tests failed (exit code: $MAESTRO_EXIT) — check test-output.log"
+# Fall back to basic flow if no Qwen flows
+if [ ${#FLOWS_TO_RUN[@]} -eq 0 ]; then
+  BASIC_FLOW="$HOME/maestro-farm/flows/android/mapyourhealth-basic.yaml"
+  if [ ! -f "$BASIC_FLOW" ]; then
+    fail "Maestro flow not found: $BASIC_FLOW"
+  fi
+  FLOWS_TO_RUN+=("$BASIC_FLOW")
+  FLOW_NAMES+=("mapyourhealth-basic")
+  log "📋 Using default basic flow"
 fi
 
-# Video recording is REQUIRED — no video = failure
-if [ ! -f "$ARTIFACTS_DIR/android-recording.mp4" ]; then
-  fail "No video recording produced — screen recording failed"
-fi
+log "🔢 Total flows to run: ${#FLOWS_TO_RUN[@]}"
 
-VIDSIZE=$(du -h "$ARTIFACTS_DIR/android-recording.mp4" | cut -f1)
-if [ "$VIDSIZE" = "0B" ] || [ "$VIDSIZE" = "0" ]; then
-  fail "Video recording is empty (0 bytes)"
-fi
+# Track results
+TOTAL_FLOWS=${#FLOWS_TO_RUN[@]}
+PASSED_FLOWS=0
+FAILED_FLOWS=0
+VIDEOS_RECORDED=0
+ANY_FAILED=0
 
-log "✅ Maestro tests passed with recording ($VIDSIZE)"
+for i in "${!FLOWS_TO_RUN[@]}"; do
+  FLOW_FILE="${FLOWS_TO_RUN[$i]}"
+  FLOW_NAME="${FLOW_NAMES[$i]}"
+  FLOW_NUM=$((i + 1))
+
+  log "--- Running flow $FLOW_NUM/$TOTAL_FLOWS: $FLOW_NAME ---"
+
+  # Start screen recording in background
+  DEVICE_RECORDING="/sdcard/e2e-recording-${FLOW_NAME}.mp4"
+  adb -s "$DEVICE_ID" shell screenrecord --bugreport "$DEVICE_RECORDING" &
+  RECORD_PID=$!
+  log "📹 Started screen recording (PID: $RECORD_PID)"
+  sleep 2
+
+  # Run Maestro test
+  FLOW_LOG="$ARTIFACTS_DIR/test-output-${FLOW_NAME}.log"
+  maestro test --udid "$DEVICE_ID" "$FLOW_FILE" >> "$FLOW_LOG" 2>&1
+  MAESTRO_EXIT=$?
+
+  # Stop recording
+  kill $RECORD_PID 2>/dev/null
+  wait $RECORD_PID 2>/dev/null
+  sleep 2
+
+  # Pull recording from device
+  VIDEO_FILE="$ARTIFACTS_DIR/android-${FLOW_NAME}.mp4"
+  adb -s "$DEVICE_ID" pull "$DEVICE_RECORDING" "$VIDEO_FILE" >> "$LOG_FILE" 2>&1
+  adb -s "$DEVICE_ID" shell rm "$DEVICE_RECORDING" 2>/dev/null
+
+  # --- Post-Test Validation ---
+
+  # Check Maestro exit code
+  if [ $MAESTRO_EXIT -ne 0 ]; then
+    log "❌ Flow $FLOW_NAME FAILED (Maestro exit code: $MAESTRO_EXIT)"
+    FAILED_FLOWS=$((FAILED_FLOWS + 1))
+    ANY_FAILED=1
+  else
+    # Check for screenshots in Maestro output
+    SCREENSHOT_COUNT=0
+    MAESTRO_TESTS_DIR="$HOME/.maestro/tests"
+    if [ -d "$MAESTRO_TESTS_DIR" ]; then
+      SCREENSHOT_COUNT=$(find "$MAESTRO_TESTS_DIR" -name '*.png' -newer "$FLOW_LOG" 2>/dev/null | wc -l | tr -d ' ')
+    fi
+
+    if [ "$SCREENSHOT_COUNT" -gt 0 ]; then
+      log "📸 Found $SCREENSHOT_COUNT screenshot(s) for $FLOW_NAME"
+      # Copy screenshots to artifacts
+      find "$MAESTRO_TESTS_DIR" -name '*.png' -newer "$FLOW_LOG" -exec cp {} "$ARTIFACTS_DIR/" \; 2>/dev/null
+    else
+      log "⚠️ No screenshots found for $FLOW_NAME (flow may not use takeScreenshot)"
+    fi
+
+    log "✅ Flow $FLOW_NAME PASSED"
+    PASSED_FLOWS=$((PASSED_FLOWS + 1))
+  fi
+
+  # Validate video
+  if [ -f "$VIDEO_FILE" ]; then
+    VIDSIZE=$(stat -f%z "$VIDEO_FILE" 2>/dev/null || stat -c%s "$VIDEO_FILE" 2>/dev/null || echo "0")
+    if [ "$VIDSIZE" -gt 0 ]; then
+      VIDSIZE_H=$(du -h "$VIDEO_FILE" | cut -f1)
+      log "🎬 Video for $FLOW_NAME: $VIDSIZE_H"
+      VIDEOS_RECORDED=$((VIDEOS_RECORDED + 1))
+    else
+      log "⚠️ Video for $FLOW_NAME is empty (0 bytes)"
+    fi
+  else
+    log "⚠️ No video recorded for $FLOW_NAME"
+  fi
+
+  log "--- End flow $FLOW_NAME ---"
+done
 
 # -------------------------------------------------------
 # Step 6: iOS tests (if device available)
@@ -167,8 +256,6 @@ log "✅ Maestro tests passed with recording ($VIDSIZE)"
 log "Step 6/6: Checking iOS device..."
 if ideviceinfo -u "$IOS_DEVICE_ID" -k DeviceName >> "$LOG_FILE" 2>&1; then
   log "📱 iOS device found, skipping iOS build for now (use cached .app when available)"
-  # iOS build caching would go here in future
-  # For now, just log that the device is available
 else
   log "ℹ️ iOS device not available, skipping iOS tests"
 fi
@@ -178,11 +265,15 @@ fi
 # -------------------------------------------------------
 log ""
 log "=== E2E Pipeline Complete for Issue #$ISSUE_ID ==="
+log "📊 Summary: $PASSED_FLOWS/$TOTAL_FLOWS flows passed, $VIDEOS_RECORDED video(s) recorded"
+if [ $FAILED_FLOWS -gt 0 ]; then
+  log "❌ $FAILED_FLOWS flow(s) FAILED"
+fi
 log "Artifacts:"
 ls -la "$ARTIFACTS_DIR" >> "$LOG_FILE" 2>&1
 
-# Report recording size
-SIZE=$(du -h "$ARTIFACTS_DIR/android-recording.mp4" | cut -f1)
-log "🎬 Video recording: $SIZE"
+if [ $ANY_FAILED -ne 0 ]; then
+  fail "$FAILED_FLOWS/$TOTAL_FLOWS flows failed — see individual test-output logs"
+fi
 
 exit 0

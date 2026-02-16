@@ -1,33 +1,18 @@
 {
   "current_issue": null,
-  "processing": null,
-  "completed": [
-    {
-      "id": "104",
-      "title": "E2E: Auth Flow Test - Login, Signup & Forgot Password",
-      "repo": "epiphanyapps/MapYourHealth",
-      "url": "https://github.com/epiphanyapps/mapyourhealth/issues/104",
-      "priority": "medium",
-      "labels": [
-        "e2e",
-        "test"
-      ],
-      "created_at": "2026-02-15T22:48:00.000Z",
-      "solution": "To address the **E2E Testing** for the *Auth Flow* in the **MapYourHealth** React Native app, we will create and execute Maestro flows to cover the Login, Signup, and Forgot Password functionalities. Below are the detailed steps to set up and run these tests.\n\n## Step-by-Step Guide\n\n### 1. Sync Amplify Outputs\nEnsure that the Amplify outputs are synced properly as this is a prerequisite for the app to load correctly.\n```bash\ncd ~/Documents/MapYourHealth && yarn sync:amplify\n```\n\n### 2. Build Release APK\nNavigate to the mobile directory and build a release APK with JS bundled in.\n```bash\ncd apps/mobile && npx expo prebuild --platform android --clean\ncd android && ./gradlew assembleRelease\n```\n\n### 3. Install on Android Device\nInstall the built APK on the Moto E13 device using ADB.\n```bash\nadb -s ZL73232GKP install -r app/build/outputs/apk/release/app-release.apk\n```\n**App ID:** `com.epiphanyapps.mapyourhealth`\n\n### 4. Set PATH for Maestro\nEnsure that the Maestro binary is in your PATH.\n```bash\nexport PATH=\"$PATH:$HOME/.maestro/bin\"\n```\n\n### 5. Create Artifact Directory\nCreate a directory to store test artifacts, replacing `{issue-id}` with `104`.\n```bash\nmkdir -p ~/Documents/ai-queue-dashboard/artifacts/104\n```\n\n### 6. Define Maestro Flows\n\n#### Login Flow (`login-test.yaml`)\nThis flow will cover the login functionality.\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Sign In\"\n- inputText:\n    id: \"email-input\"\n    text: \"test@example.com\"\n- inputText:\n    id: \"password-input\"\n    text: \"password123\"\n- tapOn: \"Submit\"\n- assertVisible: \"Dashboard\"\n```\n\n#### Signup Flow (`signup-test.yaml`)\nThis flow will cover the signup functionality.\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Sign Up\"\n- inputText:\n    id: \"email-input\"\n    text: \"newuser@example.com\"\n- inputText:\n    id: \"password-input\"\n    text: \"securepassword123\"\n- inputText:\n    id: \"confirm-password-input\"\n    text: \"securepassword123\"\n- tapOn: \"Create Account\"\n- assertVisible: \"Confirmation Sent\"\n```\n\n#### Forgot Password Flow (`forgot-password-test.yaml`)\nThis flow will cover the forgot password functionality.\n```yaml\nappId: com.epiphanyapps.mapyourhealth\n---\n- launchApp\n- tapOn: \"Sign In\"\n- tapOn: \"Forgot Password?\"\n- inputText:\n    id: \"email-input\"\n    text: \"test@example.com\"\n- tapOn: \"Send Reset Link\"\n- assertVisible: \"Reset Email Sent\"\n```\n\n### 7. Run Maestro Tests with Recording\nRun each test flow and capture video recordings.\n\n**Login Flow:**\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/maestro-farm/flows/android/login-test.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/104/login-recording.mp4 \\\n  2>&1 | tee ~/Documents/ai-queue-dashboard/artifacts/104/login-output.log\n```\n\n**Signup Flow:**\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/maestro-farm/flows/android/signup-test.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/104/signup-recording.mp4 \\\n  2>&1 | tee -a ~/Documents/ai-queue-dashboard/artifacts/104/test-output.log\n```\n\n**Forgot Password Flow:**\n```bash\nmaestro record --local --device ZL73232GKP \\\n  ~/maestro-farm/flows/android/forgot-password-test.yaml \\\n  ~/Documents/ai-queue-dashboard/artifacts/104/forgot-password-recording.mp4 \\\n  2>&1 | tee -a ~/Documents/ai-queue-dashboard/artifacts/104/test-output.log\n```\n\n## Output Requirements\n\n### Test Results Summary\nAfter running the tests, compile a summary report detailing:\n\n- **Total Tests:** Number of test flows executed (3 in this case: Login, Signup, Forgot Password).\n- **Passed:** Number of test flows that passed.\n- **Failed:** Number of test flows that failed.\n- **Skipped:** Any test flows that were skipped (if applicable).\n\n### Screenshots of Failures\nIf any tests fail, capture screenshots to illustrate the failure points.\n\n### Error Output and Fixes\nFor each failed test flow:\n- Include the Maestro error output.\n- Suggest possible fixes based on the error message.\n\n## Example Summary Report\n\n```plaintext\n### Test Results Summary\n\n**Total Tests:** 3\n**Passed:** 2\n**Failed:** 1\n**Skipped:** 0\n\n### Test Flows\n\n#### Login Flow\n- **Status:** Passed\n- **Recording:** [login-recording.mp4](/api/artifacts/104/login-recording.mp4)\n\n#### Signup Flow\n- **Status:** Passed\n- **Recording:** [signup-recording.mp4](/api/artifacts/104/signup-recording.mp4)\n\n#### Forgot Password Flow\n- **Status:** Failed\n- **Error Output:**\n  ```\n  Error: Element with ID \"email-input\" not found.\n  ```\n- **Screenshots:** ![Forgot Password Failure](/api/artifacts/104/forgot-password-failure.png)\n- **Fix Suggestions:**\n  - Verify that the `id` attribute for the email input field in the Forgot Password screen is correctly set to `\"email-input\"`.\n  - Ensure that the Forgot Password screen is fully loaded before attempting to interact with elements.\n```\n\n## Conclusion\nBy following these steps, you will be able to automate the E2E testing of the Auth Flow in the MapYourHealth app using Maestro. This ensures that the login, signup, and forgot password functionalities are working as expected on real devices.\n\nIf any issues arise during the setup or execution, refer to the Maestro documentation or reach out to the development team for assistance.",
-      "model": "qwen2.5-coder:32b",
-      "completed_at": "2026-02-15T22:59:04.110Z",
-      "processing_time": 376290,
-      "pipelineExecuted": true,
-      "pipelineSuccess": false,
-      "artifacts": {
-        "dir": "artifacts/104",
-        "recordings": [],
-        "logs": [
-          "pipeline.log"
-        ]
-      }
-    }
-  ],
+  "processing": {
+    "issueNumber": 105,
+    "repo": "epiphanyapps/MapYourHealth",
+    "title": "E2E: Settings Screen & Dark Mode Toggle",
+    "labels": [
+      "e2e",
+      "test"
+    ],
+    "priority": "medium",
+    "addedAt": "2026-02-16T02:46:26.770Z",
+    "started_at": "2026-02-16T04:03:58.075Z"
+  },
+  "completed": [],
   "queue": [],
   "failed": []
 }

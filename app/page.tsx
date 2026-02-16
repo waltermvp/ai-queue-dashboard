@@ -156,6 +156,7 @@ function LabelBadge({ label }: { label: string }) {
 }
 
 function PriorityBadge({ priority }: { priority: string }) {
+  if (!priority) return null
   const p = priority.toLowerCase()
   let classes = 'px-2 py-0.5 text-xs rounded-full font-medium '
   if (p === 'high') classes += 'bg-red-100 text-red-800'

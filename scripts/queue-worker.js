@@ -167,12 +167,45 @@ async function executePipeline(type, issueId, solutionText) {
   const solutionFile = path.join(artifactsDir, 'qwen-solution.md');
   fs.writeFileSync(solutionFile, solutionText);
   
+  // For e2e issues, extract YAML flow blocks from Qwen's solution
+  let flowsDir = null;
+  if (type === 'e2e' && solutionText) {
+    flowsDir = path.join(artifactsDir, 'flows');
+    fs.mkdirSync(flowsDir, { recursive: true });
+    
+    // Extract YAML blocks from markdown code fences
+    const yamlBlockRegex = /```ya?ml\s*\n([\s\S]*?)```/gi;
+    let match;
+    let flowIndex = 0;
+    while ((match = yamlBlockRegex.exec(solutionText)) !== null) {
+      const yamlContent = match[1].trim();
+      // Only save blocks that look like Maestro flows (contain appId or maestro commands)
+      if (yamlContent.includes('appId') || yamlContent.includes('launchApp') || 
+          yamlContent.includes('tapOn') || yamlContent.includes('assertVisible') ||
+          yamlContent.includes('scrollUntilVisible') || yamlContent.includes('takeScreenshot')) {
+        flowIndex++;
+        const flowFile = path.join(flowsDir, `qwen-flow-${flowIndex}.yaml`);
+        fs.writeFileSync(flowFile, yamlContent);
+        log(`📝 Extracted Qwen flow ${flowIndex}: qwen-flow-${flowIndex}.yaml`);
+      }
+    }
+    
+    if (flowIndex === 0) {
+      log(`ℹ️ No Maestro flows found in Qwen's solution, will use default basic flow`);
+      flowsDir = null; // Signal to e2e.sh to use default
+    } else {
+      log(`📋 Extracted ${flowIndex} Maestro flow(s) from Qwen's solution`);
+    }
+  }
+
   return new Promise((resolve) => {
     const args = [String(issueId)];
     if (type === 'coding') {
       args.push('epiphanyapps/MapYourHealth', solutionFile);
     } else if (type === 'content') {
       args.push(solutionFile);
+    } else if (type === 'e2e' && flowsDir) {
+      args.push(flowsDir);
     }
     
     const proc = spawn('bash', [pipelineScript, ...args], {
