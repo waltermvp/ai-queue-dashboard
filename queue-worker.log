@@ -400,3 +400,16 @@
 [2026-02-16T18:17:06.198Z] ⚠️ DB recordRun failed: NOT NULL constraint failed: runs.issue_id
 [2026-02-16T18:17:06.198Z] ▶️  Started processing: Optimize API Performance
 [2026-02-16T18:17:06.198Z] 🤖 Processing [coding]: Optimize API Performance
+[2026-02-16T18:22:18.010Z] 🔧 Executing coding pipeline for issue #undefined...
+[2026-02-16T18:22:18.051Z] [pipeline] [2026-02-16 13:22:18] === Coding Pipeline Started for Issue #undefined ===
+[2026-02-16T18:22:18.055Z] [pipeline] [2026-02-16 13:22:18] Repository: epiphanyapps/MapYourHealth
+[2026-02-16T18:22:18.058Z] [pipeline] [2026-02-16 13:22:18] Delegating to pr-worker.js...
+[2026-02-16T18:22:18.275Z] [pipeline] [2026-02-16 13:22:18] ⚠️ PR worker finished with errors
+[2026-02-16T18:22:18.276Z] ❌ Pipeline coding failed for issue #undefined (exit code: 1)
+[2026-02-16T18:22:18.276Z] ❌ Pipeline failed for coding issue #undefined
+[2026-02-16T18:22:18.276Z] ✅ Completed: Optimize API Performance
+[2026-02-16T18:25:04.276Z] 📥 Loaded 10 new issue(s) from GitHub (13 total open, 5 already tracked)
+[2026-02-16T18:25:06.225Z] 
+📥 Found 10 item(s) in queue. Processing...
+[2026-02-16T18:25:06.231Z] ▶️  Started processing: E2E Tests: Mobile App Content Sharing Functionality
+[2026-02-16T18:25:06.232Z] 🤖 Processing [coding]: E2E Tests: Mobile App Content Sharing Functionality

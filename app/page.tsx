@@ -306,12 +306,12 @@ export default function Dashboard() {
     } catch (e) { console.error('Failed to fetch history:', e); }
   }, [])
 
-  const executeAction = async (action: string) => {
+  const executeAction = async (action: string, payload?: Record<string, unknown>) => {
     try {
       const response = await fetch('/api/queue-action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, payload }),
       })
       const result = await response.json()
       console.log('Action result:', result)
@@ -490,6 +490,24 @@ export default function Dashboard() {
               <RotateCcw className="w-4 h-4 mr-2" />
               Cleanup
             </button>
+            <button 
+              onClick={() => {
+                if (confirm('Clear all queued items?')) executeAction('clear-all')
+              }}
+              className="px-3 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+            >
+              <XCircle className="w-4 h-4 mr-2 inline" />
+              Clear All
+            </button>
+            <button 
+              onClick={() => {
+                if (confirm('Clear all completed and failed history?')) executeAction('clear-history')
+              }}
+              className="px-3 py-2 text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700"
+            >
+              <History className="w-4 h-4 mr-2 inline" />
+              Clear History
+            </button>
           </div>
         </div>
       </div>
@@ -616,6 +634,13 @@ export default function Dashboard() {
                       ))}
                     </div>
                   </div>
+                  <button
+                    onClick={() => executeAction('remove', { issueNumber: issue.number || issue.id.split('-').pop() })}
+                    className="ml-2 p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Remove from queue"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
                 </div>
               ))
             ) : (

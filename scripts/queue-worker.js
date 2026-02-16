@@ -556,6 +556,42 @@ async function main() {
             case 'cleanup':
                 cleanup();
                 break;
+            case 'remove': {
+                const issueNum = parseInt(process.argv[3]);
+                if (!issueNum) { log('❌ Usage: node queue-worker.js remove <issueNumber>'); process.exit(1); }
+                const rs = loadQueueState();
+                if (rs.processing && rs.processing.issueNumber === issueNum) {
+                    log(`❌ Cannot remove issue #${issueNum} — currently processing`);
+                    process.exit(1);
+                }
+                const before = rs.queue.length;
+                rs.queue = rs.queue.filter(q => q.issueNumber !== issueNum);
+                if (rs.queue.length === before) {
+                    log(`⚠️ Issue #${issueNum} not found in queue`);
+                } else {
+                    saveQueueState(rs);
+                    log(`🗑️ Removed issue #${issueNum} from queue`);
+                }
+                break;
+            }
+            case 'clear-all': {
+                const cs = loadQueueState();
+                const count = cs.queue.length;
+                cs.queue = [];
+                saveQueueState(cs);
+                log(`🗑️ Cleared ${count} item(s) from queue`);
+                break;
+            }
+            case 'clear-history': {
+                const hs = loadQueueState();
+                const cc = hs.completed.length;
+                const fc = hs.failed.length;
+                hs.completed = [];
+                hs.failed = [];
+                saveQueueState(hs);
+                log(`🗑️ Cleared history: ${cc} completed, ${fc} failed`);
+                break;
+            }
             case 'status':
                 const state = loadQueueState();
                 log('📊 Queue Status:');
@@ -566,7 +602,7 @@ async function main() {
                 break;
             default:
                 log('Usage: node queue-worker.js <action>');
-                log('Actions: process | watch [intervalMs] | load-github | add-demo | cleanup | status');
+                log('Actions: process | watch [intervalMs] | load-github | add-demo | cleanup | status | remove <issueNumber> | clear-all | clear-history');
         }
     } catch (error) {
         console.error('❌ Error:', error.message);
