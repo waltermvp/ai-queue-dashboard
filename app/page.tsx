@@ -326,6 +326,14 @@ export default function Dashboard() {
     }
   }
 
+  const fetchRepoList = async () => {
+    try {
+      const res = await fetch('/api/github-issues?list=repos')
+      const data = await res.json()
+      if (data.repos) setAvailableRepos(data.repos)
+    } catch {}
+  }
+
   const fetchGithubIssues = async (repo?: string) => {
     setLoadingIssues(true)
     try {
@@ -334,7 +342,7 @@ export default function Dashboard() {
       const res = await fetch(url)
       const data = await res.json()
       setGithubIssues(data.issues || [])
-      if (data.repos) setAvailableRepos(data.repos)
+      if (data.repos && availableRepos.length === 0) setAvailableRepos(data.repos)
       if (data.currentRepo && !selectedRepo) setSelectedRepo(data.currentRepo)
     } catch (e) { console.error('Failed to fetch GitHub issues:', e) }
     finally { setLoadingIssues(false) }
@@ -494,7 +502,7 @@ export default function Dashboard() {
           <h2 className="text-lg font-medium text-gray-900">Queue Controls</h2>
           <div className="flex space-x-2">
             <button 
-              onClick={() => { setShowIssuePicker(true); fetchGithubIssues() }}
+              onClick={() => { setShowIssuePicker(true); fetchRepoList(); fetchGithubIssues() }}
               className="btn-primary"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -1008,7 +1016,7 @@ export default function Dashboard() {
               <h3 className="text-lg font-semibold text-gray-900">Add GitHub Issues to Queue</h3>
               <button onClick={() => setShowIssuePicker(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
-            {availableRepos.length > 1 && (
+            {availableRepos.length > 0 && (
               <div className="px-4 pt-3 pb-1 flex items-center space-x-2">
                 <label className="text-sm font-medium text-gray-600">Repo:</label>
                 <select

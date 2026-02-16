@@ -5,19 +5,43 @@ import path from 'path'
 const NODE_BIN = process.execPath
 const workerScript = path.join(process.cwd(), 'scripts', 'queue-worker.js')
 
-// Repos available for issue browsing
-const REPOS = [
-  'epiphanyapps/MapYourHealth',
-  'waltermvp/ai-queue-dashboard',
-]
+// Orgs/users to list repos from
+const OWNERS = ['epiphanyapps', 'waltermvp']
+
+let repoCache: { repos: string[]; ts: number } | null = null
+const CACHE_TTL = 5 * 60 * 1000 // 5 min
+
+function getRepos(): string[] {
+  if (repoCache && Date.now() - repoCache.ts < CACHE_TTL) return repoCache.repos
+  const repos: string[] = []
+  for (const owner of OWNERS) {
+    try {
+      const raw = execFileSync('gh', [
+        'repo', 'list', owner, '--limit', '50', '--json', 'nameWithOwner,hasIssuesEnabled',
+        '-q', '.[] | select(.hasIssuesEnabled) | .nameWithOwner'
+      ], { encoding: 'utf8' })
+      repos.push(...raw.trim().split('\n').filter(Boolean))
+    } catch {}
+  }
+  repos.sort()
+  repoCache = { repos, ts: Date.now() }
+  return repos
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const repo = searchParams.get('repo') || REPOS[0]
+  const repos = getRepos()
 
-  // Validate repo is in allowlist
-  if (!REPOS.includes(repo)) {
-    return NextResponse.json({ error: `Repo not allowed: ${repo}`, repos: REPOS }, { status: 400 })
+  // If just asking for repo list
+  if (searchParams.get('list') === 'repos') {
+    return NextResponse.json({ repos })
+  }
+
+  const repo = searchParams.get('repo') || repos[0] || 'epiphanyapps/MapYourHealth'
+
+  // Validate repo is accessible
+  if (!repos.includes(repo)) {
+    return NextResponse.json({ error: `Repo not found: ${repo}`, repos }, { status: 400 })
   }
 
   try {
