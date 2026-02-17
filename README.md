@@ -5,19 +5,20 @@ Automated GitHub issue processing pipeline powered by local LLMs, mini-swe-agent
 ## Overview
 
 ```
-GitHub Issue → Detect Type (label) → Route to Pipeline → Process → Results
-                                         │
-                         ┌───────────────┼───────────────┐
-                         ▼               ▼               ▼
-                    🔧 Coding       🧪 E2E Testing   📝 Content
-                   mini-swe-agent   Maestro + Device   Llama 3.1 70B
-                   + Qwen 2.5 32B  + Codestral 22B    (writing/copy)
-                         │               │               │
-                         ▼               ▼               ▼
-                    PR Created      Pass/Fail + Video   Generated Text
+GitHub Issue → Detect Type (ai: label) → Route to Pipeline → Process → Results
+                                              │
+                    ┌────────────┬────────────┼────────────┬────────────┐
+                    ▼            ▼            ▼            ▼            ▼
+              🔧 Implement  🧪 Test     📝 Generate  🏗️ Build    👀 Review
+              mini-swe-agent Maestro     Llama 3.1    APK/IPA    AI code
+              + Qwen 32B    + Device    70B writing   builds     review
+                    │            │            │            │            │
+                    ▼            ▼            ▼            ▼            ▼
+              PR Created    Pass/Fail    Generated    Build        Review
+                            + Video      Text        Artifact     Comments
 ```
 
-The system watches GitHub repos for issues, detects the type from labels, routes to the appropriate pipeline, and processes automatically. Coding issues use [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) for actual code changes. E2E issues run Maestro tests on real devices with video recording.
+The system watches GitHub repos for issues, detects the type from labels, routes to the appropriate pipeline, and processes automatically. Implement issues use [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) for actual code changes. Test issues run Maestro tests on real devices with video recording.
 
 ## 🚀 Quick Start
 
@@ -47,27 +48,33 @@ node scripts/queue-worker.js process
 
 ## Issue Types & Routing
 
-The queue worker detects issue type from GitHub labels and routes to the matching pipeline.
+The queue worker detects issue type from GitHub labels (using `ai:` prefix) and routes to the matching pipeline. Old labels (`coding`, `e2e`, `content`) are supported as aliases.
 
-### 1. 🔧 Coding (default)
-**Label:** `coding` or no label  
-**Pipeline:** `scripts/pipelines/coding.sh`  
+| Pipeline | Label | Old Label | Model | Status |
+|----------|-------|-----------|-------|--------|
+| **implement** | `ai:implement` (or no label) | `coding` | Qwen 2.5 Coder 32B | ✅ Active |
+| **test** | `ai:test` | `e2e` | Codestral 22B | ✅ Active |
+| **generate** | `ai:generate` | `content` | Llama 3.1 70B | ✅ Active |
+| **build** | `ai:build` | — | — | 🚧 Placeholder |
+| **review** | `ai:review` | — | Qwen 2.5 Coder 32B | 🚧 Placeholder |
+
+### 1. 🔧 Implement (default)
+**Label:** `ai:implement` or no label  
+**Pipeline:** `scripts/pipelines/implement.sh`  
 **Agent:** [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) + Qwen 2.5 Coder 32B
 
 **Workflow:**
 1. Qwen analyzes the issue (planning, file identification, approach)
-2. Creates a git worktree: `~/Documents/MapYourHealth-issue-{number}`
+2. Creates a git worktree (configurable via `WORKTREE_DIR` env var)
 3. Copies required `amplify_outputs.json` from main clone
 4. Runs mini-swe-agent with Qwen's analysis as context
 5. If files changed: creates branch `issue-{number}`, commits, pushes
 6. Opens PR assigned to `waltermvp` referencing the issue
-7. Saves trajectory to `artifacts/{number}/mini-trajectory.json`
+7. Saves trajectory to artifacts
 
-**Model:** `ollama/qwen2.5-coder:32b` — best local coding model for analysis + implementation
-
-### 2. 🧪 E2E Testing
-**Label:** `e2e`  
-**Pipeline:** `scripts/pipelines/e2e.sh`  
+### 2. 🧪 Test
+**Label:** `ai:test`  
+**Pipeline:** `scripts/pipelines/test.sh`  
 **Model:** `ollama/codestral:22b` — Mistral's code model, fast for structured YAML/test generation  
 **Tools:** Maestro + adb screenrecord
 
@@ -75,14 +82,12 @@ The queue worker detects issue type from GitHub labels and routes to the matchin
 1. Sync amplify outputs
 2. Build release APK (with smart caching by native dep hash)
 3. Verify device connectivity
-4. Install APK + health check (app must visibly load)
+4. Install APK + health check
 5. Run Maestro tests with per-flow video recording
-   - Uses Qwen-generated flows if available
-   - Falls back to `mapyourhealth-basic.yaml`
 6. Post-test validation: exit code + screenshots + video verification
 7. Summary: X/Y flows passed, Z videos recorded
 
-**⚠️ CRITICAL:** E2E tests MUST use release builds. Dev builds show the React Native dev menu which breaks Maestro automation.
+**⚠️ CRITICAL:** Tests MUST use release builds. Dev builds show the React Native dev menu which breaks Maestro automation.
 
 **Devices:**
 | Device | Type | ID | Status |
@@ -90,14 +95,22 @@ The queue worker detects issue type from GitHub labels and routes to the matchin
 | Moto E13 | Android | `ZL73232GKP` | ✅ Primary |
 | iPhone 11 | iOS | `00008030-001950891A53402E` | ✅ Available |
 
-### 3. 📝 Content Generation
-**Label:** `content`  
-**Pipeline:** `scripts/pipelines/content.sh`  
+### 3. 📝 Generate
+**Label:** `ai:generate`  
+**Pipeline:** `scripts/pipelines/generate.sh`  
 **Model:** `ollama/llama3.1:70b` — general-purpose model with strong writing quality
 
 **Workflow:**
-1. Qwen generates content based on issue requirements
-2. Output saved to `artifacts/{number}/content-output.md`
+1. LLM generates content based on issue requirements
+2. Output saved to artifacts as `content-output.md`
+
+### 4. 🏗️ Build (placeholder)
+**Label:** `ai:build`  
+**Pipeline:** `scripts/pipelines/build.sh` (not yet implemented)
+
+### 5. 👀 Review (placeholder)
+**Label:** `ai:review`  
+**Pipeline:** `scripts/pipelines/review.sh` (not yet implemented)
 
 ---
 
@@ -107,18 +120,19 @@ The queue worker detects issue type from GitHub labels and routes to the matchin
 ai-queue-dashboard/
 ├── scripts/
 │   ├── queue-worker.js          # Queue watcher: polls, routes, processes
-│   ├── pr-worker.js             # Legacy PR worker
+│   ├── pr-worker.js             # Standalone PR worker
 │   ├── db.js                    # SQLite history layer
 │   ├── db-api.js                # DB CLI API for Next.js routes
 │   └── pipelines/
-│       ├── coding.sh            # mini-swe-agent pipeline
-│       ├── e2e.sh               # Maestro + device testing pipeline
-│       └── content.sh           # Content generation pipeline
+│       ├── implement.sh         # mini-swe-agent pipeline
+│       ├── test.sh              # Maestro + device testing pipeline
+│       └── generate.sh          # Content generation pipeline
 ├── prompts/
-│   ├── coding.md                # Coding analysis prompt (fed to Qwen)
-│   ├── e2e.md                   # E2E testing prompt
-│   ├── content.md               # Content generation prompt
+│   ├── implement.md             # Implement analysis prompt
+│   ├── test.md                  # Test generation prompt
+│   ├── generate.md              # Content generation prompt
 │   └── react-native-coding-standards.md
+├── routing.config.json          # v2 config: pipelines, routing, repos
 ├── app/                         # Next.js dashboard
 │   ├── api/
 │   │   ├── queue-state/         # Live queue data (JSON + SQLite)
@@ -126,47 +140,55 @@ ai-queue-dashboard/
 │   │   ├── history/             # Historical run data
 │   │   └── artifacts/           # Video/log artifact serving
 │   └── page.tsx                 # Dashboard UI
-├── artifacts/                   # Per-issue artifacts (videos, logs, trajectories)
+├── artifacts/                   # Per-issue artifacts
 │   └── {issue-number}/
 │       ├── pipeline.log
-│       ├── android-*.mp4        # E2E recordings
-│       ├── mini-trajectory.json # Coding agent trajectory
-│       └── qwen-solution.md
+│       ├── android-*.mp4        # Test recordings
+│       ├── mini-trajectory.json # Agent trajectory
+│       └── ai-solution.md       # LLM output (model-agnostic)
 ├── queue-state.json             # Live queue state (atomic writes)
-├── queue-history.db             # SQLite history (completed/failed/stats)
+├── queue-history.db             # SQLite history (composite unique on repo+issue)
 └── README.md
 ```
 
-## Data Flow
+## Configuration (routing.config.json v2)
 
+```json
+{
+  "version": 2,
+  "defaults": {
+    "pipeline": "implement",
+    "worktreeBase": "~/Documents/worktrees",
+    "artifactsBase": "artifacts"
+  },
+  "pipelines": {
+    "implement": { "script": "scripts/pipelines/implement.sh", "prompt": "prompts/implement.md", ... },
+    "test": { "script": "scripts/pipelines/test.sh", "prompt": "prompts/test.md", ... },
+    "generate": { "script": "scripts/pipelines/generate.sh", "prompt": "prompts/generate.md", ... },
+    "build": { "enabled": false, ... },
+    "review": { "enabled": false, ... }
+  },
+  "routing": {
+    "ai:implement": "implement", "ai:test": "test", "ai:generate": "generate",
+    "coding": "implement", "e2e": "test", "content": "generate",
+    "*": "implement"
+  },
+  "repos": { ... }
+}
 ```
-queue-state.json (live)          queue-history.db (SQLite)
-┌──────────────────┐             ┌──────────────────┐
-│ queue: [...]     │             │ runs table       │
-│ processing: {}   │ ──done──►  │ artifacts table  │
-│ completed: [...]│             │ stats/history    │
-│ failed: [...]   │             └──────────────────┘
-└──────────────────┘
-```
 
-- **Live state** (queue, processing) from `queue-state.json`
-- **Historical data** (completed, failed, stats) from SQLite
-- Atomic JSON writes (`.tmp` + rename) prevent corruption
-- Stale processing recovery: items stuck >30 min auto-fail
+## Environment Variables (passed to pipelines)
 
-## Tech Stack
-
-- **Coding Agent:** [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) v2.1.0
-- **LLMs (all local via Ollama, no API costs):**
-  - `qwen2.5-coder:32b` (19GB) — coding analysis + implementation
-  - `codestral:22b` (12GB) — E2E test flow generation
-  - `llama3.1:70b` (42GB) — content writing (blogs, ads, copy)
-- **E2E Testing:** Maestro 2.1.0 + physical Android/iOS devices
-- **Dashboard:** Next.js 14 + TypeScript + Tailwind CSS
-- **Database:** SQLite via better-sqlite3
-- **CI/Git:** GitHub CLI (`gh`) for issues/PRs
-- **Runtime:** Node.js 20 (via nvm)
-- **Monitoring:** Telegram updates 3x daily to QueensClaw group
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `REPO_OWNER` | GitHub org/user | `epiphanyapps` |
+| `REPO_NAME` | Repository name | `MapYourHealth` |
+| `REPO_FULL` | Full repo path | `epiphanyapps/MapYourHealth` |
+| `WORKTREE_DIR` | Git worktree path | `~/Documents/worktrees/epiphanyapps/MapYourHealth/issue-112` |
+| `ARTIFACTS_DIR` | Artifacts output dir | `artifacts/epiphanyapps/MapYourHealth/112` |
+| `MAIN_CLONE_DIR` | Main repo clone | `~/Documents/MapYourHealth` |
+| `ISSUE_TYPE` | Pipeline type | `implement` |
+| `DASHBOARD_DIR` | Dashboard root | `~/Documents/ai-queue-dashboard` |
 
 ## Queue Commands
 
@@ -182,12 +204,6 @@ node scripts/queue-worker.js load-github
 
 # Check status
 node scripts/queue-worker.js status
-
-# Clear completed items
-node scripts/queue-worker.js cleanup
-
-# Remove specific issue
-node scripts/queue-worker.js remove <issueNumber>
 
 # Add a specific issue by number (optional repo)
 node scripts/queue-worker.js add-issue 112
@@ -212,22 +228,11 @@ Each pipeline uses a different model optimized for its task. Models are configur
 
 | Pipeline | Model | Size | Why |
 |----------|-------|------|-----|
-| Coding | `qwen2.5-coder:32b` | 19GB | Best local coding model — strong at reading code, generating patches |
-| E2E | `codestral:22b` | 12GB | Mistral's code model — fast, good at structured YAML/test output |
-| Content | `llama3.1:70b` | 42GB | General-purpose — writes like a human, not an engineer |
+| Implement | `qwen2.5-coder:32b` | 19GB | Best local coding model — strong at reading code, generating patches |
+| Test | `codestral:22b` | 12GB | Mistral's code model — fast, good at structured YAML/test output |
+| Generate | `llama3.1:70b` | 42GB | General-purpose — writes like a human, not an engineer |
 
 Only one model runs at a time (queue is sequential), so Ollama swaps them in/out of memory as needed.
-
-```bash
-# Check available models
-ollama list
-
-# Pull a model
-ollama pull codestral:22b
-
-# Check running model
-ollama ps
-```
 
 ## Troubleshooting
 

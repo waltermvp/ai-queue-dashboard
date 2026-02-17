@@ -28,13 +28,13 @@ function loadConfig() {
   } catch (e) {
     console.warn('⚠️ Could not load routing.config.json, using defaults');
     config = {
-      defaults: { pipeline: 'coding', model: 'qwen2.5-coder:32b', ollamaUrl: 'http://localhost:11434/api/generate', maxRuntimeSeconds: 1800 },
+      defaults: { pipeline: 'implement', model: 'qwen2.5-coder:32b', ollamaUrl: 'http://localhost:11434/api/generate', maxRuntimeSeconds: 1800 },
       pipelines: {
-        coding: { script: 'scripts/pipelines/coding.sh', prompt: 'prompts/coding.md', model: 'qwen2.5-coder:32b' },
-        e2e: { script: 'scripts/pipelines/e2e.sh', prompt: 'prompts/e2e.md', model: 'qwen2.5-coder:32b' },
-        content: { script: 'scripts/pipelines/content.sh', prompt: 'prompts/content.md', model: 'qwen2.5-coder:32b' }
+        implement: { script: 'scripts/pipelines/implement.sh', prompt: 'prompts/implement.md', model: 'qwen2.5-coder:32b' },
+        test: { script: 'scripts/pipelines/test.sh', prompt: 'prompts/test.md', model: 'codestral:22b' },
+        generate: { script: 'scripts/pipelines/generate.sh', prompt: 'prompts/generate.md', model: 'llama3.1:70b' }
       },
-      routing: { 'e2e': 'e2e', 'content': 'content', '*': 'coding' }
+      routing: { 'e2e': 'test', 'content': 'generate', 'coding': 'implement', '*': 'implement' }
     };
   }
 }
@@ -85,8 +85,8 @@ function loadPrompt(type) {
     ? path.join(__dirname, '..', pipelineCfg.prompt)
     : path.join(PROMPTS_DIR, `${type}.md`);
   if (!fs.existsSync(promptPath)) {
-    console.warn(`⚠️ Prompt file not found: ${promptPath}, falling back to coding`);
-    return fs.readFileSync(path.join(PROMPTS_DIR, 'coding.md'), 'utf8');
+    console.warn(`⚠️ Prompt file not found: ${promptPath}, falling back to implement`);
+    return fs.readFileSync(path.join(PROMPTS_DIR, 'implement.md'), 'utf8');
   }
   return fs.readFileSync(promptPath, 'utf8');
 }
@@ -118,7 +118,7 @@ async function processWithOllama(item, issueType) {
   log(`🤖 Processing [${issueType}]: ${item.title}`);
 
   let systemPrompt = loadPrompt(issueType);
-  if (issueType === 'coding' || issueType === 'e2e') {
+  if (issueType === 'implement' || issueType === 'test' || issueType === 'coding' || issueType === 'e2e') {
     systemPrompt += loadCodingStandards();
   }
 
@@ -133,7 +133,7 @@ Task: ${item.title}
 ID: ${item.issue_number}
 Priority: ${item.priority}
 Description: ${item.body || 'No description provided'}
-Repository: MapYourHealth (React Native + Expo)
+Repository: ${item.repo || 'epiphanyapps/MapYourHealth'}
 Labels: ${labels.join(', ') || 'none'}`;
 
   // Save prompt to artifacts (audit trail)
@@ -162,7 +162,7 @@ Labels: ${labels.join(', ') || 'none'}`;
 }
 
 // Execute type-specific pipeline
-async function executePipeline(type, issueId, solutionText) {
+async function executePipeline(type, issueId, solutionText, item) {
   const pipelineCfg = config.pipelines[type] || {};
   const pipelineScript = pipelineCfg.script
     ? path.join(__dirname, '..', pipelineCfg.script)
@@ -177,12 +177,12 @@ async function executePipeline(type, issueId, solutionText) {
 
   const artifactsDir = path.join(__dirname, '..', 'artifacts', String(issueId));
   if (!fs.existsSync(artifactsDir)) fs.mkdirSync(artifactsDir, { recursive: true });
-  const solutionFile = path.join(artifactsDir, 'qwen-solution.md');
+  const solutionFile = path.join(artifactsDir, 'ai-solution.md');
   fs.writeFileSync(solutionFile, solutionText);
 
-  // For e2e issues, extract YAML flow blocks
+  // For test (e2e) issues, extract YAML flow blocks
   let flowsDir = null;
-  if (type === 'e2e' && solutionText) {
+  if ((type === 'test' || type === 'e2e') && solutionText) {
     flowsDir = path.join(artifactsDir, 'flows');
     fs.mkdirSync(flowsDir, { recursive: true });
     const yamlBlockRegex = /```ya?ml\s*\n([\s\S]*?)```/gi;
@@ -193,8 +193,8 @@ async function executePipeline(type, issueId, solutionText) {
           yamlContent.includes('tapOn') || yamlContent.includes('assertVisible') ||
           yamlContent.includes('scrollUntilVisible') || yamlContent.includes('takeScreenshot')) {
         flowIndex++;
-        fs.writeFileSync(path.join(flowsDir, `qwen-flow-${flowIndex}.yaml`), yamlContent);
-        log(`📝 Extracted Qwen flow ${flowIndex}: qwen-flow-${flowIndex}.yaml`);
+        fs.writeFileSync(path.join(flowsDir, `ai-flow-${flowIndex}.yaml`), yamlContent);
+        log(`📝 Extracted AI flow ${flowIndex}: ai-flow-${flowIndex}.yaml`);
       }
     }
     if (flowIndex === 0) { log(`ℹ️ No Maestro flows found, will use default`); flowsDir = null; }
@@ -203,17 +203,31 @@ async function executePipeline(type, issueId, solutionText) {
 
   return new Promise((resolve) => {
     const args = [String(issueId)];
-    if (type === 'coding' || type === 'content') args.push(solutionFile);
-    else if (type === 'e2e' && flowsDir) args.push(flowsDir);
+    if (type === 'implement' || type === 'generate' || type === 'coding' || type === 'content') args.push(solutionFile);
+    else if ((type === 'test' || type === 'e2e') && flowsDir) args.push(flowsDir);
 
     const timeout = (pipelineCfg.maxRuntimeSeconds || config.defaults.maxRuntimeSeconds || 1800);
+    // Parse repo into owner/name for env vars
+    const repoFull = item ? (item.repo || 'epiphanyapps/MapYourHealth') : 'epiphanyapps/MapYourHealth';
+    const [repoOwner, repoName] = repoFull.includes('/') ? repoFull.split('/') : ['epiphanyapps', repoFull || 'MapYourHealth'];
+    const worktreeBase = (config.defaults.worktreeBase || '~/Documents/worktrees').replace('~', process.env.HOME);
+    const dashboardDir = path.join(__dirname, '..');
+
     const proc = spawn('bash', [pipelineScript, ...args], {
       env: {
         ...process.env,
         PATH: process.env.PATH + ':' + process.env.HOME + '/.maestro/bin:' + process.env.HOME + '/.local/bin',
         MINI_MODEL: pipelineCfg.model ? `ollama/${pipelineCfg.model}` : undefined,
         CODING_TIMEOUT: String(timeout),
-        DASHBOARD_DIR: path.join(__dirname, '..'),
+        DASHBOARD_DIR: dashboardDir,
+        REPO_OWNER: repoOwner,
+        REPO_NAME: repoName,
+        REPO_FULL: repoFull,
+        REPO_ROOT: path.join(worktreeBase, repoOwner, repoName),
+        WORKTREE_DIR: path.join(worktreeBase, repoOwner, repoName, `issue-${issueId}`),
+        ARTIFACTS_DIR: path.join(dashboardDir, 'artifacts', repoOwner, repoName, String(issueId)),
+        ISSUE_TYPE: type,
+        MAIN_CLONE_DIR: process.env.HOME + '/Documents/' + repoName,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: true,  // Create process group for clean cancel
@@ -310,7 +324,7 @@ async function _processNext() {
 
   if (result.success) {
     // Execute pipeline
-    const pipelineResult = await executePipeline(issueType, item.issue_number, result.solution);
+    const pipelineResult = await executePipeline(issueType, item.issue_number, result.solution, item);
 
     if (pipelineResult.executed && !pipelineResult.success) {
       const exitCode = pipelineResult.exitCode || 1;

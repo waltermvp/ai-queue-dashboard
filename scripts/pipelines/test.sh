@@ -1,12 +1,13 @@
 #!/bin/bash
 set -eo pipefail
 
-ISSUE_ID="${1:?Usage: e2e.sh <issue-id> [flows-dir]}"
-QWEN_FLOWS_DIR="${2:-}"
-REPO_ROOT="$HOME/Documents/MapYourHealth"
+ISSUE_ID="${1:?Usage: test.sh <issue-id> [flows-dir]}"
+AI_FLOWS_DIR="${2:-}"
+DASHBOARD_DIR="${DASHBOARD_DIR:-$HOME/Documents/ai-queue-dashboard}"
+REPO_ROOT="${MAIN_CLONE_DIR:-$HOME/Documents/MapYourHealth}"
 MOBILE_ROOT="$REPO_ROOT/apps/mobile"
-ARTIFACTS_DIR="$HOME/Documents/ai-queue-dashboard/artifacts/$ISSUE_ID"
-BUILDS_CACHE="$HOME/Documents/ai-queue-dashboard/artifacts/builds"
+ARTIFACTS_DIR="${ARTIFACTS_DIR:-$DASHBOARD_DIR/artifacts/$ISSUE_ID}"
+BUILDS_CACHE="$DASHBOARD_DIR/artifacts/builds"
 LOG_FILE="$ARTIFACTS_DIR/pipeline.log"
 DEVICE_ID="ZL73232GKP"
 IOS_DEVICE_ID="00008030-001950891A53402E"
@@ -145,11 +146,11 @@ log "Step 5/6: Running Maestro tests with recording (Android)..."
 FLOWS_TO_RUN=()
 FLOW_NAMES=()
 
-if [ -n "$QWEN_FLOWS_DIR" ] && [ -d "$QWEN_FLOWS_DIR" ]; then
+if [ -n "$AI_FLOWS_DIR" ] && [ -d "$AI_FLOWS_DIR" ]; then
   # Check for Qwen-generated flows
-  QWEN_YAMLS=$(find "$QWEN_FLOWS_DIR" -name '*.yaml' -o -name '*.yml' 2>/dev/null | sort)
+  QWEN_YAMLS=$(find "$AI_FLOWS_DIR" -name '*.yaml' -o -name '*.yml' 2>/dev/null | sort)
   if [ -n "$QWEN_YAMLS" ]; then
-    log "📋 Found Qwen-generated flows in $QWEN_FLOWS_DIR"
+    log "📋 Found Qwen-generated flows in $AI_FLOWS_DIR"
     while IFS= read -r f; do
       FLOWS_TO_RUN+=("$f")
       FLOW_NAMES+=("$(basename "$f" .yaml)")

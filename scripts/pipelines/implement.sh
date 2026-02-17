@@ -2,17 +2,19 @@
 set -eo pipefail
 
 # =============================================================
-# Coding Pipeline — mini-swe-agent integration
-# Usage: coding.sh <issue-number> [solution-file]
+# Implement Pipeline — mini-swe-agent integration
+# Usage: implement.sh <issue-number> [solution-file]
+# Env vars (from worker): REPO_FULL, REPO_OWNER, REPO_NAME,
+#   MAIN_CLONE_DIR, WORKTREE_DIR, ARTIFACTS_DIR, DASHBOARD_DIR
 # =============================================================
 
-ISSUE_ID="${1:?Usage: coding.sh <issue-number> [solution-file]}"
+ISSUE_ID="${1:?Usage: implement.sh <issue-number> [solution-file]}"
 SOLUTION_FILE="${2:-}"
 
-MAIN_REPO="$HOME/Documents/MapYourHealth"
-WORKTREE_DIR="$HOME/Documents/MapYourHealth-issue-${ISSUE_ID}"
-DASHBOARD_DIR="$HOME/Documents/ai-queue-dashboard"
-ARTIFACTS_DIR="$DASHBOARD_DIR/artifacts/$ISSUE_ID"
+MAIN_REPO="${MAIN_CLONE_DIR:-$HOME/Documents/MapYourHealth}"
+WORKTREE_DIR="${WORKTREE_DIR:-$HOME/Documents/MapYourHealth-issue-${ISSUE_ID}}"
+DASHBOARD_DIR="${DASHBOARD_DIR:-$HOME/Documents/ai-queue-dashboard}"
+ARTIFACTS_DIR="${ARTIFACTS_DIR:-$DASHBOARD_DIR/artifacts/$ISSUE_ID}"
 LOG_FILE="$ARTIFACTS_DIR/pipeline.log"
 BRANCH_NAME="issue-${ISSUE_ID}"
 MINI_MODEL="${MINI_MODEL:-ollama/qwen2.5-coder:32b}"
@@ -64,7 +66,8 @@ log "Timeout: ${TIMEOUT_SECONDS}s"
 # Step 1: Fetch issue details from GitHub
 # -------------------------------------------------------
 log "Step 1/7: Fetching issue details..."
-ISSUE_JSON=$(gh issue view "$ISSUE_ID" --repo epiphanyapps/MapYourHealth --json title,body,labels 2>/dev/null) || fail "Failed to fetch issue #$ISSUE_ID from GitHub" 3
+REPO="${REPO_FULL:-epiphanyapps/MapYourHealth}"
+ISSUE_JSON=$(gh issue view "$ISSUE_ID" --repo "$REPO" --json title,body,labels 2>/dev/null) || fail "Failed to fetch issue #$ISSUE_ID from GitHub" 3
 ISSUE_TITLE=$(echo "$ISSUE_JSON" | jq -r '.title // "Unknown"')
 ISSUE_BODY=$(echo "$ISSUE_JSON" | jq -r '.body // "No description"')
 log "Issue: $ISSUE_TITLE"
@@ -270,7 +273,7 @@ This PR was created as a **draft** because quality gates did not pass. See \`art
 fi
 
 PR_URL=$(gh pr create \
-  --repo epiphanyapps/MapYourHealth \
+  --repo "$REPO" \
   --base main \
   --head "$BRANCH_NAME" \
   --title "Fix #${ISSUE_ID}: ${ISSUE_TITLE}" \

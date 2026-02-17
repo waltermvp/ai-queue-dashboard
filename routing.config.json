@@ -1,30 +1,74 @@
 {
+  "version": 2,
   "defaults": {
-    "pipeline": "coding",
+    "pipeline": "implement",
     "model": "qwen2.5-coder:32b",
     "ollamaUrl": "http://localhost:11434/api/generate",
-    "maxRuntimeSeconds": 1800
+    "maxRuntimeSeconds": 1800,
+    "worktreeBase": "~/Documents/worktrees",
+    "artifactsBase": "artifacts"
   },
   "pipelines": {
-    "coding": {
-      "script": "scripts/pipelines/coding.sh",
-      "prompt": "prompts/coding.md",
-      "model": "qwen2.5-coder:32b"
+    "implement": {
+      "script": "scripts/pipelines/implement.sh",
+      "prompt": "prompts/implement.md",
+      "model": "qwen2.5-coder:32b",
+      "resources": ["ollama"],
+      "maxRetries": 1,
+      "retryOn": ["infra"]
     },
-    "e2e": {
-      "script": "scripts/pipelines/e2e.sh",
-      "prompt": "prompts/e2e.md",
-      "model": "codestral:22b"
+    "test": {
+      "script": "scripts/pipelines/test.sh",
+      "prompt": "prompts/test.md",
+      "model": "codestral:22b",
+      "resources": ["ollama", "android-device"],
+      "maxRetries": 1,
+      "retryOn": ["infra"]
     },
-    "content": {
-      "script": "scripts/pipelines/content.sh",
-      "prompt": "prompts/content.md",
-      "model": "llama3.1:70b"
+    "generate": {
+      "script": "scripts/pipelines/generate.sh",
+      "prompt": "prompts/generate.md",
+      "model": "llama3.1:70b",
+      "resources": ["ollama"],
+      "maxRetries": 0
+    },
+    "build": {
+      "script": "scripts/pipelines/build.sh",
+      "prompt": null,
+      "model": null,
+      "resources": ["android-device"],
+      "maxRetries": 1,
+      "retryOn": ["infra", "build"],
+      "enabled": false
+    },
+    "review": {
+      "script": "scripts/pipelines/review.sh",
+      "prompt": "prompts/review.md",
+      "model": "qwen2.5-coder:32b",
+      "resources": ["ollama"],
+      "maxRetries": 0,
+      "enabled": false
     }
   },
   "routing": {
-    "e2e": "e2e",
-    "content": "content",
-    "*": "coding"
+    "ai:implement": "implement",
+    "ai:test": "test",
+    "ai:generate": "generate",
+    "ai:build": "build",
+    "ai:review": "review",
+    "coding": "implement",
+    "e2e": "test",
+    "content": "generate",
+    "*": "implement"
+  },
+  "repos": {
+    "epiphanyapps/MapYourHealth": {
+      "defaultBranch": "main",
+      "setup": ["yarn sync:amplify"],
+      "copyFromMain": [
+        "amplify_outputs.json",
+        "apps/mobile/amplify_outputs.json"
+      ]
+    }
   }
 }

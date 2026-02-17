@@ -270,9 +270,57 @@ After the fix, the Maestro flow above should pass on Android (Moto E13).
 
 ## Issue Context
 
-Task: Add Delete Account Section to Settings (UI Only)
+Task: Add "Delete Account" Section to Settings Screen (UI Only)
 ID: 112
-Priority: high
-Description: No description provided
+Priority: medium
+Description: ## Overview
+Add a "Delete Account" UI section to the Settings screen. This is UI only — the actual deletion logic will be implemented in a separate backend issue.
+
+## Tech Stack
+- React Native / Expo / TypeScript
+- AWS Amplify (context only — no backend changes in this issue)
+
+## Requirements
+
+### New Section in Settings Screen
+- Add a new section at the bottom of the Settings screen
+- Section title: **"Account"** (or "Danger Zone")
+- Located at `apps/mobile/src/screens/Settings` or similar — follow existing patterns
+
+### Delete Account Button
+- Red "Delete Account" button (red text or red background, matching app design patterns)
+- Visually distinct / destructive-looking
+
+### Confirmation Dialog
+When the button is tapped, show a confirmation modal/alert:
+- **Title**: "Delete Account?"
+- **Body**: "This action cannot be undone. All your data will be permanently deleted."
+- **Cancel button**: Dismisses the dialog (no action)
+- **Delete button**: Calls a placeholder function that either:
+  - Logs to console: `console.log("Account deletion not yet implemented")`
+  - OR shows an Alert: `Alert.alert("Not Yet Available", "Account deletion not yet implemented")`
+
+### Code Patterns
+- Follow existing Settings screen layout patterns (sections, spacing, typography)
+- Use existing button/modal components if available in the codebase
+- Use React Native `Alert.alert()` for the confirmation dialog if the app doesn't have a custom modal pattern
+
+## Acceptance Criteria
+- [ ] New "Account" section visible at bottom of Settings screen
+- [ ] Red "Delete Account" button renders correctly
+- [ ] Tapping button shows confirmation dialog with correct title and body text
+- [ ] "Cancel" dismisses the dialog
+- [ ] "Delete" calls placeholder function (console.log or Alert)
+- [ ] No backend changes — purely UI
+- [ ] TypeScript compiles without errors
+- [ ] Follows existing code style and patterns
+
+## File Locations (expected)
+- Settings screen: `apps/mobile/src/screens/Settings/` or `apps/mobile/src/screens/SettingsScreen.tsx`
+- Explore existing components for reusable patterns
+
+## Notes
+- Keep the scope small — this should be a quick UI-only change
+- The backend counterpart will wire up actual account deletion in a follow-up issue
 Repository: MapYourHealth (React Native + Expo)
 Labels: none

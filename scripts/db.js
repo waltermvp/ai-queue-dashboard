@@ -51,7 +51,7 @@ function initDB() {
     );
     CREATE TABLE IF NOT EXISTS queue_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      issue_number INTEGER NOT NULL UNIQUE,
+      issue_number INTEGER NOT NULL,
       repo TEXT,
       title TEXT NOT NULL,
       body TEXT,
@@ -67,6 +67,13 @@ function initDB() {
       url TEXT
     );
   `);
+
+  // Add composite unique index (repo, issue_number) — replaces old UNIQUE on issue_number alone
+  try { d.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_queue_repo_issue ON queue_items(repo, issue_number)'); } catch {}
+
+  // Drop old unique index on issue_number alone if it exists (SQLite: recreate table or just ignore)
+  // The CREATE TABLE no longer has UNIQUE on issue_number, so new DBs are fine.
+  // Existing DBs: the composite index takes priority for INSERT OR IGNORE via the new index.
 
   // Add columns to runs if missing (for existing DBs)
   try { d.exec('ALTER TABLE runs ADD COLUMN error_class TEXT'); } catch {}
@@ -313,7 +320,7 @@ function recordRun({ issue_id, title, repo, type, labels, priority, status, star
     INSERT INTO runs (issue_id, title, repo, type, labels, priority, status, started_at, github_url)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  const result = stmt.run(issue_id, title, repo || null, type || 'coding', labels || null, priority || 'medium', status || 'queued', started_at || null, github_url || null);
+  const result = stmt.run(issue_id, title, repo || null, type || 'implement', labels || null, priority || 'medium', status || 'queued', started_at || null, github_url || null);
   return result.lastInsertRowid;
 }
 
