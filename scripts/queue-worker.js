@@ -343,11 +343,34 @@ async function _processNext() {
         if (runId) { try { db.failRun(runId, { error: errorMsg, error_class: errorClass }); } catch (e) {} }
       }
     } else {
-      // Success
-      db.completeItem(item.issue_number);
-      log(`✅ Completed: ${item.title}`);
-      if (runId) {
-        try { db.completeRun(runId, { solution: result.solution, model: result.model, processing_time_ms: processingTimeMs }); } catch (e) {}
+      // Success — check if implement type to set pr_open
+      if (issueType === 'implement' || issueType === 'coding') {
+        // Parse PR URL from pipeline stdout
+        const prUrlMatch = (pipelineResult.stdout || '').match(/https:\/\/github\.com\/[^\s]+\/pull\/(\d+)/);
+        if (prUrlMatch) {
+          const prUrl = prUrlMatch[0];
+          const prNumber = parseInt(prUrlMatch[1], 10);
+          db.prOpenItem(item.issue_number, { prUrl, prNumber });
+          log(`🔀 PR Open: ${item.title} → ${prUrl}`);
+          if (runId) {
+            try { db.updateRun(runId, { status: 'pr_open', pr_url: prUrl }); } catch (e) {}
+            try { db.completeRun(runId, { solution: result.solution, model: result.model, processing_time_ms: processingTimeMs }); } catch (e) {}
+          }
+        } else {
+          // No PR URL found — fall back to completed
+          db.completeItem(item.issue_number);
+          log(`✅ Completed (no PR detected): ${item.title}`);
+          if (runId) {
+            try { db.completeRun(runId, { solution: result.solution, model: result.model, processing_time_ms: processingTimeMs }); } catch (e) {}
+          }
+        }
+      } else {
+        // test/generate types → completed
+        db.completeItem(item.issue_number);
+        log(`✅ Completed: ${item.title}`);
+        if (runId) {
+          try { db.completeRun(runId, { solution: result.solution, model: result.model, processing_time_ms: processingTimeMs }); } catch (e) {}
+        }
       }
     }
 
@@ -415,12 +438,45 @@ function loadFromGitHub() {
   log(`📥 Loaded ${added} new issue(s) from GitHub (${issues.length} total open, ${existing.size} already tracked)`);
 }
 
+// Check open PRs for merge status
+async function checkPRs() {
+  const { execSync } = require('child_process');
+  const openPRs = db.getItemsByStatus('pr_open');
+  if (openPRs.length === 0) return;
+  log(`🔍 Checking ${openPRs.length} open PR(s) for merge status...`);
+  for (const item of openPRs) {
+    if (!item.pr_number || !item.repo) continue;
+    try {
+      const state = execSync(
+        `gh pr view ${item.pr_number} --repo ${item.repo} --json state -q .state`,
+        { encoding: 'utf8', timeout: 15000 }
+      ).trim();
+      if (state === 'MERGED') {
+        db.mergeItem(item.issue_number);
+        log(`🎉 PR #${item.pr_number} merged → issue #${item.issue_number} marked as merged`);
+      } else if (state === 'CLOSED') {
+        db.failItem(item.issue_number, { error: 'PR was closed without merging', errorClass: 'review' });
+        log(`❌ PR #${item.pr_number} closed → issue #${item.issue_number} marked as failed`);
+      }
+    } catch (e) {
+      log(`⚠️ Failed to check PR #${item.pr_number}: ${e.message}`);
+    }
+  }
+  db.generateCacheFile();
+}
+
 // Watch mode
 async function watch(intervalMs = 30000) {
   log(`👀 Watching queue (checking every ${intervalMs / 1000}s)...`);
   log('   Press Ctrl+C to stop\n');
 
+  let tickCount = 0;
   const tick = async () => {
+    tickCount++;
+    // Every 10 ticks (~5 min at 30s interval), check PR merge status
+    if (tickCount % 10 === 0) {
+      try { await checkPRs(); } catch (e) { log(`⚠️ PR check error: ${e.message}`); }
+    }
     const queued = db.getQueuedItems();
     const processing = db.getProcessingItem();
     if (queued.length > 0 && !processing) {
@@ -508,14 +564,21 @@ async function main() {
         log(`🔄 Moved issue #${retryNum} back to queue`);
         break;
       }
+      case 'check-prs':
+        await checkPRs();
+        break;
       case 'status': {
         const queued = db.getQueuedItems();
         const processing = db.getProcessingItem();
         const completed = db.getItemsByStatus('completed');
         const failed = db.getItemsByStatus('failed');
+        const prOpen = db.getItemsByStatus('pr_open');
+        const merged = db.getItemsByStatus('merged');
         log('📊 Queue Status:');
         log(`  Queued: ${queued.length}`);
         log(`  Processing: ${processing ? 1 : 0}`);
+        log(`  PR Open: ${prOpen.length}`);
+        log(`  Merged: ${merged.length}`);
         log(`  Completed: ${completed.length}`);
         log(`  Failed: ${failed.length}`);
         break;
@@ -571,7 +634,7 @@ async function main() {
       }
       default:
         log('Usage: node queue-worker.js <action>');
-        log('Actions: process | watch [intervalMs] | load-github | add-issue <num> | add-demo | cleanup | status | remove <issueNumber> | retry <issueNumber> | clear-all | clear-history');
+        log('Actions: process | watch [intervalMs] | load-github | add-issue <num> | add-demo | cleanup | status | check-prs | remove <issueNumber> | retry <issueNumber> | clear-all | clear-history');
     }
   } catch (error) {
     console.error('❌ Error:', error.message);
