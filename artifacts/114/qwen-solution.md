@@ -1,0 +1,100 @@
+```yaml
+appId: com.epiphanyapps.mapyourhealth
+---
+- launchApp:
+    clearState: true
+
+- waitForAnimationToEnd
+
+- takeScreenshot: app-launch
+
+# Assuming there's a login flow or pre-existing credentials setup
+- tapOn:
+    text: "Sign In"
+    optional: true
+
+- inputText:
+    id: "email-input"
+    text: "test@example.com"
+
+- inputText:
+    id: "password-input"
+    text: "testpassword"
+
+- tapOn:
+    text: "Submit"
+
+- waitForAnimationToEnd
+
+- takeScreenshot: after-login
+
+# Navigate to Settings
+- tapOn:
+    text: "Settings"
+    optional: true
+
+- waitForAnimationToEnd
+
+- takeScreenshot: settings-screen
+
+# Scroll down to find Delete Account Button
+- scrollUntilVisible:
+    element:
+      text: "Delete Account"
+    direction: DOWN
+
+- assertVisible: "Delete Account"
+
+- takeScreenshot: delete-account-button-visible
+
+# Test Cancel Flow
+- tapOn:
+    text: "Delete Account"
+
+- waitForAnimationToEnd
+
+- takeScreenshot: confirmation-dialog-open
+
+- assertVisible: "Delete Account?"
+- assertVisible: "This action cannot be undone. All your data will be permanently deleted."
+- assertVisible: "Cancel"
+- assertVisible: "Delete"
+
+- tapOn:
+    text: "Cancel"
+
+- waitForAnimationToEnd
+
+- takeScreenshot: after-cancel
+
+- assertNotVisible: "Delete Account?"
+
+- assertVisible: "Settings"
+
+# Test Delete Flow (Placeholder)
+- tapOn:
+    text: "Delete Account"
+
+- waitForAnimationToEnd
+
+- takeScreenshot: confirmation-dialog-reopen
+
+- assertVisible: "Delete Account?"
+- assertVisible: "This action cannot be undone. All your data will be permanently deleted."
+- assertVisible: "Cancel"
+- assertVisible: "Delete"
+
+- tapOn:
+    text: "Delete"
+
+- waitForAnimationToEnd
+
+- takeScreenshot: after-delete-attempt
+
+# Placeholder behavior (e.g., Alert or console log)
+- assertNotVisible: "Delete Account?"
+
+- assertVisible: "Settings"
+
+- takeScreenshot: final-state
+```

@@ -1,0 +1,36 @@
+Running on ZL73232GKP
+ > Flow qwen-flow-1
+Launch app "com.epiphanyapps.mapyourhealth" with clear state... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot app-launch... COMPLETED
+Tap on (Optional) "Sign In"... WARNED
+
+
+ Warning: Element not found: Text matching regex: Sign In
+Input text test@example.com... COMPLETED
+Input text testpassword... COMPLETED
+Tap on "Submit"... FAILED
+
+Element not found: Text matching regex: Submit
+
+Element with Text matching regex: Submit not found. Check the UI hierarchy in debug artifacts to verify if the element exists.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state.
+- This could be a real regression that needs to be addressed.
+
+==== Debug output (logs & screenshots) ====
+
+/Users/waltervargas-pena/.maestro/tests/2026-02-16_164516
+
+[33m🚀 Update: We built maestro-runner from scratch — 3.6x faster, real iOS device support, runs locally or on any Appium cloud, true parallel execution, no paywall. Fixes 78% of Maestro's top issues. Same YAML.[0m
+
+[4;36mTry maestro-runner: https://github.com/devicelab-dev/maestro-runner[0m
+
+[36m╔═══════════════════════════════════════════════════════════════════╗[0m
+[36m║[0m  [1;32mMaestro iOS Real Device Support[0m - by ]8;;https://devicelab.dev[1;38;2;23;162;184mDeviceLab.dev[0m]8;;               [36m║[0m
+[36m║[0m  Build your own distributed lab: [4;36mhttps://devicelab.dev[0m            [36m║[0m
+[36m╚═══════════════════════════════════════════════════════════════════╝[0m
+
+

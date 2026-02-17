@@ -648,3 +648,108 @@
 [2026-02-16T21:36:31.527Z]   Processing: 0
 [2026-02-16T21:36:31.527Z]   Completed: 0
 [2026-02-16T21:36:31.527Z]   Failed: 1
+[2026-02-16T21:39:21.126Z] 📊 Queue Status:
+[2026-02-16T21:39:21.137Z]   Queued: 0
+[2026-02-16T21:39:21.137Z]   Processing: 0
+[2026-02-16T21:39:21.138Z]   Completed: 0
+[2026-02-16T21:39:21.138Z]   Failed: 1
+[2026-02-16T21:39:32.785Z] 📊 Queue Status:
+[2026-02-16T21:39:32.790Z]   Queued: 0
+[2026-02-16T21:39:32.790Z]   Processing: 0
+[2026-02-16T21:39:32.790Z]   Completed: 0
+[2026-02-16T21:39:32.790Z]   Failed: 1
+[2026-02-16T21:40:00.385Z] ✅ Added issue #114 to queue: E2E Test: Delete Account Confirmation Dialog
+[2026-02-16T21:40:00.801Z] ✅ Added issue #114 to queue: E2E Test: Delete Account Confirmation Dialog
+[2026-02-16T21:40:00.797Z] ✅ Added issue #114 to queue: E2E Test: Delete Account Confirmation Dialog
+[2026-02-16T21:40:00.801Z] ✅ Added issue #114 to queue: E2E Test: Delete Account Confirmation Dialog
+[2026-02-16T21:40:00.798Z] ✅ Added issue #114 to queue: E2E Test: Delete Account Confirmation Dialog
+[2026-02-16T21:40:29.721Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-16T21:40:29.795Z] ▶️  Started processing: E2E Test: Delete Account Confirmation Dialog
+[2026-02-16T21:40:29.806Z] 🤖 Processing [e2e]: E2E Test: Delete Account Confirmation Dialog
+[2026-02-16T21:43:51.511Z] 🔧 Executing e2e pipeline for issue #114...
+[2026-02-16T21:43:51.515Z] 📝 Extracted Qwen flow 1: qwen-flow-1.yaml
+[2026-02-16T21:43:51.515Z] 📋 Extracted 1 Maestro flow(s)
+[2026-02-16T21:43:51.615Z] [pipeline] [2026-02-16 16:43:51] === E2E Pipeline Started for Issue #114 ===
+[2026-02-16T21:43:51.620Z] [pipeline] [2026-02-16 16:43:51] Step 1/6: Syncing amplify outputs...
+[2026-02-16T21:43:52.066Z] [pipeline] [2026-02-16 16:43:52] ✅ Amplify sync complete
+[2026-02-16T21:43:52.069Z] [pipeline] [2026-02-16 16:43:52] Step 2/6: Checking build cache...
+[2026-02-16T21:43:52.668Z] [pipeline] [2026-02-16 16:43:52] 🔨 Incremental build (skipping prebuild, JS changes only)...
+[2026-02-16T21:44:38.274Z] [pipeline] [2026-02-16 16:44:38] 📦 Cached APK as f37f02bcc8c17e853a1e323e5c8c581b07dd2f96
+[2026-02-16T21:44:38.277Z] [pipeline] [2026-02-16 16:44:38] ✅ Release APK ready: /Users/waltervargas-pena/Documents/MapYourHealth/apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+[2026-02-16T21:44:38.296Z] [pipeline] [2026-02-16 16:44:38] Step 3/6: Checking device connectivity...
+[2026-02-16T21:44:38.328Z] [pipeline] [2026-02-16 16:44:38] ✅ Device ZL73232GKP connected
+[2026-02-16T21:44:38.331Z] [pipeline] [2026-02-16 16:44:38] Step 4/6: Installing APK and running health check...
+[2026-02-16T21:44:47.410Z] [pipeline] [2026-02-16 16:44:47] ✅ APK installed on ZL73232GKP
+[2026-02-16T21:44:47.427Z] [pipeline] [2026-02-16 16:44:47] 🏥 Launching app for health check...
+[2026-02-16T21:44:47.665Z] [pipeline] [2026-02-16 16:44:47] ⏳ Waiting 10s for app to load on Moto E13...
+[2026-02-16T21:44:57.771Z] [pipeline] [2026-02-16 16:44:57] 🏥 Running health check flow...
+[2026-02-16T21:45:12.983Z] [pipeline] [2026-02-16 16:45:12] ✅ Health check passed — app is loaded and visible
+[2026-02-16T21:45:12.988Z] [pipeline] [2026-02-16 16:45:12] Step 5/6: Running Maestro tests with recording (Android)...
+[2026-02-16T21:45:13.005Z] [pipeline] [2026-02-16 16:45:13] 📋 Found Qwen-generated flows in /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/114/flows
+[2026-02-16T21:45:13.016Z] [pipeline] [2026-02-16 16:45:13]    → qwen-flow-1.yaml
+[2026-02-16T21:45:13.024Z] [pipeline] [2026-02-16 16:45:13] 🔢 Total flows to run: 1
+[2026-02-16T21:45:13.028Z] [pipeline] [2026-02-16 16:45:13] --- Running flow 1/1: qwen-flow-1 ---
+[2026-02-16T21:45:13.032Z] [pipeline] [2026-02-16 16:45:13] 📹 Started screen recording (PID: 26147)
+[2026-02-16T21:48:14.631Z] ❌ Pipeline e2e failed for issue #114 (exit code: 1)
+[2026-02-16T21:48:14.633Z] ❌ Pipeline failed: build (exit 1)
+[2026-02-16T21:48:14.637Z] 📹 Artifacts: 0 recordings, 6 logs
+[2026-02-17T01:00:05.612Z] 📊 Queue Status:
+[2026-02-17T01:00:05.615Z]   Queued: 0
+[2026-02-17T01:00:05.615Z]   Processing: 0
+[2026-02-17T01:00:05.615Z]   Completed: 0
+[2026-02-17T01:00:05.615Z]   Failed: 2
+[2026-02-17T02:06:30.314Z] 📊 Queue Status:
+[2026-02-17T02:06:30.317Z]   Queued: 0
+[2026-02-17T02:06:30.317Z]   Processing: 0
+[2026-02-17T02:06:30.317Z]   Completed: 0
+[2026-02-17T02:06:30.317Z]   Failed: 2
+[2026-02-17T02:41:04.304Z] 📊 Queue Status:
+[2026-02-17T02:41:04.306Z]   Queued: 0
+[2026-02-17T02:41:04.306Z]   Processing: 0
+[2026-02-17T02:41:04.306Z]   Completed: 0
+[2026-02-17T02:41:04.306Z]   Failed: 2
+[2026-02-17T02:41:14.864Z] ✅ Added issue #112 to queue: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T02:41:31.351Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-17T02:41:31.357Z] ▶️  Started processing: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T02:41:31.358Z] 🤖 Processing [coding]: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T02:44:27.752Z] 🛑 Cancelled issue #112: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T02:48:39.065Z] 🔧 Executing coding pipeline for issue #112...
+[2026-02-17T02:48:39.183Z] [pipeline] [2026-02-16 21:48:39] === Coding Pipeline Started for Issue #112 ===
+[2026-02-17T02:48:39.189Z] [pipeline] [2026-02-16 21:48:39] Model: ollama/qwen2.5-coder:32b
+[2026-02-17T02:48:39.195Z] [pipeline] [2026-02-16 21:48:39] Timeout: 1800s
+[2026-02-17T02:48:39.200Z] [pipeline] [2026-02-16 21:48:39] Step 1/7: Fetching issue details...
+[2026-02-17T02:48:40.573Z] [pipeline] [2026-02-16 21:48:40] Issue: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T02:48:40.579Z] [pipeline] [2026-02-16 21:48:40] Step 2/7: Creating git worktree...
+[2026-02-17T02:48:40.584Z] [pipeline] [2026-02-16 21:48:40] ⚠️ Worktree already exists, removing...
+[2026-02-17T02:48:40.773Z] [pipeline] Deleted branch issue-112 (was 96eb511).
+[2026-02-17T02:48:43.266Z] [pipeline] [2026-02-16 21:48:43] ✅ Worktree created at /Users/waltervargas-pena/Documents/MapYourHealth-issue-112
+[2026-02-17T02:48:43.269Z] [pipeline] [2026-02-16 21:48:43] Step 3/7: Copying amplify_outputs.json...
+[2026-02-17T02:48:43.276Z] [pipeline] [2026-02-16 21:48:43] ✅ Copied root amplify_outputs.json
+[2026-02-17T02:48:43.283Z] [pipeline] [2026-02-16 21:48:43] ✅ Copied mobile amplify_outputs.json
+[2026-02-17T02:48:43.287Z] [pipeline] [2026-02-16 21:48:43] Step 4/7: Preparing task for mini-swe-agent...
+[2026-02-17T02:48:43.294Z] ❌ Pipeline coding failed for issue #112 (exit code: 1)
+[2026-02-17T02:48:43.295Z] ❌ Pipeline failed: build (exit 1)
+[2026-02-17T02:48:43.295Z] 📹 Artifacts: 0 recordings, 5 logs
+[2026-02-17T02:50:13.297Z] 🗑️ Cleared 3 history items
+[2026-02-17T14:00:09.482Z] 📊 Queue Status:
+[2026-02-17T14:00:09.485Z]   Queued: 0
+[2026-02-17T14:00:09.485Z]   Processing: 0
+[2026-02-17T14:00:09.485Z]   Completed: 0
+[2026-02-17T14:00:09.485Z]   Failed: 0
+[2026-02-17T19:00:05.345Z] 📊 Queue Status:
+[2026-02-17T19:00:05.347Z]   Queued: 0
+[2026-02-17T19:00:05.347Z]   Processing: 0
+[2026-02-17T19:00:05.348Z]   Completed: 0
+[2026-02-17T19:00:05.348Z]   Failed: 0
+[2026-02-17T22:08:46.026Z] 📊 Queue Status:
+[2026-02-17T22:08:46.028Z]   Queued: 0
+[2026-02-17T22:08:46.028Z]   Processing: 0
+[2026-02-17T22:08:46.028Z]   Completed: 0
+[2026-02-17T22:08:46.028Z]   Failed: 0
+[2026-02-17T22:08:55.429Z] 📊 Queue Status:
+[2026-02-17T22:08:55.431Z]   Queued: 0
+[2026-02-17T22:08:55.431Z]   Processing: 0
+[2026-02-17T22:08:55.431Z]   Completed: 0
+[2026-02-17T22:08:55.431Z]   Failed: 0

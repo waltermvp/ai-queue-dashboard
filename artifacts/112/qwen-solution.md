@@ -1,53 +1,108 @@
-### Summary
-Add a "Delete Account" section to the Settings screen in the MapYourHealth app.
-
 ### Files to Modify
-- `apps/mobile/src/screens/SettingsScreen.tsx` — Add the Delete Account section UI.
-- `apps/mobile/src/components/DeleteAccountButton.tsx` — Create a new component for the Delete Account button with appropriate styling and logic.
-- `apps/mobile/assets/icons/delete.png` — Ensure the icon asset is available if not already present.
+- `apps/mobile/src/screens/SettingsScreen.tsx` — Add the "Account" section with the "Delete Account" button and confirmation dialog.
+- `apps/mobile/styles/globalStyles.ts` — Ensure there is a red color defined for the delete button, if not already present.
 
 ### Approach
-1. **Create a New Component (`DeleteAccountButton`)**:
-   - Create a new file named `DeleteAccountButton.tsx` in `apps/mobile/src/components/`.
-   - Implement the button with an icon and text.
-   - Add necessary styles using `StyleSheet.create()`.
-
-2. **Modify `SettingsScreen.tsx`**:
-   - Import the newly created `DeleteAccountButton` component.
-   - Add a new section in the `SettingsScreen` for the "Delete Account" option.
-   - Ensure proper alignment and spacing with existing sections.
-
-3. **Ensure Consistency**:
-   - Follow the existing pattern of UI components and styling in the `SettingsScreen`.
-   - Use theme constants for colors if available.
+1. **Locate the Settings Screen Component**: Open `apps/mobile/src/screens/SettingsScreen.tsx`.
+2. **Identify the Layout Structure**: Determine where new sections are added in the existing layout.
+3. **Add "Account" Section**:
+   - Add a new section at the bottom of the `SettingsScreen` component.
+   - Use a `<View>` with appropriate styles to create this section.
+4. **Add "Delete Account" Button**:
+   - Within the new "Account" section, add a button styled to be destructive (red text or background).
+   - Ensure the button uses the existing button components if available in the codebase.
+5. **Implement Confirmation Dialog**:
+   - Use `Alert.alert()` for the confirmation dialog when the "Delete Account" button is tapped.
+   - Define the title, body text, and buttons ("Cancel" and "Delete").
+   - Ensure tapping "Cancel" dismisses the dialog without any action.
+   - Ensure tapping "Delete" calls a placeholder function (either `console.log` or `Alert.alert`).
+6. **Ensure Styling Consistency**:
+   - Use `StyleSheet.create()` for styles to avoid inline styles.
+   - Follow existing patterns for spacing, typography, and section layout.
 
 ### Acceptance Criteria
-- [ ] The "Delete Account" section is visible on the Settings screen.
-- [ ] The Delete Account button has an appropriate icon and text ("Delete Account").
-- [ ] The new section does not break the layout of existing settings items.
-- [ ] Styles are consistent with other sections in the Settings screen.
+- [ ] New "Account" section visible at bottom of Settings screen.
+- [ ] Red "Delete Account" button renders correctly.
+- [ ] Tapping button shows confirmation dialog with correct title and body text.
+- [ ] "Cancel" dismisses the dialog.
+- [ ] "Delete" calls placeholder function (console.log or Alert).
+- [ ] TypeScript compiles without errors.
+- [ ] Follows existing code style and patterns.
 
 ### Key Constraints
-- NO inline styles — use `StyleSheet.create()`
-- Proper import order (React → third-party → local)
-- No unused imports or variables
-- No color literals — use theme constants
-- All hook dependencies must be complete
-- Follow existing patterns in the codebase
+- NO inline styles — use `StyleSheet.create()`.
+- Proper import order (React → third-party → local).
+- No unused imports or variables.
+- No color literals — use theme constants.
+- All hook dependencies must be complete.
+- Follow existing patterns in the codebase.
 
-### Additional Notes
-- Ensure that the icon asset (`delete.png`) is correctly placed and imported.
-- Consider accessibility by adding appropriate `accessibilityLabel` to the button.
+### Pitfalls
+- Ensure that the new section does not break the existing layout by adding excessive margin or padding.
+- Make sure the confirmation dialog is visually consistent with other dialogs in the app.
+- Verify that the button styles match the destructive action style as defined in the app design guidelines.
+- Double-check that the placeholder function used in the "Delete" button works correctly and matches the expected behavior.
 
-### Maestro Flow (if new test needed)
-Create: `apps/mobile/.maestro/flows/delete-account-test.yaml`
-```yaml
-appId: com.yourapp.mobile
----
-- launchApp
-- tapOn: "Settings"
-- assertVisible: "Delete Account"
+### Example Code Snippet
+Here's a sample snippet for reference:
+```tsx
+import React from 'react';
+import { View, Text, Button, Alert, StyleSheet } from 'react-native';
+
+const SettingsScreen: React.FC = () => {
+  const handleDeleteAccountPress = () => {
+    Alert.alert(
+      "Delete Account?",
+      "This action cannot be undone. All your data will be permanently deleted.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          onPress: () => console.log("Account deletion not yet implemented"),
+          style: "destructive"
+        }
+      ]
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Existing settings sections */}
+
+      <View style={styles.accountSection}>
+        <Text style={styles.sectionTitle}>Account</Text>
+        <Button
+          title="Delete Account"
+          color={styles.redColor.color}
+          onPress={handleDeleteAccountPress}
+        />
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  accountSection: {
+    marginTop: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  redColor: {
+    color: '#FF0000', // Ensure this matches your theme or define in globalStyles.ts
+  },
+});
+
+export default SettingsScreen;
 ```
 
-### Expected Behavior
-After the fix, the Maestro flow above should pass on Android (Moto E13), confirming that the "Delete Account" section is visible and correctly labeled.
+This example assumes that the red color is defined in `globalStyles.ts`. If not, you should add it there and import it into `SettingsScreen.tsx`.
