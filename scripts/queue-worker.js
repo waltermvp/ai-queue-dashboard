@@ -368,7 +368,7 @@ async function executePipeline(type, issueId, solutionText, item) {
         ISSUE_TYPE: type,
         MAIN_CLONE_DIR: process.env.HOME + '/Documents/' + repoName,
       },
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ['pipe', 'pipe', 'pipe'],
       // Note: detached:true breaks Python asyncio (mini-swe-agent)
       // Cancel uses direct PID kill instead
     });
