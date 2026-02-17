@@ -369,7 +369,8 @@ async function executePipeline(type, issueId, solutionText, item) {
         MAIN_CLONE_DIR: process.env.HOME + '/Documents/' + repoName,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
-      detached: true,  // Create process group for clean cancel
+      // Note: detached:true breaks Python asyncio (mini-swe-agent)
+      // Cancel uses direct PID kill instead
     });
 
     // Save child PID so cancel command can kill it
@@ -743,7 +744,7 @@ async function main() {
           const pid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim(), 10);
           if (!isNaN(pid)) {
             // Kill the process group (negative PID) to get all children
-            try { process.kill(-pid, 'SIGTERM'); } catch { process.kill(pid, 'SIGTERM'); }
+            process.kill(pid, 'SIGTERM');
             killed = true;
             try { fs.unlinkSync(PID_FILE); } catch {}
           }

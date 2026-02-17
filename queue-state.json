@@ -15,7 +15,7 @@
       "url": "https://github.com/epiphanyapps/mapyourhealth/issues/112",
       "error": "Pipeline failed (exit code: 1, class: build). Check artifacts/112/pipeline.log",
       "error_class": "build",
-      "failed_at": "2026-02-17 22:56:41"
+      "failed_at": "2026-02-17 23:05:11"
     }
   ],
   "pr_open": [],

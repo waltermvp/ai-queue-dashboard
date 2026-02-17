@@ -1,35 +1,37 @@
 ### Files to Modify
-- `apps/mobile/src/screens/SettingsScreen.tsx` — Add the "Account" section with the "Delete Account" button and confirmation dialog.
+- `apps/mobile/src/screens/Settings/SettingsScreen.tsx` — Add the "Delete Account" section with the button and confirmation dialog.
+- `apps/mobile/src/styles/globalStyles.ts` (or any relevant styles file) — Define necessary styles for the new section and button.
 
 ### Approach
-1. **Locate the SettingsScreen component**: Open `apps/mobile/src/screens/SettingsScreen.tsx`.
-2. **Add a new section for "Account"**:
-   - Locate the existing sections in the `SettingsScreen` component.
-   - Insert a new section at the bottom of the screen using similar layout patterns (e.g., `View` with appropriate styles).
-3. **Create the "Delete Account" button**:
-   - Add a button within the new section for deleting an account.
-   - Use a red color style to indicate destructive action, either through text or background color.
-4. **Implement confirmation dialog**:
-   - Use `Alert.alert()` from React Native to create a modal with the following details:
-     - Title: "Delete Account?"
-     - Message: "This action cannot be undone. All your data will be permanently deleted."
-     - Buttons:
-       - Cancel: Dismisses the dialog.
-       - Delete: Calls a placeholder function that logs to the console or shows an alert.
-5. **Ensure consistency with existing styles**:
-   - Use `StyleSheet.create()` for all styles, ensuring consistent typography and spacing.
-   - Follow existing import order (React → third-party → local).
-6. **Remove unused imports and variables**:
-   - Ensure no unused imports or variables are present in the file.
+1. **Identify the Settings Screen Component:**
+   - Open `SettingsScreen.tsx` to locate where sections are defined and how they are rendered.
+
+2. **Add New Section for "Account":**
+   - Create a new section at the bottom of the Settings screen.
+   - Use existing layout patterns (e.g., `View` with styles) to ensure consistency.
+
+3. **Create Delete Account Button:**
+   - Add a red button labeled "Delete Account" within the new section.
+   - Ensure it follows the app’s design patterns (matching existing buttons if possible).
+
+4. **Implement Confirmation Dialog:**
+   - Use React Native's `Alert.alert()` function to show a confirmation dialog when the "Delete Account" button is pressed.
+   - Define the title, body text, and button actions as specified.
+
+5. **Define Styles:**
+   - Add necessary styles in `globalStyles.ts` or another appropriate stylesheet file.
+   - Ensure all styles are defined using `StyleSheet.create()`.
+
+6. **Ensure TypeScript Compatibility:**
+   - Verify that all added components and functions compile without TypeScript errors.
+   - Check for proper import order, no unused imports, and adherence to linting rules.
 
 ### Acceptance Criteria
-- [ ] New "Account" section visible at bottom of Settings screen.
+- [ ] New "Account" section visible at the bottom of Settings screen.
 - [ ] Red "Delete Account" button renders correctly.
-- [ ] Tapping button shows confirmation dialog with correct title and body text.
+- [ ] Tapping button shows confirmation dialog with correct title ("Delete Account?") and body text ("This action cannot be undone. All your data will be permanently deleted.").
 - [ ] "Cancel" dismisses the dialog.
-- [ ] "Delete" calls placeholder function (console.log or Alert).
-- [ ] TypeScript compiles without errors.
-- [ ] Follows existing code style and patterns.
+- [ ] "Delete" calls placeholder function (`console.log("Account deletion not yet implemented")` or `Alert.alert("Not Yet Available", "Account deletion not yet implemented")`).
 
 ### Key Constraints
 - NO inline styles — use `StyleSheet.create()`.
@@ -41,11 +43,13 @@
 
 ### Example Code Snippet
 
-```tsx
+#### In `SettingsScreen.tsx`:
+```jsx
 import React from 'react';
-import { View, Text, Button, Alert, StyleSheet } from 'react-native';
+import { View, Button, Alert } from 'react-native';
+import styles from '../../styles/globalStyles';
 
-const SettingsScreen: React.FC = () => {
+const SettingsScreen = () => {
   const handleDeleteAccountPress = () => {
     Alert.alert(
       "Delete Account?",
@@ -59,45 +63,54 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Existing sections */}
+      {/* Existing settings sections */}
 
       {/* New Account section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
+      <View style={styles.accountSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Account</Text>
+        </View>
         <Button
           title="Delete Account"
-          color={styles.deleteButton.color}
+          color={styles.deleteButtonColor}
           onPress={handleDeleteAccountPress}
         />
       </View>
-
     </View>
   );
 };
 
+export default SettingsScreen;
+```
+
+#### In `globalStyles.ts`:
+```jsx
+import { StyleSheet } from 'react-native';
+import theme from '../theme';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
-  section: {
-    marginTop: 24,
+  accountSection: {
+    marginTop: 20,
+  },
+  sectionHeader: {
+    marginBottom: 10,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 12,
   },
-  deleteButton: {
-    color: '#FF0000', // Assuming theme constants are not available, this is a placeholder
-  },
+  deleteButtonColor: theme.colors.red, // Use a theme constant for color
 });
 
-export default SettingsScreen;
+export default styles;
 ```
 
 ### Pitfalls
-- Ensure the confirmation dialog matches the design and functionality requirements.
-- Verify that styles are consistent with other sections on the screen.
-- Avoid modifying any backend-related files or logic. This is strictly a UI change.
-- Test the component to ensure no regressions in existing functionality.
+- **Incorrect Styling:** Ensure all styles are defined in `StyleSheet.create()` and use theme constants.
+- **Missing Imports:** Verify that all necessary components (e.g., `Alert`) are imported.
+- **TypeScript Errors:** Double-check TypeScript definitions to avoid compilation errors.
+- **Consistency Issues:** Follow existing patterns for sections, buttons, and spacing to maintain consistency.
