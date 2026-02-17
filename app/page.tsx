@@ -150,8 +150,11 @@ function ElapsedTimer({ startedAt }: { startedAt: string }) {
 function LabelBadge({ label }: { label: string }) {
   const l = label.toLowerCase()
   let classes = 'px-2 py-0.5 text-xs rounded-full font-medium '
-  if (l === 'e2e') classes += 'bg-blue-100 text-blue-800'
-  else if (l === 'content') classes += 'bg-green-100 text-green-800'
+  if (l === 'implement' || l === 'coding' || l === 'ai:implement') classes += 'bg-purple-100 text-purple-800'
+  else if (l === 'test' || l === 'e2e' || l === 'ai:test') classes += 'bg-blue-100 text-blue-800'
+  else if (l === 'generate' || l === 'content' || l === 'ai:generate') classes += 'bg-green-100 text-green-800'
+  else if (l === 'build' || l === 'ai:build') classes += 'bg-orange-100 text-orange-800'
+  else if (l === 'review' || l === 'ai:review') classes += 'bg-yellow-100 text-yellow-800'
   else classes += 'bg-gray-100 text-gray-800'
   return <span className={classes}>{label}</span>
 }
@@ -968,7 +971,7 @@ export default function Dashboard() {
                           )}
                         </td>
                         <td className="py-2 pr-3 text-gray-700 max-w-xs truncate">{run.title}</td>
-                        <td className="py-2 pr-3"><LabelBadge label={run.type || 'coding'} /></td>
+                        <td className="py-2 pr-3"><LabelBadge label={run.type || 'implement'} /></td>
                         <td className="py-2 pr-3">
                           <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
                             run.status === 'completed' ? 'bg-green-100 text-green-800' :
