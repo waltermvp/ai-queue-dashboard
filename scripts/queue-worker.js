@@ -109,6 +109,145 @@ function collectArtifacts(issueId) {
   return { dir: `artifacts/${issueId}`, recordings, logs };
 }
 
+// ========== Preflight Checks ==========
+
+async function preflight(item, pipelineType, pipelineConfig) {
+  const { execSync } = require('child_process');
+  const checks = [];
+  const warnings = [];
+
+  function ok(name, msg) { log(`  ✅ ${name}: ${msg}`); checks.push({ name, status: 'ok', msg }); }
+  function warn(name, msg) { log(`  ⚠️ ${name}: ${msg}`); warnings.push(msg); checks.push({ name, status: 'warn', msg }); }
+  function fix(name, msg) { log(`  🔧 ${name}: ${msg}`); checks.push({ name, status: 'fixed', msg }); }
+  function fail(name, msg) { log(`  ❌ ${name}: ${msg}`); throw new Error(`Preflight failed [${name}]: ${msg}`); }
+
+  log(`🔍 Running preflight checks for #${item.issue_number} (type: ${pipelineType})...`);
+
+  // --- All types ---
+
+  // 1. Check stale lock file
+  if (fs.existsSync(LOCK_FILE)) {
+    try {
+      const pid = parseInt(fs.readFileSync(LOCK_FILE, 'utf8').trim(), 10);
+      if (!isNaN(pid)) {
+        try { process.kill(pid, 0); ok('lock', `Lock held by active PID ${pid}`); }
+        catch {
+          fs.unlinkSync(LOCK_FILE);
+          fix('lock', `Removed stale lock (PID ${pid} is dead)`);
+        }
+      }
+    } catch (e) { fix('lock', `Removed unreadable lock file`); try { fs.unlinkSync(LOCK_FILE); } catch {} }
+  } else {
+    ok('lock', 'No lock file');
+  }
+
+  // 2. Check Ollama is running & model available
+  const model = pipelineConfig.model || config.defaults.model;
+  let ollamaModels = [];
+  try {
+    const tagsRaw = execSync('curl -s http://localhost:11434/api/tags', { encoding: 'utf8', timeout: 5000 });
+    const tags = JSON.parse(tagsRaw);
+    ollamaModels = (tags.models || []).map(m => m.name || m.model || '');
+    ok('ollama', 'Ollama is running');
+  } catch {
+    fail('ollama', 'Ollama not running — cannot reach http://localhost:11434/api/tags');
+  }
+
+  // Check model
+  const modelAvailable = ollamaModels.some(m => m === model || m.startsWith(model.split(':')[0]));
+  if (modelAvailable) {
+    ok('model', `Model ${model} is available`);
+  } else {
+    fail('model', `Model ${model} not pulled. Available: ${ollamaModels.join(', ') || 'none'}`);
+  }
+
+  // 3. Check disk space
+  try {
+    const dfOut = execSync('df -k /', { encoding: 'utf8', timeout: 5000 });
+    const lines = dfOut.trim().split('\n');
+    if (lines.length >= 2) {
+      const parts = lines[1].split(/\s+/);
+      const availKB = parseInt(parts[3], 10);
+      const availGB = (availKB / 1048576).toFixed(1);
+      if (availKB < 5 * 1048576) {
+        warn('disk', `Only ${availGB}GB free (< 5GB threshold)`);
+      } else {
+        ok('disk', `${availGB}GB free`);
+      }
+    }
+  } catch { warn('disk', 'Could not check disk space'); }
+
+  // --- Type-specific checks ---
+
+  if (pipelineType === 'implement') {
+    const repoFull = item.repo || 'epiphanyapps/MapYourHealth';
+    const [repoOwner, repoName] = repoFull.includes('/') ? repoFull.split('/') : ['epiphanyapps', repoFull];
+    const worktreeBase = (config.defaults.worktreeBase || '~/Documents/worktrees').replace('~', process.env.HOME);
+    const worktreePath = path.join(worktreeBase, repoOwner, repoName, `issue-${item.issue_number}`);
+    const mainCloneDir = path.join(process.env.HOME, 'Documents', repoName);
+    const branchName = `issue-${item.issue_number}`;
+
+    // Check stale worktree
+    if (fs.existsSync(worktreePath)) {
+      try {
+        execSync(`rm -rf "${worktreePath}"`, { timeout: 15000 });
+        try { execSync(`cd "${mainCloneDir}" && git worktree prune`, { timeout: 10000 }); } catch {}
+        fix('worktree', `Removed stale worktree at ${worktreePath}`);
+      } catch (e) { fail('worktree', `Could not remove stale worktree: ${e.message}`); }
+    } else {
+      ok('worktree', 'No stale worktree');
+    }
+
+    // Check stale branch
+    try {
+      execSync(`cd "${mainCloneDir}" && git rev-parse --verify "${branchName}" 2>/dev/null`, { encoding: 'utf8', timeout: 5000 });
+      // Branch exists — delete it
+      try {
+        execSync(`cd "${mainCloneDir}" && git branch -D "${branchName}"`, { timeout: 10000 });
+        fix('branch', `Deleted stale branch ${branchName}`);
+      } catch (e) { warn('branch', `Could not delete stale branch: ${e.message}`); }
+    } catch {
+      ok('branch', `No stale branch ${branchName}`);
+    }
+
+    // Check amplify_outputs.json for MapYourHealth
+    if (repoName === 'MapYourHealth') {
+      const amplifyPath = path.join(mainCloneDir, 'amplify_outputs.json');
+      if (fs.existsSync(amplifyPath)) {
+        ok('amplify', 'amplify_outputs.json exists in main clone');
+      } else {
+        warn('amplify', 'amplify_outputs.json missing in main clone — pipeline may fail');
+      }
+    }
+  }
+
+  if (pipelineType === 'test') {
+    // Check device connected
+    const deviceId = 'ZL73232GKP';
+    try {
+      const adbOut = execSync('adb devices', { encoding: 'utf8', timeout: 10000 });
+      if (adbOut.includes(deviceId)) {
+        ok('device', `Device ${deviceId} connected`);
+      } else {
+        fail('device', `Device ${deviceId} not found in adb devices. Connect it and try again.`);
+      }
+    } catch (e) {
+      fail('device', `adb not available or failed: ${e.message}`);
+    }
+
+    // Check maestro installed
+    try {
+      execSync('which maestro', { encoding: 'utf8', timeout: 5000 });
+      ok('maestro', 'Maestro is installed');
+    } catch {
+      fail('maestro', 'Maestro not installed — run: curl -Ls "https://get.maestro.mobile.dev" | bash');
+    }
+  }
+
+  log(`🔍 Preflight complete: ${checks.length} checks passed${warnings.length ? `, ${warnings.length} warning(s)` : ''}`);
+  return { success: true, checks, warnings };
+}
+
 // Process single item with Ollama
 async function processWithOllama(item, issueType) {
   const pipelineCfg = config.pipelines[issueType] || {};
@@ -317,6 +456,18 @@ async function _processNext() {
   } catch (e) { log(`⚠️ DB recordRun failed: ${e.message}`); }
 
   log(`▶️  Started processing: ${item.title}`);
+
+  // Run preflight checks before Ollama call
+  const pipelineCfg2 = config.pipelines[issueType] || {};
+  try {
+    await preflight(item, issueType, pipelineCfg2);
+  } catch (preflightError) {
+    log(`❌ Preflight failed for #${item.issue_number}: ${preflightError.message}`);
+    db.failItem(item.issue_number, { error: preflightError.message, errorClass: 'infra' });
+    if (runId) { try { db.failRun(runId, { error: preflightError.message, error_class: 'infra' }); } catch (e) {} }
+    db.generateCacheFile();
+    return;
+  }
 
   // Process with Ollama
   const result = await processWithOllama(item, issueType);
