@@ -1,11 +1,18 @@
 {
   "model": "qwen2.5-coder:32b",
-  "issueType": "coding",
-  "startedAt": "2026-02-17T02:48:39.063Z",
+  "issueType": "implement",
+  "startedAt": "2026-02-17T22:56:40.346Z",
   "config": {
-    "script": "scripts/pipelines/coding.sh",
-    "prompt": "prompts/coding.md",
-    "model": "qwen2.5-coder:32b"
+    "script": "scripts/pipelines/implement.sh",
+    "prompt": "prompts/implement.md",
+    "model": "qwen2.5-coder:32b",
+    "resources": [
+      "ollama"
+    ],
+    "maxRetries": 1,
+    "retryOn": [
+      "infra"
+    ]
   },
   "ollamaUrl": "http://localhost:11434/api/generate"
 }

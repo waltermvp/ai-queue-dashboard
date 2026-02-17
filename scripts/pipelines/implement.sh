@@ -116,7 +116,9 @@ fi
 # -------------------------------------------------------
 log "Step 4/7: Preparing task for mini-swe-agent..."
 
-TASK_FILE=$(mktemp /tmp/mini-task-${ISSUE_ID}-XXXXXX.md)
+TASK_FILE=$(mktemp /tmp/mini-task-${ISSUE_ID}-XXXXXX)
+mv "$TASK_FILE" "${TASK_FILE}.md"
+TASK_FILE="${TASK_FILE}.md"
 
 cat > "$TASK_FILE" <<TASK_EOF
 # GitHub Issue #${ISSUE_ID}: ${ISSUE_TITLE}

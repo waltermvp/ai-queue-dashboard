@@ -3,5 +3,21 @@
   "processing": null,
   "queue": [],
   "completed": [],
-  "failed": []
+  "failed": [
+    {
+      "issueNumber": 112,
+      "repo": "epiphanyapps/mapyourhealth",
+      "title": "Add \"Delete Account\" Section to Settings Screen (UI Only)",
+      "body": "## Overview\nAdd a \"Delete Account\" UI section to the Settings screen. This is UI only — the actual deletion logic will be implemented in a separate backend issue.\n\n## Tech Stack\n- React Native / Expo / TypeScript\n- AWS Amplify (context only — no backend changes in this issue)\n\n## Requirements\n\n### New Section in Settings Screen\n- Add a new section at the bottom of the Settings screen\n- Section title: **\"Account\"** (or \"Danger Zone\")\n- Located at `apps/mobile/src/screens/Settings` or similar — follow existing patterns\n\n### Delete Account Button\n- Red \"Delete Account\" button (red text or red background, matching app design patterns)\n- Visually distinct / destructive-looking\n\n### Confirmation Dialog\nWhen the button is tapped, show a confirmation modal/alert:\n- **Title**: \"Delete Account?\"\n- **Body**: \"This action cannot be undone. All your data will be permanently deleted.\"\n- **Cancel button**: Dismisses the dialog (no action)\n- **Delete button**: Calls a placeholder function that either:\n  - Logs to console: `console.log(\"Account deletion not yet implemented\")`\n  - OR shows an Alert: `Alert.alert(\"Not Yet Available\", \"Account deletion not yet implemented\")`\n\n### Code Patterns\n- Follow existing Settings screen layout patterns (sections, spacing, typography)\n- Use existing button/modal components if available in the codebase\n- Use React Native `Alert.alert()` for the confirmation dialog if the app doesn't have a custom modal pattern\n\n## Acceptance Criteria\n- [ ] New \"Account\" section visible at bottom of Settings screen\n- [ ] Red \"Delete Account\" button renders correctly\n- [ ] Tapping button shows confirmation dialog with correct title and body text\n- [ ] \"Cancel\" dismisses the dialog\n- [ ] \"Delete\" calls placeholder function (console.log or Alert)\n- [ ] No backend changes — purely UI\n- [ ] TypeScript compiles without errors\n- [ ] Follows existing code style and patterns\n\n## File Locations (expected)\n- Settings screen: `apps/mobile/src/screens/Settings/` or `apps/mobile/src/screens/SettingsScreen.tsx`\n- Explore existing components for reusable patterns\n\n## Notes\n- Keep the scope small — this should be a quick UI-only change\n- The backend counterpart will wire up actual account deletion in a follow-up issue",
+      "labels": [],
+      "priority": "medium",
+      "addedAt": "2026-02-17 22:53:48",
+      "url": "https://github.com/epiphanyapps/mapyourhealth/issues/112",
+      "error": "Pipeline failed (exit code: 1, class: build). Check artifacts/112/pipeline.log",
+      "error_class": "build",
+      "failed_at": "2026-02-17 22:56:41"
+    }
+  ],
+  "pr_open": [],
+  "merged": []
 }

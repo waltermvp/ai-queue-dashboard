@@ -1,0 +1,232 @@
+👋 This is mini-swe-agent version 2.1.0.
+Check the v2 migration guide at https://klieret.short.gy/mini-v2-migration
+ Loading global config from '/Users/waltervargas-pena/Library/Application 
+Support/mini-swe-agent/.env'
+Warning: Input is not a terminal (fd=0).
+────────────────────────────────────────────────────────────────────────────────
+To get started, we need to set up your global config file.
+
+You can edit it manually or use the mini-extra config set or mini-extra config 
+edit commands.
+
+This setup will ask you for your model and an API key.
+
+Here's a few popular models and the required API keys:
+
+anthropic/claude-sonnet-4-5-20250929 (ANTHROPIC_API_KEY)
+openai/gpt-5 or openai/gpt-5-mini (OPENAI_API_KEY)
+gemini/gemini-3-pro-preview (GEMINI_API_KEY)
+
+Note: Please always include the provider (e.g., "openai/") in the model name.
+
+You can leave any setting blank to skip it.
+
+More information at https://mini-swe-agent.com/latest/quickstart/
+To find the best model, check the leaderboard at https://swebench.com/
+
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/asyncio/selector_events.py:282 in _add_reader          │
+│                                                                              │
+│    279 │   │   self._check_closed()                                          │
+│    280 │   │   handle = events.Handle(callback, args, self, None)            │
+│    281 │   │   try:                                                          │
+│ ❱  282 │   │   │   key = self._selector.get_key(fd)                          │
+│    283 │   │   except KeyError:                                              │
+│    284 │   │   │   self._selector.register(fd, selectors.EVENT_READ,         │
+│    285 │   │   │   │   │   │   │   │   │   (handle, None))                   │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/selectors.py:192 in get_key                            │
+│                                                                              │
+│   189 │   │   try:                                                           │
+│   190 │   │   │   return mapping[fileobj]                                    │
+│   191 │   │   except KeyError:                                               │
+│ ❱ 192 │   │   │   raise KeyError("{!r} is not registered".format(fileobj)) f │
+│   193 │                                                                      │
+│   194 │   @abstractmethod                                                    │
+│   195 │   def get_map(self):                                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+KeyError: '0 is not registered'
+
+During handling of the above exception, another exception occurred:
+
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/minisweagent/run/mini.py:68 in main                           │
+│                                                                              │
+│    65 │   exit_immediately: bool = typer.Option(False, "--exit-immediately", │
+│    66 ) -> Any:                                                              │
+│    67 │   # fmt: on                                                          │
+│ ❱  68 │   configure_if_first_time()                                          │
+│    69 │                                                                      │
+│    70 │   # Build the config from the command line arguments                 │
+│    71 │   console.print(f"Building agent config from specs: [bold green]{con │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/minisweagent/run/utilities/config.py:54 in                    │
+│ configure_if_first_time                                                      │
+│                                                                              │
+│    51 def configure_if_first_time():                                         │
+│    52 │   if not os.getenv("MSWEA_CONFIGURED"):                              │
+│    53 │   │   console.print(Rule())                                          │
+│ ❱  54 │   │   setup()                                                        │
+│    55 │   │   console.print(Rule())                                          │
+│    56                                                                        │
+│    57                                                                        │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/minisweagent/run/utilities/config.py:62 in setup              │
+│                                                                              │
+│    59 def setup():                                                           │
+│    60 │   """Setup the global config file."""                                │
+│    61 │   console.print(_SETUP_HELP.format(global_config_file=global_config_ │
+│ ❱  62 │   default_model = prompt(                                            │
+│    63 │   │   "Enter your default model (e.g., anthropic/claude-sonnet-4-5-2 │
+│    64 │   │   default=os.getenv("MSWEA_MODEL_NAME", ""),                     │
+│    65 │   ).strip()                                                          │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/prompt_toolkit/shortcuts/prompt.py:1449 in prompt             │
+│                                                                              │
+│   1446 │   # `PromptSession`, it can't be passed into the `prompt()` method. │
+│   1447 │   session: PromptSession[str] = PromptSession(history=history)      │
+│   1448 │                                                                     │
+│ ❱ 1449 │   return session.prompt(                                            │
+│   1450 │   │   message,                                                      │
+│   1451 │   │   editing_mode=editing_mode,                                    │
+│   1452 │   │   refresh_interval=refresh_interval,                            │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/prompt_toolkit/shortcuts/prompt.py:1055 in prompt             │
+│                                                                              │
+│   1052 │   │   │   with self._dumb_prompt(self.message) as dump_app:         │
+│   1053 │   │   │   │   return dump_app.run(in_thread=in_thread, handle_sigin │
+│   1054 │   │                                                                 │
+│ ❱ 1055 │   │   return self.app.run(                                          │
+│   1056 │   │   │   set_exception_handler=set_exception_handler,              │
+│   1057 │   │   │   in_thread=in_thread,                                      │
+│   1058 │   │   │   handle_sigint=handle_sigint,                              │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/prompt_toolkit/application/application.py:1002 in run         │
+│                                                                              │
+│    999 │   │                                                                 │
+│   1000 │   │   else:                                                         │
+│   1001 │   │   │   # No loop installed. Run like usual.                      │
+│ ❱ 1002 │   │   │   return asyncio.run(coro)                                  │
+│   1003 │                                                                     │
+│   1004 │   def _handle_exception(                                            │
+│   1005 │   │   self, loop: AbstractEventLoop, context: dict[str, Any]        │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/asyncio/runners.py:195 in run                          │
+│                                                                              │
+│   192 │   │   │   "asyncio.run() cannot be called from a running event loop" │
+│   193 │                                                                      │
+│   194 │   with Runner(debug=debug, loop_factory=loop_factory) as runner:     │
+│ ❱ 195 │   │   return runner.run(main)                                        │
+│   196                                                                        │
+│   197                                                                        │
+│   198 def _cancel_all_tasks(loop):                                           │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/asyncio/runners.py:118 in run                          │
+│                                                                              │
+│   115 │   │                                                                  │
+│   116 │   │   self._interrupt_count = 0                                      │
+│   117 │   │   try:                                                           │
+│ ❱ 118 │   │   │   return self._loop.run_until_complete(task)                 │
+│   119 │   │   except exceptions.CancelledError:                              │
+│   120 │   │   │   if self._interrupt_count > 0:                              │
+│   121 │   │   │   │   uncancel = getattr(task, "uncancel", None)             │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/asyncio/base_events.py:691 in run_until_complete       │
+│                                                                              │
+│    688 │   │   if not future.done():                                         │
+│    689 │   │   │   raise RuntimeError('Event loop stopped before Future comp │
+│    690 │   │                                                                 │
+│ ❱  691 │   │   return future.result()                                        │
+│    692 │                                                                     │
+│    693 │   def stop(self):                                                   │
+│    694 │   │   """Stop running the event loop.                               │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/prompt_toolkit/application/application.py:886 in run_async    │
+│                                                                              │
+│    883 │   │   │   f = stack.enter_context(create_future(loop))              │
+│    884 │   │   │                                                             │
+│    885 │   │   │   try:                                                      │
+│ ❱  886 │   │   │   │   return await _run_async(f)                            │
+│    887 │   │   │   finally:                                                  │
+│    888 │   │   │   │   # Wait for the background tasks to be done. This need │
+│    889 │   │   │   │   # go in the finally! If `_run_async` raises           │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/prompt_toolkit/application/application.py:734 in _run_async   │
+│                                                                              │
+│    731 │   │   │   │   │   │   f.set_exception(EOFError)                     │
+│    732 │   │   │                                                             │
+│    733 │   │   │   # Enter raw mode, attach input and attach WINCH event han │
+│ ❱  734 │   │   │   with self.input.raw_mode(), self.input.attach(            │
+│    735 │   │   │   │   read_from_input_in_context                            │
+│    736 │   │   │   ), attach_winch_signal_handler(self._on_resize):          │
+│    737 │   │   │   │   # Draw UI.                                            │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/contextlib.py:137 in __enter__                         │
+│                                                                              │
+│   134 │   │   # they are only needed for recreation, which is not possible a │
+│   135 │   │   del self.args, self.kwds, self.func                            │
+│   136 │   │   try:                                                           │
+│ ❱ 137 │   │   │   return next(self.gen)                                      │
+│   138 │   │   except StopIteration:                                          │
+│   139 │   │   │   raise RuntimeError("generator didn't yield") from None     │
+│   140                                                                        │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/tools/mini-swe-agent/lib/python3.12 │
+│ /site-packages/prompt_toolkit/input/vt100.py:165 in _attached_input          │
+│                                                                              │
+│   162 │   │   callback()                                                     │
+│   163 │                                                                      │
+│   164 │   try:                                                               │
+│ ❱ 165 │   │   loop.add_reader(fd, callback_wrapper)                          │
+│   166 │   except PermissionError:                                            │
+│   167 │   │   # For `EPollSelector`, adding /dev/null to the event loop will │
+│   168 │   │   # `PermissionError` (that doesn't happen for `SelectSelector`  │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/asyncio/selector_events.py:357 in add_reader           │
+│                                                                              │
+│    354 │   def add_reader(self, fd, callback, *args):                        │
+│    355 │   │   """Add a reader callback."""                                  │
+│    356 │   │   self._ensure_fd_no_transport(fd)                              │
+│ ❱  357 │   │   self._add_reader(fd, callback, *args)                         │
+│    358 │                                                                     │
+│    359 │   def remove_reader(self, fd):                                      │
+│    360 │   │   """Remove a reader callback."""                               │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/asyncio/selector_events.py:284 in _add_reader          │
+│                                                                              │
+│    281 │   │   try:                                                          │
+│    282 │   │   │   key = self._selector.get_key(fd)                          │
+│    283 │   │   except KeyError:                                              │
+│ ❱  284 │   │   │   self._selector.register(fd, selectors.EVENT_READ,         │
+│    285 │   │   │   │   │   │   │   │   │   (handle, None))                   │
+│    286 │   │   else:                                                         │
+│    287 │   │   │   mask, (reader, writer) = key.events, key.data             │
+│                                                                              │
+│ /Users/waltervargas-pena/.local/share/uv/python/cpython-3.12.11-macos-aarch6 │
+│ 4-none/lib/python3.12/selectors.py:523 in register                           │
+│                                                                              │
+│   520 │   │   │   │   if events & EVENT_READ:                                │
+│   521 │   │   │   │   │   kev = select.kevent(key.fd, select.KQ_FILTER_READ, │
+│   522 │   │   │   │   │   │   │   │   │   │   select.KQ_EV_ADD)              │
+│ ❱ 523 │   │   │   │   │   self._selector.control([kev], 0, 0)                │
+│   524 │   │   │   │   │   self._max_events += 1                              │
+│   525 │   │   │   │   if events & EVENT_WRITE:                               │
+│   526 │   │   │   │   │   kev = select.kevent(key.fd, select.KQ_FILTER_WRITE │
+╰──────────────────────────────────────────────────────────────────────────────╯
+OSError: [Errno 22] Invalid argument
