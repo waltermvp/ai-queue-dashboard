@@ -9,6 +9,8 @@ import {
   XCircle, 
   Clock,
   GitBranch,
+  GitPullRequest,
+  GitMerge,
   Cpu,
   FileText,
   Plus,
@@ -99,6 +101,28 @@ interface QueueState {
     type?: string
     labels?: string[]
   }>
+  pr_open: Array<{
+    issueNumber: number
+    title: string
+    repo: string
+    url: string
+    labels: string[]
+    priority: string
+    completed_at: string
+    pr_url: string
+    pr_number: number
+  }>
+  merged: Array<{
+    issueNumber: number
+    title: string
+    repo: string
+    url: string
+    labels: string[]
+    priority: string
+    completed_at: string
+    pr_url: string
+    pr_number: number
+  }>
   needs_clarification: Array<{
     id: string
     title: string
@@ -167,6 +191,20 @@ function PriorityBadge({ priority }: { priority: string }) {
   else if (p === 'medium') classes += 'bg-yellow-100 text-yellow-800'
   else classes += 'bg-gray-100 text-gray-600'
   return <span className={classes}>{priority}</span>
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const s = status.toLowerCase()
+  let classes = 'px-2 py-0.5 text-xs rounded-full font-medium '
+  if (s === 'queued') classes += 'bg-blue-100 text-blue-800'
+  else if (s === 'processing') classes += 'bg-yellow-100 text-yellow-800'
+  else if (s === 'pr_open') classes += 'bg-purple-100 text-purple-800'
+  else if (s === 'merged') classes += 'bg-green-100 text-green-800'
+  else if (s === 'completed') classes += 'bg-green-100 text-green-800'
+  else if (s === 'failed') classes += 'bg-red-100 text-red-800'
+  else classes += 'bg-gray-100 text-gray-800'
+  const label = s === 'pr_open' ? 'PR Open' : s.charAt(0).toUpperCase() + s.slice(1)
+  return <span className={classes}>{label}</span>
 }
 
 function ArtifactsPanel({ artifacts }: { artifacts: { dir: string; recordings: string[]; logs: string[] } }) {
@@ -424,6 +462,30 @@ export default function Dashboard() {
               <p className="text-2xl font-semibold text-gray-900">
                 {isProcessing ? '1' : '0'}
               </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <GitPullRequest className="h-8 w-8 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <h3 className="text-sm font-medium text-gray-900">PR Open</h3>
+              <p className="text-2xl font-semibold text-gray-900">{queueState.pr_open?.length ?? 0}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <GitMerge className="h-8 w-8 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <h3 className="text-sm font-medium text-gray-900">Merged</h3>
+              <p className="text-2xl font-semibold text-gray-900">{queueState.merged?.length ?? 0}</p>
             </div>
           </div>
         </div>
@@ -758,6 +820,87 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* PR Open Issues */}
+      {queueState.pr_open && queueState.pr_open.length > 0 && (
+        <div className="card">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">
+            <GitPullRequest className="w-5 h-5 inline mr-2 text-purple-600" />
+            PRs Awaiting Review
+          </h2>
+          <div className="space-y-3">
+            {queueState.pr_open.map((issue) => (
+              <div key={issue.issueNumber} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border-l-4 border-purple-400">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <GitPullRequest className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-mono text-gray-500">#{issue.issueNumber}</span>
+                    <span className="text-sm font-medium text-gray-900">{issue.title}</span>
+                    <StatusBadge status="pr_open" />
+                  </div>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <GitBranch className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">{issue.repo}</span>
+                    {issue.completed_at && (
+                      <>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-gray-500">PR created: {new Date(issue.completed_at).toLocaleString()}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {issue.pr_url && (
+                    <a href={issue.pr_url} target="_blank" rel="noopener noreferrer" className="text-sm text-purple-600 hover:text-purple-700 flex items-center space-x-1" title="View PR">
+                      <GitPullRequest className="w-4 h-4" />
+                      <span className="text-xs">PR #{issue.pr_number}</span>
+                    </a>
+                  )}
+                  {issue.url && (
+                    <a href={issue.url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 hover:text-gray-700" title="View Issue">
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Merged Issues */}
+      {queueState.merged && queueState.merged.length > 0 && (
+        <div className="card">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">
+            <GitMerge className="w-5 h-5 inline mr-2 text-green-600" />
+            Merged PRs
+          </h2>
+          <div className="space-y-3">
+            {queueState.merged.map((issue) => (
+              <div key={issue.issueNumber} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <GitMerge className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-mono text-gray-500">#{issue.issueNumber}</span>
+                    <span className="text-sm font-medium text-gray-900">{issue.title}</span>
+                    <StatusBadge status="merged" />
+                  </div>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="text-xs text-gray-500">Merged: {new Date(issue.completed_at).toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {issue.pr_url && (
+                    <a href={issue.pr_url} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 hover:text-green-700" title="View PR">
+                      <GitBranch className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Confirmed Bugs */}
       {queueState.bug_confirmed && queueState.bug_confirmed.length > 0 && (
         <div className="card">
@@ -973,12 +1116,7 @@ export default function Dashboard() {
                         <td className="py-2 pr-3 text-gray-700 max-w-xs truncate">{run.title}</td>
                         <td className="py-2 pr-3"><LabelBadge label={run.type || 'implement'} /></td>
                         <td className="py-2 pr-3">
-                          <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                            run.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            run.status === 'failed' ? 'bg-red-100 text-red-800' :
-                            run.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>{run.status}</span>
+                          <StatusBadge status={run.status} />
                         </td>
                         <td className="py-2 pr-3 text-gray-500 font-mono text-xs">
                           {run.processing_time_ms ? `${Math.round(run.processing_time_ms / 1000)}s` : '—'}
