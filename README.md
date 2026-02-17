@@ -46,6 +46,40 @@ node scripts/queue-worker.js process
 
 ---
 
+## Status Lifecycle
+
+Each queue item goes through a status lifecycle depending on its type:
+
+### Implement pipeline (creates PRs):
+```
+queued → processing → pr_open → merged (or failed)
+```
+
+### Test/Generate pipelines (no PRs):
+```
+queued → processing → completed (or failed)
+```
+
+### Status Reference
+
+| Status | Color | Meaning |
+|--------|-------|---------|
+| `queued` | 🔵 Blue | Waiting in queue |
+| `processing` | 🟡 Yellow | Pipeline actively running |
+| `pr_open` | 🟣 Purple | PR created, awaiting review |
+| `merged` | 🟢 Green | PR merged |
+| `completed` | 🟢 Green | Pipeline finished (non-PR workflows) |
+| `failed` | 🔴 Red | Pipeline error |
+
+### PR Merge Detection
+
+The worker automatically checks open PRs for merge status:
+- **In watch mode:** every ~5 minutes (every 10 ticks at 30s interval)
+- **Manual:** `node scripts/queue-worker.js check-prs`
+- Uses `gh pr view` to poll PR state, updates to `merged` when detected
+
+---
+
 ## Issue Types & Routing
 
 The queue worker detects issue type from GitHub labels (using `ai:` prefix) and routes to the matching pipeline. Old labels (`coding`, `e2e`, `content`) are supported as aliases.
