@@ -322,5 +322,5 @@ When the button is tapped, show a confirmation modal/alert:
 ## Notes
 - Keep the scope small — this should be a quick UI-only change
 - The backend counterpart will wire up actual account deletion in a follow-up issue
-Repository: MapYourHealth (React Native + Expo)
+Repository: epiphanyapps/mapyourhealth
 Labels: none

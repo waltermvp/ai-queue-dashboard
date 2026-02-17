@@ -753,3 +753,126 @@
 [2026-02-17T22:08:55.431Z]   Processing: 0
 [2026-02-17T22:08:55.431Z]   Completed: 0
 [2026-02-17T22:08:55.431Z]   Failed: 0
+[2026-02-17T22:20:20.364Z] 👀 Watching queue (checking every 30s)...
+[2026-02-17T22:20:20.366Z]    Press Ctrl+C to stop
+
+[2026-02-17T22:20:57.119Z] 📊 Queue Status:
+[2026-02-17T22:20:57.121Z]   Queued: 0
+[2026-02-17T22:20:57.122Z]   Processing: 0
+[2026-02-17T22:20:57.122Z]   Completed: 0
+[2026-02-17T22:20:57.122Z]   Failed: 0
+[2026-02-17T22:22:15.706Z] ✅ Added issue #112 to queue: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:22:20.375Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-17T22:22:20.381Z] ▶️  Started processing: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:22:20.382Z] 🤖 Processing [implement]: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:25:26.141Z] 🔧 Executing implement pipeline for issue #112...
+[2026-02-17T22:25:26.174Z] [pipeline] [2026-02-17 17:25:26] === Coding Pipeline Started for Issue #112 ===
+[2026-02-17T22:25:26.179Z] [pipeline] [2026-02-17 17:25:26] Model: ollama/qwen2.5-coder:32b
+[2026-02-17T22:25:26.183Z] [pipeline] [2026-02-17 17:25:26] Timeout: 1800s
+[2026-02-17T22:25:26.188Z] [pipeline] [2026-02-17 17:25:26] Step 1/7: Fetching issue details...
+[2026-02-17T22:25:26.534Z] [pipeline] [2026-02-17 17:25:26] Issue: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:25:26.538Z] [pipeline] [2026-02-17 17:25:26] Step 2/7: Creating git worktree...
+[2026-02-17T22:25:26.994Z] [pipeline] [2026-02-17 17:25:26] ❌ PIPELINE FAILED: Failed to create worktree (exit code: 3)
+[2026-02-17T22:25:26.995Z] ❌ Pipeline implement failed for issue #112 (exit code: 3)
+[2026-02-17T22:25:26.995Z] ❌ Pipeline failed: infra (exit 3)
+[2026-02-17T22:25:26.996Z] 🔄 Auto-retrying infra failure for #112
+[2026-02-17T22:25:26.997Z] 📹 Artifacts: 0 recordings, 6 logs
+[2026-02-17T22:25:26.999Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-17T22:25:27.000Z] ▶️  Started processing: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:25:27.000Z] 🤖 Processing [implement]: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:26:53.263Z] 🔧 Executing implement pipeline for issue #112...
+[2026-02-17T22:26:53.297Z] [pipeline] [2026-02-17 17:26:53] === Coding Pipeline Started for Issue #112 ===
+[2026-02-17T22:26:53.303Z] [pipeline] [2026-02-17 17:26:53] Model: ollama/qwen2.5-coder:32b
+[2026-02-17T22:26:53.309Z] [pipeline] [2026-02-17 17:26:53] Timeout: 1800s
+[2026-02-17T22:26:53.314Z] [pipeline] [2026-02-17 17:26:53] Step 1/7: Fetching issue details...
+[2026-02-17T22:26:53.867Z] [pipeline] [2026-02-17 17:26:53] Issue: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:26:53.872Z] [pipeline] [2026-02-17 17:26:53] Step 2/7: Creating git worktree...
+[2026-02-17T22:26:54.179Z] [pipeline] [2026-02-17 17:26:54] ❌ PIPELINE FAILED: Failed to create worktree (exit code: 3)
+[2026-02-17T22:26:54.180Z] ❌ Pipeline implement failed for issue #112 (exit code: 3)
+[2026-02-17T22:26:54.180Z] ❌ Pipeline failed: infra (exit 3)
+[2026-02-17T22:26:54.181Z] 📹 Artifacts: 0 recordings, 6 logs
+[2026-02-17T22:29:52.511Z] 🔄 Moved issue #112 back to queue
+[2026-02-17T22:30:20.415Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-17T22:30:20.425Z] ▶️  Started processing: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:30:20.426Z] 🤖 Processing [implement]: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:31:54.013Z] 🔧 Executing implement pipeline for issue #112...
+[2026-02-17T22:31:54.045Z] [pipeline] [2026-02-17 17:31:54] === Coding Pipeline Started for Issue #112 ===
+[2026-02-17T22:31:54.051Z] [pipeline] [2026-02-17 17:31:54] Model: ollama/qwen2.5-coder:32b
+[2026-02-17T22:31:54.057Z] [pipeline] [2026-02-17 17:31:54] Timeout: 1800s
+[2026-02-17T22:31:54.063Z] [pipeline] [2026-02-17 17:31:54] Step 1/7: Fetching issue details...
+[2026-02-17T22:31:54.548Z] [pipeline] [2026-02-17 17:31:54] Issue: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:31:54.555Z] [pipeline] [2026-02-17 17:31:54] Step 2/7: Creating git worktree...
+[2026-02-17T22:31:55.471Z] [pipeline] [2026-02-17 17:31:55] ✅ Worktree created at /Users/waltervargas-pena/Documents/worktrees/epiphanyapps/MapYourHealth/issue-112
+[2026-02-17T22:31:55.475Z] [pipeline] [2026-02-17 17:31:55] Step 3/7: Copying amplify_outputs.json...
+[2026-02-17T22:31:55.481Z] [pipeline] [2026-02-17 17:31:55] ✅ Copied root amplify_outputs.json
+[2026-02-17T22:31:55.489Z] [pipeline] [2026-02-17 17:31:55] ✅ Copied mobile amplify_outputs.json
+[2026-02-17T22:31:55.491Z] [pipeline] [2026-02-17 17:31:55] Step 4/7: Preparing task for mini-swe-agent...
+[2026-02-17T22:31:55.509Z] [pipeline] [2026-02-17 17:31:55] ✅ Appended Qwen analysis from /Users/waltervargas-pena/Documents/ai-queue-dashboard/artifacts/112/ai-solution.md
+[2026-02-17T22:31:55.519Z] [pipeline] [2026-02-17 17:31:55] Task file: /tmp/mini-task-112-XXXXXX.md (    5533 bytes)
+[2026-02-17T22:31:55.523Z] [pipeline] [2026-02-17 17:31:55] Step 5/7: Running mini-swe-agent...
+[2026-02-17T22:31:55.526Z] [pipeline] [2026-02-17 17:31:55] Using local Ollama model (no cost limit)
+[2026-02-17T22:31:55.529Z] [pipeline] [2026-02-17 17:31:55] Running: /Users/waltervargas-pena/.local/bin/mini -m ollama/qwen2.5-coder:32b --yolo -t <task>
+[2026-02-17T22:31:56.599Z] ❌ Pipeline implement failed for issue #112 (exit code: 1)
+[2026-02-17T22:31:56.599Z] ❌ Pipeline failed: build (exit 1)
+[2026-02-17T22:31:56.599Z] 📹 Artifacts: 0 recordings, 6 logs
+[2026-02-17T22:41:24.988Z] 👀 Watching queue (checking every 30s)...
+[2026-02-17T22:41:24.990Z]    Press Ctrl+C to stop
+
+[2026-02-17T22:51:43.360Z] 📊 Queue Status:
+[2026-02-17T22:51:43.362Z]   Queued: 0
+[2026-02-17T22:51:43.362Z]   Processing: 0
+[2026-02-17T22:51:43.362Z]   PR Open: 0
+[2026-02-17T22:51:43.362Z]   Merged: 0
+[2026-02-17T22:51:43.362Z]   Completed: 0
+[2026-02-17T22:51:43.362Z]   Failed: 0
+[2026-02-17T22:51:43.435Z] 👀 Watching queue (checking every 30s)...
+[2026-02-17T22:51:43.437Z]    Press Ctrl+C to stop
+
+[2026-02-17T22:52:01.756Z] 👀 Watching queue (checking every 30s)...
+[2026-02-17T22:52:01.758Z]    Press Ctrl+C to stop
+
+[2026-02-17T22:53:32.230Z] 📊 Queue Status:
+[2026-02-17T22:53:32.232Z]   Queued: 0
+[2026-02-17T22:53:32.233Z]   Processing: 0
+[2026-02-17T22:53:32.233Z]   PR Open: 0
+[2026-02-17T22:53:32.233Z]   Merged: 0
+[2026-02-17T22:53:32.233Z]   Completed: 0
+[2026-02-17T22:53:32.233Z]   Failed: 0
+[2026-02-17T22:53:45.085Z] 📊 Queue Status:
+[2026-02-17T22:53:45.087Z]   Queued: 0
+[2026-02-17T22:53:45.088Z]   Processing: 0
+[2026-02-17T22:53:45.088Z]   PR Open: 0
+[2026-02-17T22:53:45.088Z]   Merged: 0
+[2026-02-17T22:53:45.088Z]   Completed: 0
+[2026-02-17T22:53:45.088Z]   Failed: 0
+[2026-02-17T22:53:48.790Z] ✅ Added issue #112 to queue: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:54:01.768Z] 
+📥 Found 1 item(s) in queue. Processing...
+[2026-02-17T22:54:01.777Z] ▶️  Started processing: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:54:01.781Z] 🔍 Running preflight checks for #112 (type: implement)...
+[2026-02-17T22:54:01.785Z]   ✅ lock: Lock held by active PID 77704
+[2026-02-17T22:54:01.856Z]   ✅ ollama: Ollama is running
+[2026-02-17T22:54:01.857Z]   ✅ model: Model qwen2.5-coder:32b is available
+[2026-02-17T22:54:01.872Z]   ✅ disk: 133.0GB free
+[2026-02-17T22:54:02.052Z]   🔧 worktree: Removed stale worktree at /Users/waltervargas-pena/Documents/worktrees/epiphanyapps/mapyourhealth/issue-112
+[2026-02-17T22:54:02.080Z]   🔧 branch: Deleted stale branch issue-112
+[2026-02-17T22:54:02.080Z] 🔍 Preflight complete: 6 checks passed
+[2026-02-17T22:54:02.080Z] 🤖 Processing [implement]: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:56:40.347Z] 🔧 Executing implement pipeline for issue #112...
+[2026-02-17T22:56:40.384Z] [pipeline] [2026-02-17 17:56:40] === Coding Pipeline Started for Issue #112 ===
+[2026-02-17T22:56:40.390Z] [pipeline] [2026-02-17 17:56:40] Model: ollama/qwen2.5-coder:32b
+[2026-02-17T22:56:40.396Z] [pipeline] [2026-02-17 17:56:40] Timeout: 1800s
+[2026-02-17T22:56:40.401Z] [pipeline] [2026-02-17 17:56:40] Step 1/7: Fetching issue details...
+[2026-02-17T22:56:40.905Z] [pipeline] [2026-02-17 17:56:40] Issue: Add "Delete Account" Section to Settings Screen (UI Only)
+[2026-02-17T22:56:40.912Z] [pipeline] [2026-02-17 17:56:40] Step 2/7: Creating git worktree...
+[2026-02-17T22:56:41.808Z] [pipeline] [2026-02-17 17:56:41] ✅ Worktree created at /Users/waltervargas-pena/Documents/worktrees/epiphanyapps/mapyourhealth/issue-112
+[2026-02-17T22:56:41.811Z] [pipeline] [2026-02-17 17:56:41] Step 3/7: Copying amplify_outputs.json...
+[2026-02-17T22:56:41.817Z] [pipeline] [2026-02-17 17:56:41] ✅ Copied root amplify_outputs.json
+[2026-02-17T22:56:41.824Z] [pipeline] [2026-02-17 17:56:41] ✅ Copied mobile amplify_outputs.json
+[2026-02-17T22:56:41.826Z] [pipeline] [2026-02-17 17:56:41] Step 4/7: Preparing task for mini-swe-agent...
+[2026-02-17T22:56:41.830Z] ❌ Pipeline implement failed for issue #112 (exit code: 1)
+[2026-02-17T22:56:41.830Z] ❌ Pipeline failed: build (exit 1)
+[2026-02-17T22:56:41.830Z] 📹 Artifacts: 0 recordings, 6 logs
