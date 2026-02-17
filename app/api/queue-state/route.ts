@@ -52,6 +52,14 @@ export async function GET(request: NextRequest) {
       "SELECT * FROM runs WHERE status = 'failed' ORDER BY id DESC LIMIT 20"
     ).all() as any[]
 
+    const prOpenRows = db.prepare(
+      "SELECT * FROM queue_items WHERE status = 'pr_open' ORDER BY completed_at DESC LIMIT 50"
+    ).all() as any[]
+
+    const mergedRows = db.prepare(
+      "SELECT * FROM queue_items WHERE status = 'merged' ORDER BY completed_at DESC LIMIT 50"
+    ).all() as any[]
+
     // Stats
     const total = (db.prepare('SELECT COUNT(*) as count FROM runs').get() as any).count
     const completedCount = (db.prepare("SELECT COUNT(*) as count FROM runs WHERE status = 'completed'").get() as any).count
@@ -108,11 +116,37 @@ export async function GET(request: NextRequest) {
       labels: parseLabels(r.labels),
     }))
 
+    const pr_open = prOpenRows.map((r: any) => ({
+      issueNumber: r.issue_number,
+      repo: r.repo || '',
+      title: r.title,
+      labels: parseLabels(r.labels),
+      priority: r.priority || 'medium',
+      url: r.url,
+      completed_at: r.completed_at,
+      pr_url: r.pr_url,
+      pr_number: r.pr_number,
+    }))
+
+    const merged = mergedRows.map((r: any) => ({
+      issueNumber: r.issue_number,
+      repo: r.repo || '',
+      title: r.title,
+      labels: parseLabels(r.labels),
+      priority: r.priority || 'medium',
+      url: r.url,
+      completed_at: r.completed_at,
+      pr_url: r.pr_url,
+      pr_number: r.pr_number,
+    }))
+
     return NextResponse.json({
       processing,
       queue,
       completed,
       failed,
+      pr_open,
+      merged,
       needs_clarification: [],
       bug_confirmed: [],
       stats,
