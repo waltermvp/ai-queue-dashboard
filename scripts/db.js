@@ -75,6 +75,10 @@ function initDB() {
   // The CREATE TABLE no longer has UNIQUE on issue_number, so new DBs are fine.
   // Existing DBs: the composite index takes priority for INSERT OR IGNORE via the new index.
 
+  // Add columns to queue_items if missing (for existing DBs)
+  try { d.exec('ALTER TABLE queue_items ADD COLUMN pr_number INTEGER'); } catch {}
+  try { d.exec('ALTER TABLE queue_items ADD COLUMN pr_url TEXT'); } catch {}
+
   // Add columns to runs if missing (for existing DBs)
   try { d.exec('ALTER TABLE runs ADD COLUMN error_class TEXT'); } catch {}
   try { d.exec('ALTER TABLE runs ADD COLUMN retry_count INTEGER DEFAULT 0'); } catch {}
@@ -125,6 +129,22 @@ function completeItem(issueNumber) {
   const d = getDB();
   d.prepare(`
     UPDATE queue_items SET status = 'completed', completed_at = datetime('now')
+    WHERE issue_number = ?
+  `).run(issueNumber);
+}
+
+function prOpenItem(issueNumber, { prUrl, prNumber } = {}) {
+  const d = getDB();
+  d.prepare(`
+    UPDATE queue_items SET status = 'pr_open', completed_at = datetime('now'), pr_url = ?, pr_number = ?
+    WHERE issue_number = ?
+  `).run(prUrl || null, prNumber || null, issueNumber);
+}
+
+function mergeItem(issueNumber) {
+  const d = getDB();
+  d.prepare(`
+    UPDATE queue_items SET status = 'merged', completed_at = datetime('now')
     WHERE issue_number = ?
   `).run(issueNumber);
 }
@@ -195,7 +215,7 @@ function clearQueue() {
 
 function clearHistory() {
   const d = getDB();
-  const completed = d.prepare("DELETE FROM queue_items WHERE status IN ('completed', 'failed', 'needs-input')").run().changes;
+  const completed = d.prepare("DELETE FROM queue_items WHERE status IN ('completed', 'failed', 'needs-input', 'merged')").run().changes;
   return completed;
 }
 
@@ -216,6 +236,8 @@ function generateCacheFile() {
   const queue = getQueuedItems();
   const completed = getItemsByStatus('completed', 50);
   const failed = getItemsByStatus('failed', 50);
+  const prOpen = getItemsByStatus('pr_open', 50);
+  const merged = getItemsByStatus('merged', 50);
 
   const toItem = (row) => ({
     issueNumber: row.issue_number,
@@ -241,6 +263,18 @@ function generateCacheFile() {
       error: r.error,
       error_class: r.error_class,
       failed_at: r.completed_at,
+    })),
+    pr_open: prOpen.map(r => ({
+      ...toItem(r),
+      completed_at: r.completed_at,
+      pr_url: r.pr_url,
+      pr_number: r.pr_number,
+    })),
+    merged: merged.map(r => ({
+      ...toItem(r),
+      completed_at: r.completed_at,
+      pr_url: r.pr_url,
+      pr_number: r.pr_number,
     })),
   };
 
@@ -390,7 +424,7 @@ function getStats() {
 module.exports = {
   initDB, getDB,
   // Queue operations
-  enqueue, dequeueNext, completeItem, failItem, needsInputItem, requeueItem,
+  enqueue, dequeueNext, completeItem, prOpenItem, mergeItem, failItem, needsInputItem, requeueItem,
   getRetryCount, getProcessingItem, getQueuedItems, getItemsByStatus,
   getItemByIssueNumber, removeItem, clearQueue, clearHistory, allIssueNumbers,
   generateCacheFile, migrateFromJSON, parseLabels,
