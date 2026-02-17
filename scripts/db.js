@@ -320,7 +320,7 @@ function recordRun({ issue_id, title, repo, type, labels, priority, status, star
     INSERT INTO runs (issue_id, title, repo, type, labels, priority, status, started_at, github_url)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  const result = stmt.run(issue_id, title, repo || null, type || 'coding', labels || null, priority || 'medium', status || 'queued', started_at || null, github_url || null);
+  const result = stmt.run(issue_id, title, repo || null, type || 'implement', labels || null, priority || 'medium', status || 'queued', started_at || null, github_url || null);
   return result.lastInsertRowid;
 }
 
