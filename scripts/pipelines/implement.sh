@@ -2,7 +2,7 @@
 set -eo pipefail
 
 # =============================================================
-# Implement Pipeline — mini-swe-agent integration
+# Implement Pipeline — Qwen direct code generation
 # Usage: implement.sh <issue-number> [solution-file]
 # Env vars (from worker): REPO_FULL, REPO_OWNER, REPO_NAME,
 #   MAIN_CLONE_DIR, WORKTREE_DIR, ARTIFACTS_DIR, DASHBOARD_DIR
@@ -104,9 +104,9 @@ if [ -f "$MAIN_REPO/apps/mobile/amplify_outputs.json" ]; then
 fi
 
 # -------------------------------------------------------
-# Step 4: Build task description for mini-swe-agent
+# Step 4: Build task description for AI analysis  
 # -------------------------------------------------------
-log "Step 4/7: Preparing task for mini-swe-agent..."
+log "Step 4/7: Preparing task for AI analysis..."
 
 TASK_FILE=$(mktemp /tmp/mini-task-${ISSUE_ID}-XXXXXX)
 mv "$TASK_FILE" "${TASK_FILE}.md"
@@ -262,7 +262,7 @@ CHANGED_FILES=$(git diff --name-only 2>/dev/null || true)
 UNTRACKED_FILES=$(git ls-files --others --exclude-standard 2>/dev/null || true)
 
 if [ -z "$CHANGED_FILES" ] && [ -z "$UNTRACKED_FILES" ]; then
-  log "ℹ️ No code changes detected. mini-swe-agent did not modify any files."
+  log "ℹ️ No code changes detected. AI solution did not modify any files."
   log "=== Coding Pipeline Complete (no changes) for Issue #$ISSUE_ID ==="
   cleanup_worktree
   rm -f "$TASK_FILE"
