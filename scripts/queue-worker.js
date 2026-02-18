@@ -28,7 +28,7 @@ function loadConfig() {
   } catch (e) {
     console.warn('⚠️ Could not load routing.config.json, using defaults');
     config = {
-      defaults: { pipeline: 'implement', model: 'qwen2.5-coder:32b', ollamaUrl: 'http://localhost:11434/api/generate', maxRuntimeSeconds: 1800 },
+      defaults: { pipeline: 'implement', model: 'qwen2.5-coder:32b', ollamaUrl: 'http://localhost:11434/api/generate', maxRuntimeSeconds: 3600 },
       pipelines: {
         implement: { script: 'scripts/pipelines/implement.sh', prompt: 'prompts/implement.md', model: 'qwen2.5-coder:32b' },
         test: { script: 'scripts/pipelines/test.sh', prompt: 'prompts/test.md', model: 'codestral:22b' },
@@ -356,7 +356,6 @@ async function executePipeline(type, issueId, solutionText, item) {
       env: {
         ...process.env,
         PATH: process.env.PATH + ':' + process.env.HOME + '/.maestro/bin:' + process.env.HOME + '/.local/bin',
-        MINI_MODEL: pipelineCfg.model ? `ollama/${pipelineCfg.model}` : undefined,
         CODING_TIMEOUT: String(timeout),
         DASHBOARD_DIR: dashboardDir,
         REPO_OWNER: repoOwner,
@@ -369,7 +368,7 @@ async function executePipeline(type, issueId, solutionText, item) {
         MAIN_CLONE_DIR: process.env.HOME + '/Documents/' + repoName,
       },
       stdio: ['pipe', 'pipe', 'pipe'],
-      // Note: detached:true breaks Python asyncio (mini-swe-agent)
+      // Note: detached:true could cause issues with child processes
       // Cancel uses direct PID kill instead
     });
 

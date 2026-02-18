@@ -17,7 +17,6 @@ DASHBOARD_DIR="${DASHBOARD_DIR:-$HOME/Documents/ai-queue-dashboard}"
 ARTIFACTS_DIR="${ARTIFACTS_DIR:-$DASHBOARD_DIR/artifacts/$ISSUE_ID}"
 LOG_FILE="$ARTIFACTS_DIR/pipeline.log"
 BRANCH_NAME="issue-${ISSUE_ID}"
-MINI_MODEL="${MINI_MODEL:-ollama/qwen2.5-coder:32b}"
 TIMEOUT_SECONDS="${CODING_TIMEOUT:-1800}"
 
 # Exit code conventions (for failure categorization):
@@ -26,12 +25,6 @@ TIMEOUT_SECONDS="${CODING_TIMEOUT:-1800}"
 # 2 = test failure
 # 3 = infra failure
 # 4 = agent failure (timeout, no changes)
-
-export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/uv/tools/mini-swe-agent/bin"
-MINI_BIN="$HOME/.local/bin/mini"
-if [ ! -f "$MINI_BIN" ]; then
-  MINI_BIN=$(which mini 2>/dev/null || echo "mini")
-fi
 
 mkdir -p "$ARTIFACTS_DIR"
 
@@ -59,7 +52,6 @@ cleanup_worktree() {
 }
 
 log "=== Coding Pipeline Started for Issue #$ISSUE_ID ==="
-log "Model: $MINI_MODEL"
 log "Timeout: ${TIMEOUT_SECONDS}s"
 
 # -------------------------------------------------------
@@ -153,53 +145,111 @@ TASK_CONTENT=$(cat "$TASK_FILE")
 log "Task file: $TASK_FILE ($(wc -c < "$TASK_FILE") bytes)"
 
 # -------------------------------------------------------
-# Step 5: Run mini-swe-agent
+# Step 5: Parse AI solution and write files
 # -------------------------------------------------------
-log "Step 5/7: Running mini-swe-agent..."
+log "Step 5/7: Parsing AI solution and writing files..."
 
 cd "$WORKTREE_DIR"
 
-# Build mini args
-MINI_ARGS="-m $MINI_MODEL --yolo"
-
-# For local Ollama models, disable cost limit
-if [[ "$MINI_MODEL" == ollama/* ]]; then
-  MINI_ARGS="$MINI_ARGS"
-  log "Using local Ollama model (no cost limit)"
+# Check if solution file exists
+if [ -z "$SOLUTION_FILE" ] || [ ! -f "$SOLUTION_FILE" ]; then
+  fail "No solution file provided or file does not exist" 4
 fi
 
-TRAJECTORY_FILE="$ARTIFACTS_DIR/mini-trajectory.json"
+# Parse solution file for ### FILE: blocks and write files
+PARSING_LOG="$ARTIFACTS_DIR/file-parsing.log"
+FILES_WRITTEN=0
+PARSING_ERROR=""
 
-# Run with timeout (use gtimeout on macOS via coreutils, fallback to timeout)
-log "Running: $MINI_BIN $MINI_ARGS -t <task>"
-TIMEOUT_CMD="$(command -v gtimeout || command -v timeout || echo "")"
-if [ -n "$TIMEOUT_CMD" ]; then
-  "$TIMEOUT_CMD" "$TIMEOUT_SECONDS" "$MINI_BIN" $MINI_ARGS -t "$TASK_CONTENT" > "$ARTIFACTS_DIR/mini-output.log" 2>&1
-  MINI_EXIT=$?
+# Create a temp script to parse the solution file
+PARSER_SCRIPT=$(mktemp /tmp/parse-files-XXXXXX.sh)
+cat > "$PARSER_SCRIPT" << 'PARSER_EOF'
+#!/bin/bash
+SOLUTION_FILE="$1"
+WORKTREE_DIR="$2"
+PARSING_LOG="$3"
+
+FILES_WRITTEN=0
+CURRENT_FILE=""
+CURRENT_LANG=""
+IN_CODE_BLOCK=false
+
+while IFS= read -r line; do
+  # Check for ### FILE: header
+  if [[ "$line" =~ ^###[[:space:]]+FILE:[[:space:]]+(.+)$ ]]; then
+    CURRENT_FILE="${BASH_REMATCH[1]}"
+    echo "Found file: $CURRENT_FILE" >> "$PARSING_LOG"
+    IN_CODE_BLOCK=false
+    continue
+  fi
+  
+  # Check for code block start after a file header
+  if [[ -n "$CURRENT_FILE" && "$line" =~ ^\`\`\`([a-zA-Z]*) ]]; then
+    CURRENT_LANG="${BASH_REMATCH[1]}"
+    IN_CODE_BLOCK=true
+    echo "Starting code block for $CURRENT_FILE (lang: $CURRENT_LANG)" >> "$PARSING_LOG"
+    
+    # Create directory if needed
+    FULL_PATH="$WORKTREE_DIR/$CURRENT_FILE"
+    FULL_DIR=$(dirname "$FULL_PATH")
+    mkdir -p "$FULL_DIR"
+    
+    # Clear the file
+    : > "$FULL_PATH"
+    continue
+  fi
+  
+  # Check for code block end
+  if [[ "$IN_CODE_BLOCK" = true && "$line" =~ ^\`\`\`$ ]]; then
+    IN_CODE_BLOCK=false
+    echo "Finished writing $CURRENT_FILE" >> "$PARSING_LOG"
+    FILES_WRITTEN=$((FILES_WRITTEN + 1))
+    CURRENT_FILE=""
+    CURRENT_LANG=""
+    continue
+  fi
+  
+  # Write content to current file if in code block
+  if [[ "$IN_CODE_BLOCK" = true && -n "$CURRENT_FILE" ]]; then
+    echo "$line" >> "$WORKTREE_DIR/$CURRENT_FILE"
+  fi
+done < "$SOLUTION_FILE"
+
+echo "Parsing complete. Files written: $FILES_WRITTEN" >> "$PARSING_LOG"
+echo "$FILES_WRITTEN"
+PARSER_EOF
+
+chmod +x "$PARSER_SCRIPT"
+
+# Run the parser
+log "Parsing solution file for FILE blocks..."
+FILES_WRITTEN=$("$PARSER_SCRIPT" "$SOLUTION_FILE" "$WORKTREE_DIR" "$PARSING_LOG" 2>&1)
+PARSER_EXIT=$?
+
+# Clean up parser script
+rm -f "$PARSER_SCRIPT"
+
+if [ $PARSER_EXIT -ne 0 ]; then
+  log "⚠️ File parsing failed with exit code $PARSER_EXIT"
+  PARSING_ERROR="File parsing script failed"
+elif [ "$FILES_WRITTEN" -eq 0 ]; then
+  log "⚠️ No files were written - no ### FILE: blocks found in solution"
+  PARSING_ERROR="No FILE blocks found in AI solution"
 else
-  log "⚠️ No timeout command available, running without timeout"
-  "$MINI_BIN" $MINI_ARGS -t "$TASK_CONTENT" > "$ARTIFACTS_DIR/mini-output.log" 2>&1
-  MINI_EXIT=$?
+  log "✅ Successfully wrote $FILES_WRITTEN file(s) from AI solution"
 fi
 
-if [ $MINI_EXIT -eq 124 ]; then
-  log "⚠️ mini-swe-agent timed out after ${TIMEOUT_SECONDS}s"
-  # Timeout is agent failure — but continue to check if any changes were made
-elif [ $MINI_EXIT -ne 0 ]; then
-  log "⚠️ mini-swe-agent exited with code $MINI_EXIT"
-else
-  log "✅ mini-swe-agent completed successfully"
+# Log parsing details
+if [ -f "$PARSING_LOG" ]; then
+  log "File parsing details:"
+  cat "$PARSING_LOG" | while read -r logline; do
+    log "  $logline"
+  done
 fi
 
-# Save trajectory if it exists
-if [ -f "$WORKTREE_DIR/.mini/trajectory.json" ]; then
-  cp "$WORKTREE_DIR/.mini/trajectory.json" "$TRAJECTORY_FILE"
-  log "✅ Saved trajectory to $TRAJECTORY_FILE"
-elif [ -f "$WORKTREE_DIR/.mini-swe-agent/trajectory.json" ]; then
-  cp "$WORKTREE_DIR/.mini-swe-agent/trajectory.json" "$TRAJECTORY_FILE"
-  log "✅ Saved trajectory to $TRAJECTORY_FILE"
-else
-  log "ℹ️ No trajectory file found"
+# If parsing failed, continue but note the error
+if [ -n "$PARSING_ERROR" ]; then
+  log "⚠️ Parsing error: $PARSING_ERROR, but continuing to check for changes"
 fi
 
 # -------------------------------------------------------
@@ -227,7 +277,7 @@ echo "$UNTRACKED_FILES" | while read -r f; do [ -n "$f" ] && log "  A $f"; done
 git add -A
 git commit -m "fix: address issue #${ISSUE_ID} - ${ISSUE_TITLE}
 
-Automated fix generated by mini-swe-agent ($MINI_MODEL).
+Automated fix generated by AI queue system.
 Fixes #${ISSUE_ID}" >> "$LOG_FILE" 2>&1 || fail "git commit failed" 1
 log "✅ Changes committed"
 
@@ -281,7 +331,7 @@ PR_URL=$(gh pr create \
   --title "Fix #${ISSUE_ID}: ${ISSUE_TITLE}" \
   --body "## Automated Fix for #${ISSUE_ID}
 
-This PR was generated by **mini-swe-agent** (\`$MINI_MODEL\`) via the AI queue system.
+This PR was generated by the **AI queue system** using Qwen for direct code generation.
 
 ### Changes
 \`\`\`
@@ -293,7 +343,7 @@ Fixes #${ISSUE_ID}
 ${GATE_STATUS}
 ### Review Notes
 - Auto-generated code — please review carefully
-- Generated by: \`$MINI_MODEL\`
+- Generated by: AI queue system (Qwen direct generation)
 " \
   --assignee waltermvp $PR_FLAGS 2>&1) || log "⚠️ PR creation failed (branch pushed, create manually)"
 
