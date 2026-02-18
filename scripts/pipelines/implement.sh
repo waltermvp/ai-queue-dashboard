@@ -183,8 +183,18 @@ while IFS= read -r line; do
     continue
   fi
   
+  # Check for code block end (must check BEFORE code block start)
+  if [[ "$IN_CODE_BLOCK" = true && "$line" =~ ^\`\`\`[[:space:]]*$ ]]; then
+    IN_CODE_BLOCK=false
+    echo "Finished writing $CURRENT_FILE" >> "$PARSING_LOG"
+    FILES_WRITTEN=$((FILES_WRITTEN + 1))
+    CURRENT_FILE=""
+    CURRENT_LANG=""
+    continue
+  fi
+
   # Check for code block start after a file header
-  if [[ -n "$CURRENT_FILE" && "$line" =~ ^\`\`\`([a-zA-Z]*) ]]; then
+  if [[ -n "$CURRENT_FILE" && "$IN_CODE_BLOCK" = false && "$line" =~ ^\`\`\`([a-zA-Z]*) ]]; then
     CURRENT_LANG="${BASH_REMATCH[1]}"
     IN_CODE_BLOCK=true
     echo "Starting code block for $CURRENT_FILE (lang: $CURRENT_LANG)" >> "$PARSING_LOG"
@@ -196,16 +206,6 @@ while IFS= read -r line; do
     
     # Clear the file
     : > "$FULL_PATH"
-    continue
-  fi
-  
-  # Check for code block end
-  if [[ "$IN_CODE_BLOCK" = true && "$line" =~ ^\`\`\`$ ]]; then
-    IN_CODE_BLOCK=false
-    echo "Finished writing $CURRENT_FILE" >> "$PARSING_LOG"
-    FILES_WRITTEN=$((FILES_WRITTEN + 1))
-    CURRENT_FILE=""
-    CURRENT_LANG=""
     continue
   fi
   
