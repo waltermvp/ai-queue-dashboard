@@ -302,8 +302,10 @@ PR_FLAGS=""
 GATES_PASSED=true
 
 if [ -f "$GATES_SCRIPT" ]; then
+  set +e
   bash "$GATES_SCRIPT" "$WORKTREE_DIR" >> "$ARTIFACTS_DIR/quality-gates.log" 2>&1
   GATES_EXIT=$?
+  set -e
   if [ $GATES_EXIT -ne 0 ]; then
     GATES_PASSED=false
     PR_FLAGS="--draft --label needs-input"
