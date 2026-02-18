@@ -351,12 +351,9 @@ if [ -n "$PR_URL" ]; then
   log "✅ PR created: $PR_URL"
 fi
 
-# If gates failed, exit with build failure code
+# If gates failed, still treat as success (draft PR was created)
 if [ "$GATES_PASSED" = "false" ]; then
-  log "⚠️ Exiting with code 1 (quality gates failed, draft PR created)"
-  cleanup_worktree
-  rm -f "$TASK_FILE"
-  exit 1
+  log "⚠️ Quality gates failed — draft PR created for manual review"
 fi
 
 # -------------------------------------------------------
