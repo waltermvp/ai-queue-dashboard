@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 
-const LOG_FILE = path.join(process.cwd(), 'queue-worker.log')
+const LOG_FILE = process.env.QUEUE_LOG_FILE || '/tmp/queue-worker.log'
 
 export async function GET() {
   try {

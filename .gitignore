@@ -13,3 +13,7 @@ queue-history.db-wal
 queue-history.db-shm
 queue-worker.logartifacts/builds/*.apk
 artifacts/builds/
+*.log
+pipeline.pid
+queue-worker.lock
+queue.db

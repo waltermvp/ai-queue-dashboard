@@ -16,17 +16,41 @@ function parseLabels(labels: string | null): string[] {
   try { return JSON.parse(labels) } catch { return labels.split(',').map(s => s.trim()) }
 }
 
-async function getArtifacts(issueId: string) {
+async function getArtifacts(issueId: string, repo?: string) {
+  // Try namespaced path first (v2: artifacts/{owner}/{repo}/{issueId}), then legacy (artifacts/{issueId})
+  const paths = []
+  if (repo) {
+    paths.push(join(process.cwd(), 'artifacts', ...repo.split('/'), issueId))
+  }
+  // Also try scanning for any repo match
   try {
-    const artDir = join(process.cwd(), 'artifacts', issueId)
-    await stat(artDir)
-    const files = await readdir(artDir)
-    const recordings = files.filter((f: string) => /\.(mp4|mov|webm)$/i.test(f))
-    const logs = files.filter((f: string) => /\.(log|txt|patch|md|json)$/i.test(f))
-    if (recordings.length > 0 || logs.length > 0) {
-      return { dir: `artifacts/${issueId}`, recordings, logs }
+    const artBase = join(process.cwd(), 'artifacts')
+    const owners = await readdir(artBase)
+    for (const owner of owners) {
+      try {
+        const repos = await readdir(join(artBase, owner))
+        for (const r of repos) {
+          const candidate = join(artBase, owner, r, issueId)
+          try { await stat(candidate); paths.push(candidate) } catch {}
+        }
+      } catch {}
     }
   } catch {}
+  // Legacy path
+  paths.push(join(process.cwd(), 'artifacts', issueId))
+
+  for (const artDir of paths) {
+    try {
+      await stat(artDir)
+      const files = await readdir(artDir)
+      const recordings = files.filter((f: string) => /\.(mp4|mov|webm)$/i.test(f))
+      const logs = files.filter((f: string) => /\.(log|txt|patch|md|json)$/i.test(f))
+      if (recordings.length > 0 || logs.length > 0) {
+        const relDir = artDir.replace(process.cwd() + '/', '')
+        return { dir: relDir, recordings, logs }
+      }
+    } catch {}
+  }
   return undefined
 }
 
@@ -86,7 +110,7 @@ export async function GET(request: NextRequest) {
     })
 
     const queue = queuedRows.map(toQueueItem)
-    const processing = processingRow ? { ...toQueueItem(processingRow), started_at: processingRow.started_at } : null
+    const processing = processingRow ? { ...toQueueItem(processingRow), started_at: processingRow.started_at, artifacts: await getArtifacts(String(processingRow.issue_number), processingRow.repo) } : null
 
     const completed = await Promise.all(recentCompleted.map(async (r: any) => ({
       id: r.issue_id,
@@ -101,7 +125,7 @@ export async function GET(request: NextRequest) {
       model: r.model,
       pr_url: r.pr_url,
       github_url: r.github_url,
-      artifacts: await getArtifacts(r.issue_id)
+      artifacts: await getArtifacts(r.issue_id, r.repo)
     })))
 
     const failed = recentFailed.map((r: any) => ({
