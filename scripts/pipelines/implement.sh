@@ -270,8 +270,8 @@ if [ -z "$CHANGED_FILES" ] && [ -z "$UNTRACKED_FILES" ]; then
 fi
 
 log "Changed files:"
-echo "$CHANGED_FILES" | while read -r f; do [ -n "$f" ] && log "  M $f"; done
-echo "$UNTRACKED_FILES" | while read -r f; do [ -n "$f" ] && log "  A $f"; done
+echo "$CHANGED_FILES" | while read -r f; do [ -n "$f" ] && log "  M $f"; done || true
+echo "$UNTRACKED_FILES" | while read -r f; do [ -n "$f" ] && log "  A $f"; done || true
 
 # Stage and commit
 git add -A
