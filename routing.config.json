@@ -2,9 +2,10 @@
   "version": 2,
   "defaults": {
     "pipeline": "implement",
-    "model": "qwen2.5-coder:32b",
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-20250514",
     "ollamaUrl": "http://localhost:11434/api/generate",
-    "maxRuntimeSeconds": 1800,
+    "maxRuntimeSeconds": 3600,
     "worktreeBase": "~/Documents/worktrees",
     "artifactsBase": "artifacts"
   },
@@ -12,8 +13,9 @@
     "implement": {
       "script": "scripts/pipelines/implement.sh",
       "prompt": "prompts/implement.md",
-      "model": "qwen2.5-coder:32b",
-      "resources": ["ollama"],
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-20250514",
+      "resources": ["anthropic"],
       "maxRetries": 1,
       "retryOn": ["infra"]
     },

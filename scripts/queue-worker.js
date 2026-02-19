@@ -141,24 +141,35 @@ async function preflight(item, pipelineType, pipelineConfig) {
     ok('lock', 'No lock file');
   }
 
-  // 2. Check Ollama is running & model available
+  // 2. Check AI provider
+  const provider = (pipelineConfig.provider || config.defaults.provider || 'ollama').toLowerCase();
   const model = pipelineConfig.model || config.defaults.model;
-  let ollamaModels = [];
-  try {
-    const tagsRaw = execSync('curl -s http://localhost:11434/api/tags', { encoding: 'utf8', timeout: 5000 });
-    const tags = JSON.parse(tagsRaw);
-    ollamaModels = (tags.models || []).map(m => m.name || m.model || '');
-    ok('ollama', 'Ollama is running');
-  } catch {
-    fail('ollama', 'Ollama not running — cannot reach http://localhost:11434/api/tags');
-  }
 
-  // Check model
-  const modelAvailable = ollamaModels.some(m => m === model || m.startsWith(model.split(':')[0]));
-  if (modelAvailable) {
-    ok('model', `Model ${model} is available`);
+  if (provider === 'anthropic') {
+    if (process.env.ANTHROPIC_API_KEY) {
+      ok('provider', `Anthropic API key set, model: ${model}`);
+    } else {
+      fail('provider', 'ANTHROPIC_API_KEY not set in environment');
+    }
   } else {
-    fail('model', `Model ${model} not pulled. Available: ${ollamaModels.join(', ') || 'none'}`);
+    // Ollama checks
+    let ollamaModels = [];
+    try {
+      const tagsRaw = execSync('curl -s http://localhost:11434/api/tags', { encoding: 'utf8', timeout: 5000 });
+      const tags = JSON.parse(tagsRaw);
+      ollamaModels = (tags.models || []).map(m => m.name || m.model || '');
+      ok('ollama', 'Ollama is running');
+    } catch {
+      fail('ollama', 'Ollama not running — cannot reach http://localhost:11434/api/tags');
+    }
+
+    // Check model
+    const modelAvailable = ollamaModels.some(m => m === model || m.startsWith(model.split(':')[0]));
+    if (modelAvailable) {
+      ok('model', `Model ${model} is available`);
+    } else {
+      fail('model', `Model ${model} not pulled. Available: ${ollamaModels.join(', ') || 'none'}`);
+    }
   }
 
   // 3. Check disk space
@@ -246,6 +257,77 @@ async function preflight(item, pipelineType, pipelineConfig) {
 
   log(`🔍 Preflight complete: ${checks.length} checks passed${warnings.length ? `, ${warnings.length} warning(s)` : ''}`);
   return { success: true, checks, warnings };
+}
+
+// Process single item with Anthropic API (Claude Sonnet)
+async function processWithAnthropic(item, issueType) {
+  const pipelineCfg = config.pipelines[issueType] || {};
+  const model = pipelineCfg.model || config.defaults.model;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    return { success: false, error: 'ANTHROPIC_API_KEY not set in environment', model, processed_at: new Date().toISOString() };
+  }
+
+  log(`🤖 Processing [${issueType}] with Anthropic ${model}: ${item.title}`);
+
+  let systemPrompt = loadPrompt(issueType);
+  if (issueType === 'implement' || issueType === 'test' || issueType === 'coding' || issueType === 'e2e') {
+    systemPrompt += loadCodingStandards();
+  }
+
+  const labels = db.parseLabels(item.labels);
+  const userPrompt = `## Issue Context
+
+Task: ${item.title}
+ID: ${item.issue_number}
+Priority: ${item.priority}
+Description: ${item.body || 'No description provided'}
+Repository: ${item.repo || 'epiphanyapps/MapYourHealth'}
+Labels: ${labels.join(', ') || 'none'}`;
+
+  // Save prompt to artifacts (audit trail)
+  const artifactsDir = path.join(ARTIFACTS_DIR, String(item.issue_number));
+  if (!fs.existsSync(artifactsDir)) fs.mkdirSync(artifactsDir, { recursive: true });
+  fs.writeFileSync(path.join(artifactsDir, 'prompt-sent.md'), `# System Prompt\n\n${systemPrompt}\n\n---\n\n# User Prompt\n\n${userPrompt}`);
+
+  try {
+    const startTime = Date.now();
+    const response = await axios.post('https://api.anthropic.com/v1/messages', {
+      model: model,
+      max_tokens: 16384,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    }, {
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
+      },
+      timeout: 120000 // 2 min timeout for API call
+    });
+
+    const elapsedMs = Date.now() - startTime;
+    const solution = response.data.content.map(c => c.text || '').join('\n');
+    const usage = response.data.usage || {};
+    const costEstimate = ((usage.input_tokens || 0) * 3 / 1e6 + (usage.output_tokens || 0) * 15 / 1e6).toFixed(4);
+
+    log(`✅ Anthropic responded in ${(elapsedMs / 1000).toFixed(1)}s — ${usage.input_tokens || '?'} in / ${usage.output_tokens || '?'} out — est. $${costEstimate}`);
+
+    // Save run metadata (audit trail)
+    fs.writeFileSync(path.join(artifactsDir, 'run-metadata.json'), JSON.stringify({
+      provider: 'anthropic', model, issueType,
+      startedAt: new Date(startTime).toISOString(),
+      elapsedMs, usage, costEstimate: `$${costEstimate}`,
+      config: pipelineCfg
+    }, null, 2));
+
+    return { success: true, solution, model, provider: 'anthropic', processed_at: new Date().toISOString() };
+  } catch (error) {
+    const errMsg = error.response?.data?.error?.message || error.message;
+    console.error('❌ Anthropic processing error:', errMsg);
+    return { success: false, error: errMsg, model, provider: 'anthropic', processed_at: new Date().toISOString() };
+  }
 }
 
 // Process single item with Ollama
@@ -469,8 +551,12 @@ async function _processNext() {
     return;
   }
 
-  // Process with Ollama
-  const result = await processWithOllama(item, issueType);
+  // Process with configured provider
+  const provider = (pipelineCfg2.provider || config.defaults.provider || 'ollama').toLowerCase();
+  log(`📡 Using provider: ${provider}`);
+  const result = provider === 'anthropic'
+    ? await processWithAnthropic(item, issueType)
+    : await processWithOllama(item, issueType);
   const processingTimeMs = Date.now() - new Date(startedAt).getTime();
 
   if (result.success) {
